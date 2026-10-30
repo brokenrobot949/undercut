@@ -1,6 +1,6 @@
 // The app shell: header, tab content and the tab bar.
 
-import { el, coins } from './components.js';
+import { el, coins, setTheme, updateLive } from './components.js';
 import { getFaction, getStanding } from '../engine/game.js';
 import { openSettings } from './settings.js';
 import { renderShop } from './shop.js';
@@ -26,12 +26,28 @@ export function mountApp(root, ctx) {
   const tabbar = el('nav', { class: 'tabbar', role: 'tablist', 'aria-label': 'Main' });
   root.replaceChildren(el('div', { class: 'app' }, header, main, tabbar));
 
+  // Redrawing under a finger can swallow the tap, so redraws wait for it to lift.
+  let pointerDown = false;
+  let pendingRender = false;
+  root.addEventListener('pointerdown', () => { pointerDown = true; }, true);
+  const release = () => {
+    pointerDown = false;
+    if (pendingRender) { pendingRender = false; setTimeout(render, 0); }
+  };
+  root.addEventListener('pointerup', release, true);
+  root.addEventListener('pointercancel', release, true);
+
+  let headerKey = '';
   function renderHeader() {
     const { state } = ctx;
+    updateLive(ctx.now());
+    const key = `${state.copper}|${state.reputation}|${state.player.name}|${state.player.factionId}`;
+    if (key === headerKey) return;
+    headerKey = key;
     const faction = getFaction(state);
     const { current, next } = getStanding(state);
     const pct = next ? ((state.reputation - current.rep) / (next.rep - current.rep)) * 100 : 100;
-    root.setAttribute('data-theme', faction.theme);
+    setTheme(faction.theme);
 
     header.replaceChildren(
       el('div', { class: 'header-title' },
@@ -60,11 +76,17 @@ export function mountApp(root, ctx) {
     )));
   }
 
+  ctx.render = render;
+
   function render() {
-    renderHeader();
+    if (pointerDown) { pendingRender = true; return; }
+    headerKey = '';
     renderTabs();
     const tab = TABS.find((t) => t.id === activeTab);
+    const scroll = main.scrollTop;
     main.replaceChildren(tab.render(ctx));
+    main.scrollTop = scroll;
+    renderHeader();
   }
 
   render();

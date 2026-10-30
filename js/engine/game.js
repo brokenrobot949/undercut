@@ -3,24 +3,47 @@
 
 import { tuning } from '../../data/tuning.js';
 import { factions } from '../../data/factions.js';
+import { items } from '../../data/items.js';
+import { addOrMail } from './bags.js';
 import { createRng } from './rng.js';
 import { createClock, advance, gameNow, schedule, newSummary } from './clock.js';
+import { createMarket, marketTick, freshMarket, saleProceeds } from './market.js';
+import { createStations, finishUnit } from './crafting.js';
+import { createTavern, refreshBoardTimer, expeditionReturns } from './heroes.js';
+export { collectMailbox } from './bags.js';
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 3;
 
 export function newGame({ name, factionId, seed, now }) {
-  return {
+  const state = {
     version: SAVE_VERSION,
     createdAt: now,
     player: { name, factionId },
     copper: tuning.startingCopper,
     reputation: 0,
+    bags: { ...tuning.startingBags }, // itemId -> quantity
+    // Gold and items waiting to be collected (sales, expired listings).
+    mailbox: { copper: 0, items: {} },
     rng: createRng(seed),
     clock: createClock(now),
     timers: [],
     nextTimerId: 1,
     settings: { debug: false, mute: false },
+    market: null,
+    stations: createStations(),
+    tavern: null,
   };
+  createMarket(state, now);
+  createTavern(state, now);
+  return state;
+}
+
+// Throws if a loaded save is missing something the game can't run without.
+export function checkSave(state) {
+  const ok = state.player && getFaction(state) && state.clock && Number.isFinite(state.clock.lastSeenAt) &&
+    state.rng && Number.isFinite(state.rng.state) && Array.isArray(state.timers) && Number.isFinite(state.copper);
+  if (!ok) throw new Error('This save is damaged or incomplete.');
+  return state;
 }
 
 export function getFaction(state) {
@@ -36,33 +59,69 @@ export function getStanding(state) {
 
 // ---- Clock handlers ----------------------------------------------------
 
+// What happens to the player when their listings sell or expire.
+function marketHooks(state, summary) {
+  return {
+    onSale(itemId, listing, price, at) {
+      const paid = saleProceeds(listing, price);
+      state.mailbox.copper += paid;
+      const s = (summary.sold[itemId] ||= { qty: 0, copper: 0 });
+      s.qty++;
+      s.copper += paid;
+    },
+    onExpire(itemId, listing, at) {
+      state.mailbox.items[itemId] = (state.mailbox.items[itemId] || 0) + listing.qty;
+      summary.expired[itemId] = (summary.expired[itemId] || 0) + listing.qty;
+    },
+  };
+}
+
 const handlers = {
   tick(state, at, summary) {
-    // The market simulation plugs in here in Phase 1.
+    marketTick(state, at, marketHooks(state, summary));
   },
   freshMarket(state, at, summary) {
-    // Phase 1 resets the market to a fresh state here.
+    freshMarket(state, at, marketHooks(state, summary));
   },
   timers: {
+    craft: (state, timer, summary) => finishUnit(state, timer, summary),
+    expedition: (state, timer, summary) => expeditionReturns(state, timer, summary),
+    'tavern-refresh': (state, timer) => refreshBoardTimer(state, timer),
     'debug-test'(state, timer, summary) {
       summary.lines.push(`Debug test timer (${timer.data.label}) finished.`);
     },
   },
 };
 
+function gameSummary(state) {
+  const summary = newSummary(state, null);
+  summary.sold = {}; // itemId -> { qty, copper }
+  summary.expired = {}; // itemId -> qty returned
+  summary.crafted = {}; // itemId -> qty made
+  summary.ordersDone = []; // whole orders finished: { item, qty }
+  summary.returns = []; // heroes home: { name, zone, haul, line }
+  return summary;
+}
+
 // Runs everything that happened up to real time `realNow`.
-export function catchUp(state, realNow, summary) {
+export function catchUp(state, realNow, summary = gameSummary(state)) {
+  if (!state.market) createMarket(state, state.clock.lastSeenAt);
+  if (!state.tavern) createTavern(state, state.clock.lastSeenAt);
   return advance(state, gameNow(state, realNow), handlers, summary);
 }
 
 // ---- Debug actions -----------------------------------------------------
 
 export function debugFastForward(state, realNow, hours) {
-  // Start the summary from the current moment so it covers only the skip.
-  catchUp(state, realNow);
-  const summary = newSummary(state, null);
+  const summary = gameSummary(state);
+  catchUp(state, realNow, summary);
   state.clock.offsetMs += hours * 60 * 60 * 1000;
   return catchUp(state, realNow, summary);
+}
+
+// Adds a stack of every material and trade good (overflow waits in the mailbox).
+export function debugAddMaterials(state, qty = 20) {
+  for (const item of items) if (item.category === 'material' || item.category === 'trade') addOrMail(state, item.id, qty);
 }
 
 export function debugAddCopper(state, amount) {

@@ -3,7 +3,7 @@
 ## Working with Rob
 - Rob is the game designer and has no coding experience. After each session, explain what changed in plain language.
 - `docs/DESIGN.md` is the source of truth. When Rob changes a design decision, update it.
-- Build in the phases from DESIGN.md, in small, testable slices. Current phase: Phase 0 (Foundation).
+- Build in the phases from DESIGN.md, in small, testable slices. Current phase: Phase 1 (The market, with Blacksmithing tiers 1–2).
 - Rob commits and pushes with GitHub Desktop. Do not run `git push` unless Rob asks.
 
 ## Models and delegation

@@ -1,10 +1,10 @@
 // Settings sheet: save export and import, new game, credits, and the hidden
 // debug panel (tap the version line 5 times to turn it on).
 
-import { el, openSheet, toast, formatDuration } from './components.js';
+import { el, openSheet, toast, formatDuration, fill } from './components.js';
 import { encodeExport } from '../engine/save.js';
 import { gameNow } from '../engine/clock.js';
-import { debugAddCopper, debugStartTestTimer } from '../engine/game.js';
+import { debugAddCopper, debugAddMaterials, debugStartTestTimer } from '../engine/game.js';
 
 export function openSettings(ctx) {
   const sheet = openSheet('Settings');
@@ -12,7 +12,7 @@ export function openSettings(ctx) {
 
   function draw() {
     const { state } = ctx;
-    sheet.body.replaceChildren(
+    fill(sheet.body, 
       el('section', { class: 'panel' },
         el('h3', {}, 'Back up your save'),
         el('p', { class: 'small dim' },
@@ -24,9 +24,31 @@ export function openSettings(ctx) {
         el('h3', {}, 'New game'),
         el('p', { class: 'small dim' }, 'Starts over. Export your save first if you might want it back.'),
         el('button', { class: 'btn btn-danger', type: 'button', onclick: () => { sheet.close(); ctx.newGame(); } }, 'Start a new game')),
+      backupsPanel(),
       state.settings.debug ? debugPanel() : null,
       versionLine(),
     );
+  }
+
+  function backupsPanel() {
+    const backups = ctx.listBackups();
+    if (!backups.length) return null;
+    return el('section', { class: 'panel' },
+      el('h3', {}, 'Earlier games on this device'),
+      el('p', { class: 'small dim' }, 'Starting a new game or importing keeps the replaced game here. Restoring swaps it with your current game.'),
+      el('div', { class: 'market-list' }, backups.map((b) => el('div', { class: 'my-listing' },
+        el('span', { class: 'item-name' }, `${b.name}'s Shop`),
+        el('button', { class: 'btn small-btn', type: 'button', onclick: () => {
+          if (!confirm(`Restore ${b.name}'s Shop? Your current game becomes a backup.`)) return;
+          try {
+            ctx.restoreBackup(b.key);
+            sheet.close();
+            toast('Game restored.');
+          } catch (e) {
+            toast(e.message);
+          }
+        } }, 'Restore'),
+        el('span', { class: 'small dim market-sub' }, b.savedAt ? `Last played ${new Date(b.savedAt).toLocaleString()}` : '')))));
   }
 
   function showExport() {
@@ -88,6 +110,7 @@ export function openSettings(ctx) {
       el('div', { class: 'btn-row' },
         btn('+1 g', () => ctx.act((s) => debugAddCopper(s, 10000))),
         btn('+10 g', () => ctx.act((s) => debugAddCopper(s, 100000))),
+        btn('+20 materials', () => ctx.act((s) => debugAddMaterials(s, 20))),
         btn('15 min test timer', () => ctx.act((s) => debugStartTestTimer(s, Date.now(), 15)))),
       el('p', { class: 'small dim', style: 'margin-top:12px' }, 'Internals'),
       el('dl', { class: 'kv' },

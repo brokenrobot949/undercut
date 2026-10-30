@@ -14,6 +14,109 @@ export const tuning = {
 
   // Gold a new shop starts with, in copper (5,000 = 50 silver).
   startingCopper: 5000,
+  // Materials a new shop starts with: enough for a first copper cleaver.
+  startingBags: { 'copper-bar': 4, 'rough-stone': 6 },
+
+  // ---- Shop ----
+  // Bag slots at the start. Materials stack this many per slot; gear takes a slot each.
+  bagSlots: 48,
+  stackSize: 20,
+  // Orders each workstation (anvil, forge) can hold at the start.
+  queueSlots: 3,
+  // Auction house listings you can have up at once, at the start.
+  listingSlots: 10,
+  // The City Smelter smelts instantly for this share of the bars' base value.
+  smelterFee: 0.25,
+
+  // ---- Tavern ----
+  tavern: {
+    // Heroes on the hire board, and how often it refreshes (hours).
+    boardSize: 3,
+    refreshHours: 4,
+    // Cost to refresh the board early, in copper.
+    refreshFee: 25,
+    // Heroes out gathering at once, at the start.
+    expeditionSlots: 2,
+    // Trip lengths offered, in hours.
+    tripHours: [0.25, 1, 4, 8],
+    // Fee = zone fee per hour x hours ^ this. Below 1, long trips cost less per hour.
+    feeExponent: 0.85,
+    // Chance a trip comes back with half a load (Orcs halve it again).
+    badHaulChance: 0.12,
+    // Each haul varies by up to this much either way.
+    haulSpread: 0.2,
+    // Hero levels on the board, [lowest, highest]. Phase 1: tiers 1-2.
+    heroLevels: [3, 25],
+  },
+
+  // ---- Auction house ----
+  market: {
+    // Selling to a vendor pays this share of an item's base value. This is the price floor.
+    vendorShare: 0.25,
+    // The auction house keeps this share of every sale.
+    cut: 0.05,
+    // Listing durations in hours, and the deposit for each: a share of
+    // vendor price x quantity, lost for any units that don't sell.
+    durations: [
+      { hours: 2, deposit: 0.05 },
+      { hours: 8, deposit: 0.10 },
+      { hours: 24, deposit: 0.20 },
+    ],
+
+    // Buyers. Unserved buyers wait in a "reservoir" that refills at the
+    // demand rate, up to this many hours of demand.
+    reservoirHours: 24,
+    // Share of waiting buyers who shop each 10-minute tick.
+    shopperShare: 0.2,
+    // How far a buyer's price limit strays from the fair price. 0.35 puts
+    // most buyers within about +/-20% of fair, a few out to +/-35%.
+    buyerSpread: 0.35,
+
+    // NPC sellers. Each category restocks at this share of its demand...
+    // A little above 1 keeps stock on the board to undercut. Much above 1 and
+    // there's always something cheaper, so listing high never sells.
+    npcSupply: { material: 1.2, consumable: 1.2, gear: 1.15 },
+    // ...and stops posting once this many hours of demand are already listed.
+    npcMaxStockHours: 8,
+    // Units per NPC listing, [smallest, largest].
+    npcLotSize: { material: [5, 20], consumable: [2, 10], gear: [1, 1] },
+    // NPCs post at fair price x somewhere in this range...
+    npcPriceRange: [0.9, 1.25],
+    // ...except this share of them, who undercut the lowest listing by 1-5%...
+    npcUndercutShare: 0.25,
+    // ...and this share, who need gold fast and list a bargain in this range.
+    // Bargains are what flippers hunt for.
+    npcBargainShare: 0.04,
+    npcBargainRange: [0.6, 0.8],
+
+    // Demand drifts up and down a little day to day, item by item.
+    // About this much either way on a typical day.
+    demandDrift: 0.12,
+    // When the price is low, NPCs list less (higher = they hold back more).
+    npcPriceElasticity: 2,
+
+    // Fair price. Each tick it moves this share of the way to its target
+    // (0.025 = about halfway in 4-5 hours).
+    followRate: 0.025,
+    // Listed stock below this many days of demand is normal and doesn't lower the price.
+    normalSupplyDays: 0.4,
+    // How hard extra stock pushes the price down. At 2.2, one extra day of
+    // demand listed cuts the target price by about two thirds.
+    floodStrength: 2.2,
+    // Stock listed above fair price weighs on the price less and less, and
+    // stops counting at fair x this.
+    affordableUpTo: 2.5,
+    // Waiting buyers above this share of the reservoir push the price up...
+    normalScarcity: 0.1,
+    // ...by up to this much when the reservoir is full.
+    scarcityStrength: 0.4,
+    // The fair price never goes above base x this.
+    maxPriceMult: 3,
+  },
+
+  // Demand multiplier by hero level band (tier 1 to 5): the realm has the most
+  // heroes at low levels and at the level cap.
+  populationByTier: [1.0, 0.85, 0.75, 0.75, 1.2],
 
   // Reputation needed for each Trade Guild standing.
   standings: [

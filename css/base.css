@@ -325,6 +325,197 @@ textarea {
 .kv dt { color: var(--text-dim); }
 .kv dd { margin: 0; word-break: break-all; }
 
+/* ---- Item quality text ---------------------------------------------- */
+
+.q-poor { color: var(--q-poor); }
+.q-common { color: var(--q-common); }
+.q-uncommon { color: var(--q-uncommon); }
+.q-rare { color: var(--q-rare); }
+.q-epic { color: var(--q-epic); }
+
+/* ---- Auction house ---------------------------------------------------- */
+
+.market-list { display: grid; }
+.market-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "name price" "sub tag";
+  gap: 2px 12px;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 10px 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.market-row:first-child { border-top: 0; }
+.market-row .item-name { grid-area: name; font-weight: 600; }
+.market-row .market-price { grid-area: price; justify-self: end; }
+.market-row .market-sub { grid-area: sub; }
+.market-row .tag { grid-area: tag; justify-self: end; }
+
+.tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+.tag-hot { color: #ff8a5c; }
+.tag-steady { color: var(--text-dim); }
+.tag-slow { color: #9fb4d9; }
+.tag-flooded { color: #6fa8ff; background: rgba(80, 140, 255, 0.12); }
+
+.listings {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+.listings th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border);
+}
+.listings td { padding: 6px; border-bottom: 1px solid var(--border); }
+.listings tr.mine td { background: var(--panel-raised); font-weight: 700; }
+
+.listings tr.short td { color: #ff9d8f; }
+.profit { color: #7fd68f; }
+.loss { color: #ff9d8f; }
+
+/* ---- Controls ---------------------------------------------------------- */
+
+input[type="number"] {
+  width: 100%;
+  min-height: var(--tap);
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-deep);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.stepper {
+  display: grid;
+  grid-template-columns: var(--tap) 1fr var(--tap) auto;
+  gap: 6px;
+}
+.stepper .btn { padding: 0 10px; }
+.stepper input { text-align: center; }
+.btn.wide { width: 100%; }
+.btn.small-btn { min-height: var(--tap); padding: 0 14px; font-size: 0.85rem; }
+.seg .btn { flex: 1 1 0; padding: 0 8px; }
+.chips { margin: 12px 0 4px; }
+.chips .chip { flex: 0 0 auto; min-height: var(--tap); font-size: 0.85rem; }
+.link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  text-align: left;
+}
+
+/* ---- Lists: my listings, queues, recipes --------------------------- */
+
+.market-row .market-tag { grid-area: tag; justify-self: end; color: var(--highlight); }
+.my-listing {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.my-listing:first-child { border-top: 0; }
+.my-listing .market-price { justify-self: end; }
+.my-listing .market-sub { grid-column: 1; }
+.my-listing .small-btn { grid-column: 2; grid-row: 2; justify-self: end; }
+
+.queue { display: grid; gap: 10px; margin-bottom: 8px; }
+.queue-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--panel-raised);
+  border-radius: var(--radius);
+}
+.queue-row .item-name { font-weight: 600; }
+.queue-row .progress { grid-column: 1 / -1; max-width: none; }
+.queue-row .small-btn { grid-column: 2; grid-row: 1 / span 2; }
+.bar.progress { height: 6px; }
+.bar.progress > span { transition: width 1s linear; }
+
+/* ---- Bags -------------------------------------------------------------- */
+
+.bag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+.bag-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 72px;
+  padding: 8px;
+  border: 2px solid var(--q-common);
+  border-radius: var(--radius);
+  background: var(--bg-deep);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  text-align: left;
+  cursor: pointer;
+}
+.bag-tile .bag-qty {
+  align-self: flex-end;
+  font-weight: 700;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+.border-poor { border-color: var(--q-poor); }
+.border-common { border-color: var(--q-common); }
+.border-uncommon { border-color: var(--q-uncommon); }
+.border-rare { border-color: var(--q-rare); }
+.border-epic { border-color: var(--q-epic); }
+
+/* ---- Tavern ------------------------------------------------------------ */
+
+.hero-list { display: grid; gap: 10px; margin-bottom: 12px; }
+.hero-card {
+  display: grid;
+  gap: 2px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-raised);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.hero-card:disabled { opacity: 0.55; cursor: default; }
+.hero-name { font-family: var(--font-heading); font-weight: 700; font-size: 1.05rem; color: var(--highlight); }
+.hero-fee { justify-self: end; }
+
 /* ---- Bottom sheet (settings, item sheet, confirmations) ------------- */
 
 .sheet-backdrop {
@@ -423,3 +614,24 @@ textarea {
   z-index: 20;
   max-width: calc(100% - 32px);
 }
+
+/* ---- Tap targets for text links inside lists and tables ----------------- */
+
+.my-listing .link,
+.listings .link,
+.sheet-body p .link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+}
+
+/* ---- Gold / silver / copper price entry ------------------------------- */
+
+.coin-input {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.coin-input .coin { gap: 6px; }
+.coin-input .coin::after { flex: 0 0 auto; width: 14px; height: 14px; }
+.coin-input input { text-align: right; }

@@ -10,6 +10,8 @@ export const factions = [
     guild: 'Kragmar Trade Consortium',
     races: ['Orc', 'Troll', 'Hornkin', 'Risen'],
     factionClass: 'Shaman',
+    // Gear demand multiplier by armor type (Shamans wear mail).
+    armorDemand: { mail: 1.15, plate: 0.9 },
     theme: 'red',
   },
   {
@@ -20,6 +22,8 @@ export const factions = [
     guild: "Aldmere Merchants' Guild",
     races: ['Human', 'Dwarf', 'Gnome', 'Elf'],
     factionClass: 'Paladin',
+    // Gear demand multiplier by armor type (Paladins wear plate).
+    armorDemand: { mail: 0.9, plate: 1.15 },
     theme: 'blue',
   },
 ];

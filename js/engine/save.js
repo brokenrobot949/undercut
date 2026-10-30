@@ -2,7 +2,8 @@
 // `storage` is anything with getItem/setItem/removeItem: localStorage in the
 // browser, or a plain stand-in object in Node.
 
-import { SAVE_VERSION } from './game.js';
+import { SAVE_VERSION, checkSave } from './game.js';
+import { createStations } from './crafting.js';
 
 // Every key starts with "undercut:" because other games share this web address.
 export const SAVE_KEY = 'undercut:save';
@@ -13,7 +14,21 @@ const EXPORT_PREFIX = 'UNDERCUT';
 // One function per old version, upgrading a save by exactly one version.
 // When the save shape changes: bump SAVE_VERSION in game.js and add a step here.
 const migrations = {
-  // 1: (save) => { save.newThing = 0; return save; },
+  // Version 2 (Phase 1): adds bags, the mailbox and the auction house.
+  // The market is built fresh on the next catch-up.
+  1: (save) => {
+    save.bags = {};
+    save.mailbox = { copper: 0, items: {} };
+    save.market = null;
+    return save;
+  },
+  // Version 3 (Phase 1): adds workstation queues and the tavern.
+  // The tavern board is rolled on the next catch-up.
+  2: (save) => {
+    save.stations = createStations();
+    save.tavern = null;
+    return save;
+  },
 };
 
 export function migrate(save) {
@@ -29,7 +44,7 @@ export function migrate(save) {
     save = step(save);
     save.version++;
   }
-  return save;
+  return checkSave(save);
 }
 
 export function writeSave(storage, state) {
@@ -43,11 +58,43 @@ export function readSave(storage) {
   return migrate(JSON.parse(raw));
 }
 
-// Keeps a copy of the old save before "New game" or an import replaces it.
+// ---- Backups -------------------------------------------------------------
+// "New game", import and restore keep the replaced save. The newest is
+// undercut:save-backup, then -2 and -3; older ones drop off.
+const BACKUP_KEYS = [BACKUP_KEY, `${BACKUP_KEY}-2`, `${BACKUP_KEY}-3`];
+
+export function pushBackup(storage, raw) {
+  for (let i = BACKUP_KEYS.length - 1; i > 0; i--) {
+    const older = storage.getItem(BACKUP_KEYS[i - 1]);
+    if (older) storage.setItem(BACKUP_KEYS[i], older);
+  }
+  storage.setItem(BACKUP_KEYS[0], raw);
+}
+
 export function backupAndClear(storage) {
   const raw = storage.getItem(SAVE_KEY);
-  if (raw) storage.setItem(BACKUP_KEY, raw);
+  if (raw) pushBackup(storage, raw);
   storage.removeItem(SAVE_KEY);
+}
+
+// [{ key, name, faction, savedAt }] for the settings screen. Unreadable backups are skipped.
+export function listBackups(storage) {
+  const out = [];
+  for (const key of BACKUP_KEYS) {
+    try {
+      const s = JSON.parse(storage.getItem(key));
+      if (s?.player) out.push({ key, name: s.player.name, factionId: s.player.factionId, savedAt: s.clock?.lastSeenAt });
+    } catch { /* skip */ }
+  }
+  return out;
+}
+
+// Loads a backup. The caller swaps it in; the current game becomes a backup.
+export function readBackup(storage, key) {
+  if (!BACKUP_KEYS.includes(key)) throw new Error('No such backup.');
+  const raw = storage.getItem(key);
+  if (!raw) throw new Error('That backup is gone.');
+  return migrate(JSON.parse(raw));
 }
 
 // ---- Export code -------------------------------------------------------

@@ -1,13 +1,15 @@
 // Startup, the live clock loop, catch-up and saving.
 
 import { tuning } from '../data/tuning.js';
-import { newGame, catchUp, debugFastForward } from './engine/game.js';
-import { readSave, writeSave, backupAndClear, decodeExport } from './engine/save.js';
+import { newGame, catchUp, collectMailbox, debugFastForward } from './engine/game.js';
+import { itemById } from '../data/items.js';
+import { gameNow } from './engine/clock.js';
+import { readSave, writeSave, backupAndClear, decodeExport, listBackups, readBackup } from './engine/save.js';
 import { mountApp } from './ui/app.js';
 import { renderNewGame } from './ui/new-game.js';
-import { el, toast } from './ui/components.js';
+import { el, toast, setTheme } from './ui/components.js';
 
-const VERSION = 'v0.0.1';
+const VERSION = 'v0.1.0';
 // Absences shorter than this don't open the "While you were away" summary.
 const AWAY_MIN_MS = 60 * 1000;
 
@@ -24,15 +26,34 @@ const ctx = {
   state: null,
   away: null,
 
-  // Every player action goes through here: change state, save, redraw.
+  // Current game time (real time plus any debug fast-forward).
+  now() {
+    return gameNow(ctx.state, Date.now());
+  },
+
+  // Every player action goes through here: catch up, change state, save,
+  // redraw. Engine actions throw a plain-language Error when they can't be
+  // done; that becomes a toast. Returns the action's result, or undefined.
   act(fn) {
-    fn(ctx.state);
+    catchUpNow(false);
+    try {
+      const result = fn(ctx.state, ctx.now());
+      save();
+      app.render();
+      return result ?? true;
+    } catch (error) {
+      if (!(error instanceof Error) || error instanceof TypeError || error instanceof ReferenceError) throw error;
+      toast(error.message);
+      return undefined;
+    }
+  },
+  // "Collect all": gold and returned items go to your purse and bags.
+  collectAll() {
+    const allFit = collectMailbox(ctx.state);
+    ctx.away = null;
     save();
     app.render();
-  },
-  dismissAway() {
-    ctx.away = null;
-    app.render();
+    if (!allFit) toast('Your bags are full. The rest is waiting on the Shop tab.');
   },
   fastForward(hours) {
     showAway(debugFastForward(ctx.state, Date.now(), hours), true);
@@ -40,16 +61,31 @@ const ctx = {
     app.render();
   },
   importCode(code) {
+    // Decode and catch up on the side, so a bad code never replaces the live game.
     const state = decodeExport(code);
+    const summary = catchUp(state, Date.now());
     backupAndClear(storage);
     ctx.state = state;
     ctx.away = null;
-    catchUpNow(true);
+    showAway(summary);
     save();
     app.render();
   },
+  restoreBackup(key) {
+    const state = readBackup(storage, key);
+    const summary = catchUp(state, Date.now());
+    backupAndClear(storage);
+    ctx.state = state;
+    ctx.away = null;
+    showAway(summary);
+    save();
+    app.render();
+  },
+  listBackups() {
+    return listBackups(storage);
+  },
   newGame() {
-    if (!confirm('Start a new game? Your current shop will be replaced. (A backup copy is kept on this device.)')) return;
+    if (!confirm('Start a new game? Your current shop will be replaced. (The last 3 games are kept as backups on this device.)')) return;
     stopLoop();
     backupAndClear(storage);
     ctx.state = null;
@@ -72,7 +108,7 @@ function save() {
 // Adds a catch-up summary to the "While you were away" panel.
 function showAway(summary, force = false) {
   const long = summary.to - summary.from >= AWAY_MIN_MS;
-  if (!force && !long && !summary.lines.length) return;
+  if (!force && !long && !summary.lines.length && !summary.returns.length) return;
   const prev = ctx.away;
   ctx.away = prev ? {
     ...summary,
@@ -81,13 +117,34 @@ function showAway(summary, force = false) {
     timersFired: prev.timersFired + summary.timersFired,
     freshMarket: prev.freshMarket || summary.freshMarket,
     lines: [...prev.lines, ...summary.lines],
+    sold: mergeCounts(prev.sold, summary.sold),
+    expired: mergeCounts(prev.expired, summary.expired),
+    crafted: mergeCounts(prev.crafted, summary.crafted),
+    returns: [...prev.returns, ...summary.returns],
   } : summary;
+}
+
+// Adds up per-item counts: plain numbers, or { qty, copper } records.
+function mergeCounts(a, b) {
+  const out = structuredClone(a);
+  for (const [id, v] of Object.entries(b)) {
+    if (typeof v === 'number') out[id] = (out[id] || 0) + v;
+    else out[id] = { qty: (out[id]?.qty || 0) + v.qty, copper: (out[id]?.copper || 0) + v.copper };
+  }
+  return out;
 }
 
 function catchUpNow(asCheckIn) {
   const summary = catchUp(ctx.state, Date.now());
-  if (asCheckIn) showAway(summary);
-  else summary.lines.forEach((line) => toast(line));
+  if (asCheckIn) {
+    showAway(summary);
+  } else {
+    summary.lines.forEach((line) => toast(line));
+    const sold = Object.entries(summary.sold);
+    if (sold.length) toast(`Sold! ${sold.map(([id, s]) => `${s.qty} × ${itemById[id].name}`).join(', ')}`);
+    for (const o of summary.ordersDone) toast(`Made ${o.qty} × ${itemById[o.item].name}.`);
+    for (const r of summary.returns) toast(`${r.name} is back from ${r.zone}. Collect on the Shop tab.`);
+  }
   return summary;
 }
 
@@ -95,7 +152,10 @@ function catchUpNow(asCheckIn) {
 function startLoop() {
   stopLoop();
   loopTimer = setInterval(() => {
-    const summary = catchUpNow(false);
+    // A long gap with the page still visible (laptop lid shut, phone locked
+    // without a visibility event) counts as a check-in too.
+    const gap = gameNow(ctx.state, Date.now()) - ctx.state.clock.lastSeenAt;
+    const summary = catchUpNow(gap >= AWAY_MIN_MS);
     if (summary.ticks || summary.timersFired) {
       save();
       app.render();
@@ -127,7 +187,7 @@ function showNewGame() {
 }
 
 function showLoadError(error) {
-  root.setAttribute('data-theme', 'red');
+  setTheme('red');
   root.replaceChildren(el('div', { class: 'new-game' },
     el('h1', { class: 'title-mark' }, 'Undercut'),
     el('section', { class: 'panel' },
@@ -158,11 +218,13 @@ window.addEventListener('pagehide', save);
 
 // ---- Start -----------------------------------------------------------
 
-let saved = null;
 try {
-  saved = readSave(storage);
+  const saved = readSave(storage);
+  if (saved) startGame(saved);
+  else showNewGame();
 } catch (error) {
+  stopLoop();
+  ctx.state = null; // stops autosave from writing a broken game over the save
+  app = null;
   showLoadError(error);
 }
-if (saved) startGame(saved);
-else if (saved === null && !root.hasChildNodes()) showNewGame();

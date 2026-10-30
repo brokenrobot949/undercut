@@ -1,6 +1,6 @@
 // New game screen: maker's mark name and capital choice.
 
-import { el } from './components.js';
+import { el, setTheme } from './components.js';
 import { factions } from '../../data/factions.js';
 
 export function renderNewGame(root, { onStart }) {
@@ -25,7 +25,7 @@ export function renderNewGame(root, { onStart }) {
   function choose(faction) {
     chosen = faction;
     cards.forEach((card, i) => card.setAttribute('aria-pressed', String(factions[i] === faction)));
-    root.setAttribute('data-theme', faction.theme);
+    setTheme(faction.theme);
     update();
   }
   function update() {
@@ -37,7 +37,7 @@ export function renderNewGame(root, { onStart }) {
     onStart({ name: nameInput.value.trim(), factionId: chosen.id });
   });
 
-  root.setAttribute('data-theme', 'red');
+  setTheme('red');
   root.replaceChildren(el('div', { class: 'new-game' },
     el('h1', { class: 'title-mark' }, 'Undercut'),
     el('p', { class: 'dim', style: 'text-align:center' }, 'Run a crafting shop. Beat the market.'),
