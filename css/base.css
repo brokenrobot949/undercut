@@ -1,0 +1,425 @@
+/* Layout and shared components. Faction colors come from theme-red.css and
+   theme-blue.css; everything here uses their variables. */
+
+/* Heading font (SIL Open Font License, see assets/fonts/ofl.txt). */
+@font-face {
+  font-family: "Cinzel";
+  src: url("../assets/fonts/cinzel-variable.ttf") format("truetype");
+  font-weight: 400 900;
+  font-display: swap;
+}
+
+:root {
+  --font-heading: "Cinzel", Georgia, "Times New Roman", serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Item quality borders. */
+  --q-poor: #8a8a8a;
+  --q-common: #e8e8e8;
+  --q-uncommon: #3fc35a;
+  --q-rare: #3d8bf0;
+  --q-epic: #a855f7;
+
+  /* Coin colors. */
+  --coin-gold: #e8c24a;
+  --coin-silver: #c8ced6;
+  --coin-copper: #c27a45;
+
+  --radius: 10px;
+  --tap: 44px;
+  --header-h: 56px;
+  --tabbar-h: 60px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg, #111);
+  color: var(--text, #eee);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1, h2, h3 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: 0 0 0.5em;
+}
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.2rem; }
+h3 { font-size: 1rem; }
+p { margin: 0 0 0.75em; }
+
+.dim { color: var(--text-dim); }
+.small { font-size: 0.85rem; }
+.hidden { display: none !important; }
+
+/* ---- App shell ------------------------------------------------------ */
+
+.app {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+  height: 100dvh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: calc(8px + var(--safe-top)) 16px 8px;
+  min-height: calc(var(--header-h) + var(--safe-top));
+  background: var(--bg-deep);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-title {
+  flex: 1;
+  min-width: 0;
+}
+.header-title .shop-name {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.main {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+}
+.main-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: grid;
+  gap: 16px;
+}
+
+.tabbar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: var(--bg-deep);
+  border-top: 1px solid var(--border);
+  padding-bottom: var(--safe-bottom);
+}
+
+.tab {
+  position: relative;
+  min-height: var(--tabbar-h);
+  border: 0;
+  background: none;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-top: 3px solid transparent;
+}
+.tab[aria-selected="true"] {
+  color: var(--text);
+  border-top-color: var(--accent-strong);
+  background: var(--panel);
+}
+
+/* Wide screens: tabs move to a sidebar. */
+@media (min-width: 900px) {
+  .app {
+    grid-template-columns: 200px 1fr;
+    grid-template-rows: auto 1fr;
+  }
+  .header { grid-column: 1 / -1; }
+  .tabbar {
+    grid-row: 2;
+    grid-column: 1;
+    grid-template-columns: 1fr;
+    align-content: start;
+    border-top: 0;
+    border-right: 1px solid var(--border);
+    padding: 8px 0;
+  }
+  .tab {
+    text-align: left;
+    padding: 0 20px;
+    font-size: 0.95rem;
+    border-top: 0;
+    border-left: 3px solid transparent;
+  }
+  .tab[aria-selected="true"] { border-left-color: var(--accent-strong); }
+  .main { grid-row: 2; grid-column: 2; padding: 24px; }
+}
+
+/* ---- Header parts --------------------------------------------------- */
+
+.standing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+.bar {
+  height: 6px;
+  flex: 1;
+  max-width: 120px;
+  background: var(--panel-raised);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.bar > span {
+  display: block;
+  height: 100%;
+  background: var(--bar-fill);
+}
+
+.alert-dot {
+  position: absolute;
+  top: 8px;
+  right: calc(50% - 26px);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent-strong);
+  box-shadow: 0 0 0 2px var(--bg-deep);
+}
+
+.menu-btn {
+  position: relative;
+  width: var(--tap);
+  height: var(--tap);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+  gap: 4px;
+}
+.menu-btn span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 1px;
+}
+
+/* ---- Coins ---------------------------------------------------------- */
+
+.coins {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.coin {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.coin::after {
+  content: "";
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 50%;
+  box-shadow: inset -1px -1px 0 rgba(0, 0, 0, 0.35);
+}
+.coin.g::after { background: var(--coin-gold); }
+.coin.s::after { background: var(--coin-silver); }
+.coin.c::after { background: var(--coin-copper); }
+
+/* ---- Panels and buttons --------------------------------------------- */
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.panel > :last-child { margin-bottom: 0; }
+
+.btn {
+  min-height: var(--tap);
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-raised);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.45; cursor: default; transform: none; }
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent-strong);
+  color: var(--on-accent);
+}
+.btn-danger { border-color: #8e3a32; color: #ffb4a8; }
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.btn-row .btn { flex: 1 1 auto; }
+
+.field {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.field label { font-weight: 600; font-size: 0.9rem; }
+input[type="text"], textarea {
+  width: 100%;
+  min-height: var(--tap);
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-deep);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px; /* 16px stops iPhone zooming in on focus */
+}
+textarea {
+  min-height: 120px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 13px;
+  word-break: break-all;
+  resize: vertical;
+}
+
+.list {
+  margin: 0;
+  padding-left: 1.2em;
+}
+.list li { margin-bottom: 4px; }
+
+.kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 16px;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+.kv dt { color: var(--text-dim); }
+.kv dd { margin: 0; word-break: break-all; }
+
+/* ---- Bottom sheet (settings, item sheet, confirmations) ------------- */
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 10;
+}
+.sheet {
+  width: 100%;
+  max-width: 560px;
+  max-height: 90dvh;
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  border-radius: 16px 16px 0 0;
+  padding: 16px 16px calc(16px + var(--safe-bottom));
+  display: grid;
+  gap: 16px;
+}
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sheet-head h2 { margin: 0; }
+@media (min-width: 900px) {
+  .sheet-backdrop { align-items: center; }
+  .sheet { border-radius: 16px; border-bottom: 1px solid var(--border); }
+}
+
+/* ---- New game screen ------------------------------------------------- */
+
+.new-game {
+  min-height: 100dvh;
+  padding: calc(24px + var(--safe-top)) 16px calc(24px + var(--safe-bottom));
+  max-width: 560px;
+  margin: 0 auto;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+.title-mark {
+  font-family: var(--font-heading);
+  font-size: 2.4rem;
+  text-align: center;
+  margin: 8px 0 0;
+  letter-spacing: 0.08em;
+}
+.faction-choices {
+  display: grid;
+  gap: 12px;
+}
+.faction-card {
+  text-align: left;
+  width: 100%;
+  padding: 16px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.faction-card h2 { color: var(--highlight); margin-bottom: 2px; }
+.faction-card[aria-pressed="true"] {
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.swatches { display: flex; gap: 6px; margin-top: 10px; }
+.swatches span {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ---- Toast ----------------------------------------------------------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 16px);
+  transform: translateX(-50%);
+  background: var(--panel-raised);
+  border: 1px solid var(--accent-strong);
+  color: var(--text);
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  z-index: 20;
+  max-width: calc(100% - 32px);
+}

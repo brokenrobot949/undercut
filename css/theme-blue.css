@@ -1,0 +1,15 @@
+/* Aldmere (Azure Crown): royal blue and steel on navy, silver highlights. */
+[data-theme="blue"] {
+  --bg: #0e1424;
+  --bg-deep: #090d18;
+  --panel: #1a2336;
+  --panel-raised: #222d44;
+  --border: #33415e;
+  --text: #e6ecf7;
+  --text-dim: #97a5bf;
+  --accent: #2f5fc4;
+  --accent-strong: #4a7fe6;
+  --on-accent: #f4f7ff;
+  --highlight: #c3ccd9;
+  --bar-fill: linear-gradient(90deg, #2a4f9e, #6b93d6);
+}

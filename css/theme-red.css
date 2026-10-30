@@ -1,0 +1,15 @@
+/* Kragmar (Ember Pact): crimson and ember on charcoal, brass highlights. */
+[data-theme="red"] {
+  --bg: #17110f;
+  --bg-deep: #0f0b0a;
+  --panel: #2a1f1b;
+  --panel-raised: #352722;
+  --border: #4a362e;
+  --text: #f1e6dc;
+  --text-dim: #b39f92;
+  --accent: #c2362b;
+  --accent-strong: #e0552f;
+  --on-accent: #fff6ef;
+  --highlight: #c9a24a;
+  --bar-fill: linear-gradient(90deg, #a52a22, #e0662f);
+}
