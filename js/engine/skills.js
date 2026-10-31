@@ -12,6 +12,7 @@ import { itemById } from '../../data/items.js';
 import { rngChance } from './rng.js';
 import { takeFromBags } from './bags.js';
 import { noteTutorial } from './tutorial.js';
+import { standingIndex } from './guild.js';
 
 export const MAX_SKILL = ranks[ranks.length - 1].cap;
 
@@ -110,12 +111,6 @@ export function rollSkillUp(state, recipe, summary) {
 }
 
 // ---- Training at the Trade Guild ---------------------------------------------
-
-function standingIndex(state) {
-  let i = 0;
-  while (i + 1 < tuning.standings.length && state.reputation >= tuning.standings[i + 1].rep) i++;
-  return i;
-}
 
 // What training the next rank needs: { rank, cost, ready, reason }, or null at the top rank.
 export function nextTraining(state, professionId) {

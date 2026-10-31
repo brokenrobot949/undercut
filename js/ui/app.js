@@ -45,8 +45,8 @@ export function mountApp(root, ctx) {
     if (key === headerKey) return;
     headerKey = key;
     const faction = getFaction(state);
-    const { current, next } = getStanding(state);
-    const pct = next ? ((state.reputation - current.rep) / (next.rep - current.rep)) * 100 : 100;
+    const { current, share } = getStanding(state);
+    const pct = share * 100;
     setTheme(faction.theme);
 
     header.replaceChildren(

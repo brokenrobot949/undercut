@@ -19,6 +19,7 @@ import { createRng, rngNext } from '../js/engine/rng.js';
 import { recipeColor, nextTraining, trainRank, debugSetSkill, learnRecipe, trainerRecipes, learnFromScroll, debugUnlockProfessions } from '../js/engine/skills.js';
 import { recipes, recipeById } from '../data/recipes.js';
 import { ranks } from '../data/professions.js';
+import { getStanding, standingLadder, hasStanding } from '../js/engine/guild.js';
 import { encodeExport, decodeExport, migrate, writeSave, readSave } from '../js/engine/save.js';
 
 const H = 60 * 60 * 1000;
@@ -583,6 +584,19 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   const s = migrate(structuredClone(v1));
   catchUp(s, t0 + H);
   check('version 1 save upgrades and runs', s.version === SAVE_VERSION && s.tutorial.done && s.firstCustomer === 'done' && s.player.professions[0] === 'blacksmithing' && s.stations.workbench && s.skills.alchemy && Array.isArray(s.tavern.regulars) && s.knownRecipes['copper-cleaver'] && s.skills.blacksmithing.skill === 1 && s.market && s.tavern.board.length === 3 && s.stations.anvil);
+}
+
+// Trade Guild standing: progress, unlocks, and every standing in the ladder.
+{
+  const s = game();
+  s.reputation = 4500;
+  const st = getStanding(s);
+  check('standing progress is measured from the current standing', st.current.id === 'friendly' && st.next.id === 'honored' && Math.abs(st.share - 0.25) < 1e-9, `${st.current.id} ${st.share}`);
+  const ladder = standingLadder(s);
+  check('the ladder lists every standing, reached ones marked', ladder.length === tuning.standings.length && ladder[1].reached && !ladder[2].reached);
+  check('each standing past Neutral lists its unlocks, training included', ladder.slice(1).every((x) => x.unlocks.length > 0) && ladder.find((x) => x.id === 'honored').unlocks.some((u) => /Artisan/.test(u.text)));
+  s.reputation = 99999;
+  check('Exalted is the top', getStanding(s).current.id === 'exalted' && getStanding(s).next === null && getStanding(s).share === 1 && hasStanding(s, 'exalted'));
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');

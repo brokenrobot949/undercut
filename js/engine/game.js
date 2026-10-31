@@ -15,6 +15,7 @@ import { createTavern, refreshBoardTimer, expeditionReturns } from './heroes.js'
 import { createSkills, createKnownRecipes, syncSkills } from './skills.js';
 import { createCommissions, commissionPostTimer, commissionExpireTimer } from './commissions.js';
 export { collectMailbox } from './bags.js';
+export { getStanding } from './guild.js';
 
 export const SAVE_VERSION = 9;
 
@@ -65,13 +66,6 @@ export function checkSave(state) {
 
 export function getFaction(state) {
   return factions.find((f) => f.id === state.player.factionId);
-}
-
-export function getStanding(state) {
-  const list = tuning.standings;
-  let i = 0;
-  while (i + 1 < list.length && state.reputation >= list[i + 1].rep) i++;
-  return { current: list[i], next: list[i + 1] || null };
 }
 
 // ---- Clock handlers ----------------------------------------------------

@@ -10,6 +10,9 @@ import { tutorialSteps, tutorialMentor } from '../../data/tutorial.js';
 import { madeCount } from '../engine/bags.js';
 import { openItemSheet } from './item-sheet.js';
 import { getFaction, getStanding } from '../engine/game.js';
+import { standingLadder } from '../engine/guild.js';
+import { guildTips } from '../../data/guild.js';
+import { tuning } from '../../data/tuning.js';
 import { itemById } from '../../data/items.js';
 import { professions, professionById } from '../../data/professions.js';
 import { nextTraining, trainRank, trainerRecipes, learnRecipe, recipeColor, hasProfession } from '../engine/skills.js';
@@ -19,7 +22,6 @@ import { skillBar } from './skill-bar.js';
 export function renderShop(ctx) {
   const { state } = ctx;
   const faction = getFaction(state);
-  const { current, next } = getStanding(state);
   const mailboxFull = state.mailbox.copper > 0 || Object.keys(state.mailbox.items).length > 0;
 
   return el('div', { class: 'main-inner' },
@@ -27,15 +29,53 @@ export function renderShop(ctx) {
     goalPanel(ctx),
     commissionPanel(ctx),
     el('section', { class: 'panel' }, el('h2', {}, 'Town crier'), el('p', { class: 'dim' }, 'No news in the city today.')),
-    el('section', { class: 'panel' },
+    el('section', { class: 'panel guild' },
       el('h2', {}, faction.guild),
-      el('p', {}, `Standing: ${current.name}`,
-        next ? el('span', { class: 'dim' }, ` · ${state.reputation.toLocaleString()} / ${next.rep.toLocaleString()} reputation`) : null),
+      standingBlock(ctx),
       el('h3', {}, 'Trainer'),
       el('p', { class: 'small dim' }, 'Each rank lets your skill climb higher. Train the next one once you reach the cap. Recipes go on sale as your skill reaches them.'),
       professions.filter((p) => hasProfession(ctx.state, p.id)).flatMap((p) => [trainerRow(ctx, p.id), recipeOffers(ctx, p.id)]),
+      el('h3', {}, 'Quartermaster'),
+      el('p', { class: 'small dim' }, `Sells better recipes to members in good standing, from ${tuning.standings[1].name}. Coming soon.`),
     ),
   );
+}
+
+// Your standing, progress to the next one, what it unlocks, and the full ladder.
+function standingBlock(ctx) {
+  const { state } = ctx;
+  const { current, next, share } = getStanding(state);
+  const ladder = standingLadder(state);
+  const nextStep = next && ladder.find((s) => s.id === next.id);
+  return el('div', { class: 'standing-block' },
+    el('div', { class: 'standing-head' },
+      el('strong', { class: 'standing-name' }, current.name),
+      el('span', { class: 'small dim' }, next
+        ? `${state.reputation.toLocaleString()} / ${next.rep.toLocaleString()} reputation`
+        : `${state.reputation.toLocaleString()} reputation`)),
+    el('div', { class: 'bar progress', role: 'progressbar', 'aria-label': 'Progress to next standing',
+      'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(Math.round(share * 100)) },
+      el('span', { style: `width:${share * 100}%` })),
+    nextStep
+      ? el('div', { class: 'next-unlock' },
+        el('p', { class: 'small' }, el('strong', {}, `${next.name} unlocks:`),
+          ` ${(next.rep - state.reputation).toLocaleString()} reputation to go`),
+        unlockList(nextStep.unlocks))
+      : el('p', { class: 'small' }, guildTips.top),
+    el('p', { class: 'small dim' }, guildTips.earn),
+    el('details', { class: 'standing-ladder' },
+      el('summary', {}, 'All standings'),
+      el('ol', {}, ladder.map((s) => el('li', { class: s.reached ? 'reached' : '' },
+        el('div', { class: 'ladder-head' },
+          el('span', {}, s.reached ? '✓ ' : '', el('strong', {}, s.name)),
+          el('span', { class: 'small dim' }, s.rep ? `${s.rep.toLocaleString()} rep` : 'Start')),
+        unlockList(s.unlocks))))),
+  );
+}
+
+function unlockList(unlocks) {
+  return el('ul', { class: 'unlock-list small' }, unlocks.map((u) =>
+    el('li', {}, u.text, u.soon ? el('span', { class: 'soon-tag' }, 'coming soon') : null)));
 }
 
 // Recipes the trainer sells: everything you can learn now, then the next few.
