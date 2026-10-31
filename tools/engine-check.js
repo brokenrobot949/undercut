@@ -7,7 +7,8 @@ import { listItem, undercutPrice, lowestOtherPrice, quoteBuy, buyItems, sellToVe
 import { queueCraft, cancelOrder, smeltAtCity } from '../js/engine/crafting.js';
 import { hireHero, zonesFor, expectedHaul, hireFee, regularsInTown } from '../js/engine/heroes.js';
 import { tuning } from '../data/tuning.js';
-import { postCommission, deliverCommission, declineCommission, canDeliver } from '../js/engine/commissions.js';
+import { postCommission, deliverCommission, declineCommission, canDeliver, claimTutorialStep } from '../js/engine/commissions.js';
+import { tutorialStep, stepMet } from '../js/engine/tutorial.js';
 import { madeCount } from '../js/engine/bags.js';
 import { zoneById } from '../data/zones.js';
 import { itemById } from '../data/items.js';
@@ -467,9 +468,10 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
 // Commissions: the counter, the maker's mark, pay and reputation.
 {
   const s = game(25);
-  check('a new shop has a commission on the counter', s.commissions.list.length === 1);
+  check('during the tutorial, no other requests post', s.commissions.list.length === 0);
+  s.tutorial.done = true;
   catchUp(s, t0 + 6.5 * H);
-  check('new commissions post every 2 hours up to 3', s.commissions.list.length === 3, `${s.commissions.list.length}`);
+  check('after the tutorial, requests post every 2 hours up to 3', s.commissions.list.length === 3, `${s.commissions.list.length}`);
   for (const c of [...s.commissions.list]) declineCommission(s, c.id);
   check('declining clears the counter', s.commissions.list.length === 0);
 
@@ -531,6 +533,48 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   check('crafted units carry the maker\'s mark', madeCount(s, 'rough-grit') === 2);
 }
 
+// Tutorial: five steps, done in play and claimed at the counter; the first customer buys fast.
+{
+  const s = game(30);
+  const start = s.copper;
+  check('the tutorial starts at step 1', tutorialStep(s)?.goal === 'craft' && !stepMet(s));
+  queueCraft(s, 'rough-grit', 1, t0);
+  catchUp(s, t0 + 10 * 1000);
+  queueCraft(s, 'copper-cleaver', 1, t0 + 10 * 1000);
+  catchUp(s, t0 + 40 * 1000);
+  check('crafting the cleaver meets step 1', stepMet(s));
+  claimTutorialStep(s, t0 + 40 * 1000);
+  const price = undercutPrice(s, 'copper-cleaver');
+  listItem(s, { itemId: 'copper-cleaver', qty: 1, price, hours: 2 }, t0 + 41 * 1000);
+  const sum = catchUp(s, t0 + 41 * 1000 + 125 * 1000);
+  check('the first customer buys within about two minutes', sum.sold['copper-cleaver']?.qty === 1 && s.firstCustomer === 'done',
+    sum.firstSaleAt ? `${Math.round((sum.firstSaleAt - t0) / 1000)} s in` : 'no sale');
+  claimTutorialStep(s, t0 + 3 * 60 * 1000);
+  buyItems(s, 'copper-ore', 2, t0 + 3 * 60 * 1000);
+  claimTutorialStep(s, t0 + 3 * 60 * 1000);
+  smeltAtCity(s, 'smelt-copper', 1);
+  claimTutorialStep(s, t0 + 3 * 60 * 1000);
+  s.copper += 1000;
+  const hero = s.tavern.board[0];
+  hireHero(s, hero.id, zonesFor(hero)[0].id, 0.25, t0 + 3 * 60 * 1000);
+  claimTutorialStep(s, t0 + 3 * 60 * 1000);
+  check('finishing the tutorial posts the first real request', s.tutorial.done && s.commissions.list.length === 1);
+}
+{
+  const s = game(31);
+  s.bags = { 'copper-bar': 4 };
+  const fair = s.market.items['copper-bar'].fair;
+  listItem(s, { itemId: 'copper-bar', qty: 4, price: Math.round(fair * 2), hours: 2 }, t0);
+  const sum = catchUp(s, t0 + 3 * 60 * 1000);
+  check('the first customer passes on a price far above market', s.firstCustomer === 'waiting' && sum.lines.some((l) => l.includes('price too high')));
+}
+{
+  const s = game(32);
+  let threw = false;
+  try { claimTutorialStep(s, t0); } catch { threw = true; }
+  check('an unfinished step can\'t be claimed', threw);
+}
+
 // Old saves upgrade.
 {
   const v1 = { version: 1, createdAt: t0, player: { name: 'Old', factionId: 'blue' }, copper: 5000, reputation: 0,
@@ -538,7 +582,7 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
     timers: [], nextTimerId: 1, settings: { debug: false, mute: false } };
   const s = migrate(structuredClone(v1));
   catchUp(s, t0 + H);
-  check('version 1 save upgrades and runs', s.version === SAVE_VERSION && s.player.professions[0] === 'blacksmithing' && s.stations.workbench && s.skills.alchemy && Array.isArray(s.tavern.regulars) && s.knownRecipes['copper-cleaver'] && s.skills.blacksmithing.skill === 1 && s.market && s.tavern.board.length === 3 && s.stations.anvil);
+  check('version 1 save upgrades and runs', s.version === SAVE_VERSION && s.tutorial.done && s.firstCustomer === 'done' && s.player.professions[0] === 'blacksmithing' && s.stations.workbench && s.skills.alchemy && Array.isArray(s.tavern.regulars) && s.knownRecipes['copper-cleaver'] && s.skills.blacksmithing.skill === 1 && s.market && s.tavern.board.length === 3 && s.stations.anvil);
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');

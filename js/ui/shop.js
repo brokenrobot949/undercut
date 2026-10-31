@@ -4,7 +4,9 @@
 import { el, coins, comingSoon, formatDuration, countdown, toast, coinText } from './components.js';
 import { commissionTypes, commissionTuning } from '../../data/commissions.js';
 import { raceById, classById } from '../../data/races.js';
-import { canDeliver, deliverCommission, declineCommission, recipeHint } from '../engine/commissions.js';
+import { canDeliver, deliverCommission, declineCommission, recipeHint, claimTutorialStep } from '../engine/commissions.js';
+import { tutorialStep, stepMet } from '../engine/tutorial.js';
+import { tutorialSteps, tutorialMentor } from '../../data/tutorial.js';
 import { madeCount } from '../engine/bags.js';
 import { openItemSheet } from './item-sheet.js';
 import { getFaction, getStanding } from '../engine/game.js';
@@ -69,8 +71,28 @@ function commissionPanel(ctx) {
   return el('section', { class: 'panel' },
     el('h2', {}, `Commission counter (${list.length} / ${commissionTuning.slots})`),
     el('p', { class: 'small dim' }, `Heroes post requests here, about one every ${commissionTuning.postEveryHours} hours. They pay well, and they're how you earn standing with the guild. Only items you crafted count.`),
+    tutorialStep(ctx.state) ? tutorialCard(ctx) : null,
     list.length ? el('div', { class: 'commission-list' }, list.map((c) => commissionCard(ctx, c)))
-      : el('p', { class: 'small dim' }, 'No requests right now. A new one will be posted soon.'));
+      : tutorialStep(ctx.state) ? null : el('p', { class: 'small dim' }, 'No requests right now. A new one will be posted soon.'));
+}
+
+// The tutorial: one step at a time from the quartermaster. Do it anywhere, then claim it here.
+function tutorialCard(ctx) {
+  const { state } = ctx;
+  const step = tutorialStep(state);
+  const total = tutorialSteps[state.tutorial.professionId].length;
+  const met = stepMet(state);
+  return el('div', { class: `commission-card tutorial-card${met ? ' met' : ''}` },
+    el('div', { class: 'commission-head' },
+      el('span', { class: 'commission-type' }, step.title),
+      el('span', { class: 'small dim' }, `Step ${state.tutorial.step + 1} of ${total}`)),
+    el('p', { class: 'small' }, `${tutorialMentor.name}, ${tutorialMentor.title}:`),
+    el('p', {}, step.text),
+    el('p', { class: 'small' }, 'Reward: ', coins(step.pay), ` and ${step.rep} reputation.`),
+    el('button', { class: `btn wide${met ? ' btn-primary' : ''}`, type: 'button', disabled: !met, onclick: () => {
+      const s = ctx.act((st, now) => claimTutorialStep(st, now));
+      if (s && s.pay) toast(`+${coinText(s.pay)}, +${s.rep} reputation.`);
+    } }, met ? 'Done! Claim reward' : 'Not done yet'));
 }
 
 function requesterText(c) {

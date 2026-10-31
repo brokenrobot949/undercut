@@ -240,7 +240,7 @@ export const recipes = [
     makes: { item: 'faint-mending-draught', qty: 1 }, mats: [{ item: 'dawnpetal', qty: 1 }, { item: 'simple-vial', qty: 1 }] },
   { id: 'faint-focus-draught', station: 'alchemy-table', tier: 1, skill: [1, 16, 26, 36], learn: 'start', seconds: 5,
     makes: { item: 'faint-focus-draught', qty: 1 }, mats: [{ item: 'silverfern', qty: 1 }, { item: 'simple-vial', qty: 1 }] },
-  { id: 'ox-strength-tonic', station: 'alchemy-table', tier: 1, skill: [20, 35, 45, 55], learn: 100, seconds: 8,
+  { id: 'ox-strength-tonic', station: 'alchemy-table', tier: 1, skill: [10, 25, 35, 45], learn: 100, seconds: 8,
     makes: { item: 'ox-strength-tonic', qty: 1 },
     mats: [{ item: 'dawnpetal', qty: 2 }, { item: 'silverfern', qty: 1 }, { item: 'simple-vial', qty: 1 }] },
   { id: 'owl-wit-tonic', station: 'alchemy-table', tier: 1, skill: [35, 50, 60, 70], learn: 400, seconds: 8,

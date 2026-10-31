@@ -11,6 +11,8 @@
 //   4. Bot players: cautious, flooder and flipper play 60 days with miners,
 //      the forge, the anvil and the auction house. Reports gold over time and
 //      any item that never sells.
+//   5. First session: a new player of each profession follows the tutorial
+//      for an hour. The first sale should land within 5 minutes.
 
 import { newGame, catchUp, collectMailbox } from '../js/engine/game.js';
 import { itemById, tradeableItems } from '../data/items.js';
@@ -21,9 +23,11 @@ import {
 } from '../js/engine/market.js';
 import { listItem, cancelListing, undercutPrice, buyItems, buyFromVendor, quoteBuy, sellToVendor } from '../js/engine/trading.js';
 import { bagSlots, slotsUsed, roomFor } from '../js/engine/bags.js';
-import { queueCraft, maxCraftable } from '../js/engine/crafting.js';
+import { queueCraft, maxCraftable, smeltAtCity } from '../js/engine/crafting.js';
 import { hireHero, hireFee, zonesFor, expeditionSlots, regularsInTown } from '../js/engine/heroes.js';
-import { canDeliver, deliverCommission } from '../js/engine/commissions.js';
+import { canDeliver, deliverCommission, claimTutorialStep } from '../js/engine/commissions.js';
+import { tutorialStep, stepMet } from '../js/engine/tutorial.js';
+import { tutorialSteps } from '../data/tutorial.js';
 import { madeCount } from '../js/engine/bags.js';
 import { nextTraining, trainRank, recipeColor, capOf, knowsRecipe, trainerRecipes, learnRecipe, forgeRankNeeded, learnFromScroll, recipeProfession } from '../js/engine/skills.js';
 
@@ -240,6 +244,9 @@ function botCheckIn(bot, state, now, stats) {
   const tryAct = (fn) => { try { return fn(); } catch { return null; } };
   const freeSlots = () => bagSlots(state) - slotsUsed(state);
   const queueFree = (station) => state.stations[station].queue.length < tuning.queueSlots;
+
+  // Tutorial: claim any step the bot has already done.
+  while (tutorialStep(state) && stepMet(state)) claimTutorialStep(state, now);
 
   // Commissions: hand in whatever's ready, then queue crafts for the rest.
   for (const c of [...state.commissions.list]) {
@@ -472,10 +479,83 @@ function botReport() {
   return problems;
 }
 
+// ---- 5. First session -----------------------------------------------------------
+// A brand-new player of each profession follows the tutorial, looking at the
+// game every 30 seconds for the first hour. Checks the first-sale target.
+
+const FIRST_BUY = { blacksmithing: 'copper-ore', leatherworking: 'soft-leather', alchemy: 'dawnpetal' };
+
+function sessionAct(state, now, stats) {
+  const tryAct = (fn) => { try { return fn(); } catch { return null; } };
+  const prof = state.player.professions[0];
+  const step = tutorialStep(state);
+  if (!step) return;
+  const busy = (station) => state.stations[station].queue.length > 0;
+  const craft = (id) => {
+    const r = recipeById[id];
+    if (busy(r.station)) return;
+    if (tryAct(() => queueCraft(state, id, 1, now))) return;
+    // Missing an intermediate (grit, cured hide): make that first.
+    for (const m of r.mats) {
+      if ((state.bags[m.item] || 0) >= m.qty) continue;
+      const maker = recipes.find((x) => x.makes.item === m.item && knowsRecipe(state, x));
+      if (maker) tryAct(() => queueCraft(state, maker.id, m.qty, now));
+    }
+  };
+  if (step.goal === 'craft') craft(step.recipe);
+  if (step.goal === 'list') {
+    const sell = Object.keys(state.bags).find((id) => SELL_CATEGORIES.has(itemById[id].category));
+    if (sell) tryAct(() => listItem(state, { itemId: sell, qty: 1, price: undercutPrice(state, sell), hours: 2 }, now));
+  }
+  if (step.goal === 'buy') tryAct(() => buyItems(state, FIRST_BUY[prof], 2, now));
+  if (step.goal === 'smelt') tryAct(() => smeltAtCity(state, 'smelt-copper', 1));
+  if (step.goal === 'learn') {
+    const offer = trainerRecipes(state, prof).find((o) => o.ready);
+    if (offer) tryAct(() => learnRecipe(state, offer.recipe.id));
+    else {
+      // Keep crafting for skill with whatever the bags allow.
+      const r = recipes.find((x) => recipeProfession(x) === prof && knowsRecipe(state, x) && recipeColor(state, x) === 'orange' && maxCraftable(state, x.id) > 0);
+      if (r) craft(r.id);
+    }
+  }
+  if (step.goal === 'hire') {
+    const h = state.tavern.board[0];
+    tryAct(() => hireHero(state, h.id, zonesFor(h)[0].id, 0.25, now));
+  }
+  while (tutorialStep(state) && stepMet(state)) claimTutorialStep(state, now);
+  if (!tutorialStep(state) && stats.doneAt === null) stats.doneAt = now - START;
+}
+
+function firstSession() {
+  console.log('\n5. FIRST SESSION (a new player follows the tutorial, looking every 30 s; 3 seeds)');
+  console.log(`${pad('profession', 16)}${lpad('first sale', 14)}${lpad('tutorial done', 16)}${lpad('gold after 1 h', 16)}`);
+  const problems = [];
+  for (const prof of ['blacksmithing', 'leatherworking', 'alchemy']) {
+    const rows = [301, 302, 303].map((seed) => {
+      const state = newGame({ name: 'New', factionId: seed % 2 ? 'red' : 'blue', professionId: prof, seed, now: START });
+      const stats = { firstSale: null, doneAt: null };
+      for (let t = START; t <= START + HOUR; t += 30 * 1000) {
+        const sum = catchUp(state, t);
+        if (sum.firstSaleAt && stats.firstSale === null) stats.firstSale = sum.firstSaleAt - START;
+        collectMailbox(state);
+        sessionAct(state, t, stats);
+      }
+      return { ...stats, copper: state.copper };
+    });
+    const fmt = (ms) => (ms === null ? 'never' : `${(ms / 60000).toFixed(1)} min`);
+    console.log(`${pad(prof, 16)}${lpad(rows.map((r) => fmt(r.firstSale)).join(' / '), 14 + 14)}${lpad(rows.map((r) => fmt(r.doneAt)).join(' / '), 30)}${lpad(gsc(rows.reduce((n, r) => n + r.copper, 0) / rows.length), 12)}`);
+    for (const r of rows) {
+      if (r.firstSale === null || r.firstSale > 5 * 60 * 1000) problems.push(`${prof}: first sale took ${fmt(r.firstSale)} (target under 5 min)`);
+      if (r.doneAt === null) problems.push(`${prof}: a new player didn't finish the tutorial in the first hour`);
+    }
+  }
+  return problems;
+}
+
 // ---- Run ------------------------------------------------------------------
 
 const started = Date.now();
-const problems = [...quietMarket(), ...floodTest(), ...priceVsSpeed(), ...botReport()];
+const problems = [...quietMarket(), ...floodTest(), ...priceVsSpeed(), ...botReport(), ...firstSession()];
 console.log(`\nAuction house cut ${tuning.market.cut * 100}%. Ran in ${((Date.now() - started) / 1000).toFixed(1)} s.`);
 console.log(problems.length ? `\nPROBLEMS (${problems.length}):\n- ${problems.join('\n- ')}` : '\nNo problems found.');
 process.exitCode = problems.length ? 1 : 0;

@@ -66,6 +66,13 @@ const migrations = {
     save.commissions = null;
     return save;
   },
+  // Version 9 (Phase 2): the tutorial and the first customer. Existing shops
+  // skip both.
+  8: (save) => {
+    save.tutorial = { step: 0, done: true, did: { crafted: {} }, professionId: save.player.professions[0] };
+    save.firstCustomer = 'done';
+    return save;
+  },
 };
 
 export function migrate(save) {

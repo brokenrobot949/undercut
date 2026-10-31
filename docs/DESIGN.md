@@ -331,7 +331,19 @@ The shop counter takes requests from named heroes: a specific item, a quantity a
 - A request picks a recipe of one of your professions, from 60 skill points below yours to 10 above. A regular's request picks gear for the regular's armor type (or a weapon or cloak). A filled regular's request adds a loyalty level and 3 hero levels.
 - **Maker's mark:** the game counts which units in your bags you crafted. When you list, sell or use some of an item, bought units go first, so your crafted ones stay ready for commissions. Items returned from expired listings come back without the mark.
 
-**Tutorial.** The first five commissions teach the game: craft an item, buy a material on the auction house, hire a hero, smelt ore, and list an item for sale.
+**Tutorial.** The first five commissions teach the game. They come from Marta Ashgrove, the guild quartermaster, one at a time. Each step is done anywhere in the game (in any order) and then claimed at the counter for its reward. Normal commissions start after the last claim.
+
+| Step | Blacksmithing | Leatherworking | Alchemy | Reward |
+| --- | --- | --- | --- | --- |
+| 1 | Make a copper cleaver | Make a soft armor kit | Brew a faint mending draught | 10 s, 25 rep |
+| 2 | List anything on the auction house | same | same | 10 s, 25 rep |
+| 3 | Buy a material on the auction house | same | same | 15 s, 25 rep |
+| 4 | Smelt ore into bars | Cure a boar hide | Learn a recipe from the trainer (the first is at skill 10) | 15 s, 25 rep |
+| 5 | Hire a hero | same | same | 25 s, 50 rep |
+
+**First customer.** Once per game, a customer comes by 1 to 2 minutes after your first listing and buys it (up to 5 units), as long as the price is no more than 25% above market. If it's priced higher, they pass with a hint, and your next listing gets another visit. In the simulator a new player's first sale lands at 2 to 3.5 minutes.
+
+Existing saves skip the tutorial and the first customer.
 
 ## Trade Guild and reputation
 

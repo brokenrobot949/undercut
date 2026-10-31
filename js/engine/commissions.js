@@ -15,18 +15,20 @@ import { rngInt, rngPick, rngNext } from './rng.js';
 import { madeCount, takeFromBags } from './bags.js';
 import { marketValue } from './market.js';
 import { hasProfession, knowsRecipe, recipeProfession, skillOf } from './skills.js';
+import { tutorialDone, claimTutorial } from './tutorial.js';
 
 const HOUR = 60 * 60 * 1000;
 
 export function createCommissions(state, now) {
   state.commissions = { list: [], nextId: 1 };
-  postCommission(state, now);
+  if (tutorialDone(state)) postCommission(state, now);
   schedule(state, 'commission-post', now + CT.postEveryHours * HOUR);
 }
 
 // Clock timer: a new request every couple of hours, if the counter has room.
 export function commissionPostTimer(state, timer, summary) {
-  const c = state.commissions.list.length < CT.slots ? postCommission(state, timer.at) : null;
+  // While the tutorial runs, its steps are the only requests.
+  const c = tutorialDone(state) && state.commissions.list.length < CT.slots ? postCommission(state, timer.at) : null;
   if (c) summary.lines.push(`New commission: ${requestText(c)}.`);
   schedule(state, 'commission-post', timer.at + CT.postEveryHours * HOUR);
 }
@@ -143,6 +145,13 @@ export function deliverCommission(state, id, now) {
     if (c.type === 'regular') rewardRegular(state, c.requester.regularId);
   }
   return { copper, rep, done };
+}
+
+// Claims a finished tutorial step. After the last one, the first real request posts.
+export function claimTutorialStep(state, now) {
+  const step = claimTutorial(state);
+  if (tutorialDone(state) && !state.commissions.list.length) postCommission(state, now);
+  return step;
 }
 
 export function declineCommission(state, id) {

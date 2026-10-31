@@ -685,3 +685,5 @@ input[type="number"] {
 .commission-type { font-family: var(--font-heading); font-weight: 700; color: var(--highlight); }
 .commission-card.type-rush .commission-type { color: var(--skill-orange); }
 .commission-card .btn-row { margin-top: 8px; }
+.tutorial-card { margin-bottom: 10px; border-color: var(--highlight); }
+.tutorial-card.met { box-shadow: 0 0 0 2px var(--accent-strong); }

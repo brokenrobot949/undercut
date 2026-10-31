@@ -20,6 +20,7 @@ import { schedule } from './clock.js';
 import { rngNext, rngInt, rngPick, rngChance, rngRange } from './rng.js';
 import { recipes } from '../../data/recipes.js';
 import { knowsRecipe, recipeColor, recipeProfession, startingProfession } from './skills.js';
+import { noteTutorial } from './tutorial.js';
 
 const HOUR = 60 * 60 * 1000;
 const TV = tuning.tavern;
@@ -179,6 +180,7 @@ export function hireHero(state, heroId, zoneId, hours, now) {
   if (fee > state.copper) throw new Error(`${hero.name} wants ${fee} copper and you can't cover it.`);
 
   state.copper -= fee;
+  noteTutorial(state, 'hire');
   const r = regular ?? makeRegular(state, hero);
   if (regular) r.loyalty = Math.min(TV.regulars.maxLoyalty, r.loyalty + 1);
   r.away = true;

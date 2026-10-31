@@ -2,6 +2,10 @@
 // Every action checks everything first and only then changes state, so a
 // thrown error (shown to the player) never leaves a half-done action.
 
+import { noteTutorial } from './tutorial.js';
+import { schedule } from './clock.js';
+import { rngInt } from './rng.js';
+import { firstCustomer } from '../../data/tutorial.js';
 import { tuning } from '../../data/tuning.js';
 import { itemById } from '../../data/items.js';
 import { bagCount, roomFor, takeFromBags, addToBags, addOrMail } from './bags.js';
@@ -50,7 +54,14 @@ export function listItem(state, { itemId, qty, price, hours }, now) {
 
   takeFromBags(state, itemId, qty);
   state.copper -= deposit;
-  return postPlayerListing(state, itemId, { price, qty, hours, at: now });
+  const listing = postPlayerListing(state, itemId, { price, qty, hours, at: now });
+  noteTutorial(state, 'list');
+  // Once per game, a customer comes by soon after your first listing.
+  if (state.firstCustomer === 'waiting') {
+    state.firstCustomer = 'coming';
+    schedule(state, 'first-customer', now + rngInt(state.rng, firstCustomer.minSeconds, firstCustomer.maxSeconds) * 1000, { itemId, listingId: listing.id });
+  }
+  return listing;
 }
 
 // Unsold units come back; their share of the deposit is lost.
@@ -88,6 +99,7 @@ export function buyItems(state, itemId, qty, now) {
   const bought = buyFromMarket(state, itemId, qty, state.copper, now);
   state.copper -= bought.cost;
   addToBags(state, itemId, bought.qty);
+  noteTutorial(state, 'buy');
   return bought;
 }
 

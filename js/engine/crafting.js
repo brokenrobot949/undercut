@@ -13,6 +13,7 @@ import { professions } from '../../data/professions.js';
 import { schedule, cancelTimer } from './clock.js';
 import { checkMats, takeFromBags, addOrMail, markMade } from './bags.js';
 import { checkSkill, checkKnown, checkForgeRank, checkProfession, rollSkillUp } from './skills.js';
+import { noteTutorial } from './tutorial.js';
 
 export const STATIONS = professions.flatMap((p) => p.stations);
 
@@ -79,6 +80,8 @@ export function finishUnit(state, timer, summary) {
   const recipe = recipeById[order.recipeId];
   addOrMail(state, recipe.makes.item, recipe.makes.qty);
   markMade(state, recipe.makes.item, recipe.makes.qty);
+  noteTutorial(state, 'craft', recipe.id);
+  if (stationId === 'forge') noteTutorial(state, 'smelt');
   rollSkillUp(state, recipe, summary);
   summary.crafted[recipe.makes.item] = (summary.crafted[recipe.makes.item] || 0) + recipe.makes.qty;
   order.done++;
@@ -120,6 +123,7 @@ export function smeltAtCity(state, recipeId, qty) {
   state.copper -= fee;
   // Bars that don't fit wait in the mailbox.
   addOrMail(state, recipe.makes.item, recipe.makes.qty * qty);
+  noteTutorial(state, 'smelt');
   return fee;
 }
 

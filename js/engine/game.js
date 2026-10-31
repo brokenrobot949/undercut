@@ -3,18 +3,20 @@
 
 import { tuning } from '../../data/tuning.js';
 import { factions } from '../../data/factions.js';
-import { items } from '../../data/items.js';
+import { items, itemById } from '../../data/items.js';
 import { addOrMail } from './bags.js';
 import { createRng } from './rng.js';
 import { createClock, advance, gameNow, schedule, newSummary } from './clock.js';
-import { createMarket, syncMarketItems, marketTick, freshMarket, saleProceeds } from './market.js';
+import { createMarket, syncMarketItems, marketTick, freshMarket, saleProceeds, sellToFirstCustomer } from './market.js';
+import { createTutorial } from './tutorial.js';
+import { firstCustomer } from '../../data/tutorial.js';
 import { createStations, syncStations, finishUnit } from './crafting.js';
 import { createTavern, refreshBoardTimer, expeditionReturns } from './heroes.js';
 import { createSkills, createKnownRecipes, syncSkills } from './skills.js';
 import { createCommissions, commissionPostTimer, commissionExpireTimer } from './commissions.js';
 export { collectMailbox } from './bags.js';
 
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 
 export function newGame({ name, factionId, professionId = 'blacksmithing', seed, now }) {
   const state = {
@@ -42,6 +44,9 @@ export function newGame({ name, factionId, professionId = 'blacksmithing', seed,
     // Units in your bags you crafted yourself (the maker's mark): { itemId: qty }.
     made: {},
     commissions: null,
+    // The five-step tutorial, and the one-time first customer ('waiting', 'coming', 'done').
+    tutorial: createTutorial(professionId),
+    firstCustomer: 'waiting',
   };
   createMarket(state, now);
   createTavern(state, now);
@@ -77,6 +82,7 @@ function marketHooks(state, summary) {
     onSale(itemId, listing, price, at) {
       const paid = saleProceeds(listing, price);
       state.mailbox.copper += paid;
+      summary.firstSaleAt ??= at;
       const s = (summary.sold[itemId] ||= { qty: 0, copper: 0 });
       s.qty++;
       s.copper += paid;
@@ -101,6 +107,20 @@ const handlers = {
     'tavern-refresh': (state, timer) => refreshBoardTimer(state, timer),
     'commission-post': (state, timer, summary) => commissionPostTimer(state, timer, summary),
     'commission-expire': (state, timer, summary) => commissionExpireTimer(state, timer, summary),
+    // A customer looks at your first listing: buys it if the price is fair.
+    'first-customer'(state, timer, summary) {
+      const { itemId, listingId } = timer.data;
+      const m = state.market.items[itemId];
+      const l = m.listings.find((x) => x.id === listingId && x.seller === 'player');
+      if (l && l.price <= m.fair * firstCustomer.maxPriceMult) {
+        sellToFirstCustomer(state, itemId, listingId, firstCustomer.maxUnits, timer.at, marketHooks(state, summary));
+        state.firstCustomer = 'done';
+      } else {
+        // Too dear, or already gone: the next listing gets another visit.
+        state.firstCustomer = 'waiting';
+        if (l) summary.lines.push(`A customer looked at your ${itemById[itemId].name.toLowerCase()} but found the price too high. Try listing nearer the market.`);
+      }
+    },
     'debug-test'(state, timer, summary) {
       summary.lines.push(`Debug test timer (${timer.data.label}) finished.`);
     },

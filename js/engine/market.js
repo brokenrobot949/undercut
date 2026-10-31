@@ -310,6 +310,23 @@ function serveBuyers(state, item, m, demand, at, hooks) {
   }
 }
 
+// The first customer: buys up to `units` from one of your listings right now,
+// outside the normal tick. Returns how many sold.
+export function sellToFirstCustomer(state, itemId, listingId, units, at, hooks) {
+  const m = state.market.items[itemId];
+  const i = m.listings.findIndex((l) => l.id === listingId && l.seller === 'player');
+  if (i < 0) return 0;
+  const l = m.listings[i];
+  const n = Math.min(units, l.qty);
+  for (let k = 0; k < n; k++) {
+    l.qty--;
+    recordSale(m, l.price, at);
+    hooks.onSale(itemId, l, l.price, at);
+  }
+  if (l.qty === 0) m.listings.splice(i, 1);
+  return n;
+}
+
 function moveFairPrice(state, item, m, demand) {
   const extraStock = Math.max(0, supplyDays(state, item) - M.normalSupplyDays);
   // Waiting buyers only push the price up when stock is short. In a flooded

@@ -11,6 +11,7 @@ import { recipes, recipeById } from '../../data/recipes.js';
 import { itemById } from '../../data/items.js';
 import { rngChance } from './rng.js';
 import { takeFromBags } from './bags.js';
+import { noteTutorial } from './tutorial.js';
 
 export const MAX_SKILL = ranks[ranks.length - 1].cap;
 
@@ -190,6 +191,7 @@ export function learnRecipe(state, recipeId) {
   if (!offer.ready) throw new Error(offer.reason);
   state.copper -= offer.cost;
   state.knownRecipes[recipeId] = true;
+  noteTutorial(state, 'learn');
   return recipe;
 }
 
