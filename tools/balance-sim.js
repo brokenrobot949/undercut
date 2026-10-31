@@ -43,8 +43,12 @@ const pct = (x) => `${x >= 0 ? '+' : ''}${Math.round(x * 100)}%`;
 const pad = (s, n) => String(s).padEnd(n);
 const lpad = (s, n) => String(s).padStart(n);
 
+// A game with no market events, for the tests that measure the market itself.
+// The bots in section 4 play with events on.
 function freshGame(seed, factionId = 'red') {
   const state = newGame({ name: 'Sim', factionId, seed, now: START });
+  state.events.list = [];
+  state.timers = state.timers.filter((x) => !x.type.startsWith('event'));
   catchUp(state, START + 2 * DAY); // let the market settle
   return state;
 }
@@ -273,7 +277,7 @@ function botCheckIn(bot, state, now, stats) {
   // Commissions: hand in whatever's ready, then queue crafts for the rest.
   for (const c of [...state.commissions.list]) {
     const n = canDeliver(state, c);
-    if (n > 0 && (c.type === 'contract' || n >= c.qty - c.delivered)) {
+    if (n > 0 && (c.type === 'contract' || c.type === 'drive' || n >= c.qty - c.delivered)) {
       const r = tryAct(() => deliverCommission(state, c.id, now));
       if (r) { stats.commissionGold += r.copper; if (r.done) stats.commissions++; }
     }

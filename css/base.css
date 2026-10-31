@@ -714,3 +714,11 @@ input[type="number"] {
 .upgrade-row:first-child { border-top: 0; }
 .upgrade-row p { margin: 2px 0 6px; }
 .upgrade-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+
+/* ---- Town crier ---------------------------------------------------------- */
+
+.crier-list { list-style: none; margin: 0; padding: 0; }
+.crier-list li { padding: 8px 0; border-top: 1px solid var(--border); }
+.crier-list li:first-child { border-top: 0; padding-top: 0; }
+.crier-list p { margin: 0 0 2px; }
+.panel.crier:has(li) { border-color: var(--highlight); }

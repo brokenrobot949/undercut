@@ -27,6 +27,9 @@ import { depositFor } from '../js/engine/market.js';
 import { commissionSlots } from '../js/engine/commissions.js';
 import { buyWing, nextWing } from '../js/engine/wings.js';
 import { wings } from '../data/professions.js';
+import { debugForceEvent, glutLeft } from '../js/engine/events.js';
+import { eventById } from '../data/events.js';
+import { demandPerHour, baseDemandPerHour } from '../js/engine/market.js';
 import { encodeExport, decodeExport, migrate, writeSave, readSave } from '../js/engine/save.js';
 
 const H = 60 * 60 * 1000;
@@ -665,6 +668,50 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   check('a wing can’t reopen a profession you have', /already/.test(err ?? ''));
   buyWing(s, 'leatherworking');
   check('after the third wing there are no more', s.player.professions.length === 3 && nextWing(s) === null);
+}
+
+// Market events: a seeded calendar, effects while running, catch-up.
+{
+  const s = game(3);
+  const list = s.events.list;
+  check('a new game plans a week of events, none in the first day', list.length > 5 && list.every((e) => e.startsAt >= t0 + 24 * H && e.startsAt < t0 + 7 * DAY + 1));
+  const groups = list.filter((e) => eventById[e.type].group);
+  const clash = groups.some((a) => groups.some((b) => a !== b && eventById[a.type].group === eventById[b.type].group && a.startsAt < b.endsAt && b.startsAt < a.endsAt));
+  check('demand events in the same group never overlap', !clash);
+  check('the calendar is the same for the same seed', JSON.stringify(game(3).events.list) === JSON.stringify(list));
+
+  const hone = itemById['coarse-honing-stone'];
+  const ore = itemById['copper-ore'];
+  const before = demandPerHour(s, hone);
+  const raid = debugForceEvent(s, 'raid-night', t0);
+  check('raid night triples demand for honing stones only', Math.abs(demandPerHour(s, hone) / before - 3) < 1e-9 && s.events.demandMult['copper-ore'] === undefined);
+  const sum = catchUp(s, t0 + 13 * H);
+  check('an event ends on time and its effect goes', !s.events.list.includes(raid) && Math.abs(demandPerHour(s, hone) - baseDemandPerHour(s, hone)) < 1e-9);
+
+  const g = game(4);
+  g.player.professions = ['blacksmithing', 'leatherworking', 'alchemy'];
+  const glut = debugForceEvent(g, 'glut', t0);
+  const lot = g.market.items[glut.itemId].listings.find((l) => l.id === glut.listingId);
+  check('a glut dumps a big cheap lot', lot && lot.qty >= 50 && lot.price < g.market.items[glut.itemId].fair && glutLeft(g, glut) === lot.qty);
+  const short = debugForceEvent(g, 'ore-shortage', t0);
+  check('an ore shortage cuts one ore’s restocking', /-ore$/.test(short.itemId) && g.events.supplyMult[short.itemId] === 0.3);
+  g.tutorial.done = true;
+  const slots = g.commissions.list.length;
+  const drive = debugForceEvent(g, 'guild-drive', t0);
+  const c = g.commissions.list.find((x) => x.id === drive.commissionId);
+  check('a guild drive posts a big part-delivery contract', c && c.type === 'drive' && c.qty >= 40 && g.commissions.list.length === slots + 1);
+
+  const w = game(5);
+  const away = catchUp(w, t0 + 8 * DAY);
+  check('events start and end while away, and the calendar keeps planning', away.lines.some((l) => l.startsWith('Town crier:')) && w.events.list.some((e) => e.startsAt > t0 + 8 * DAY));
+
+  const old = game(6);
+  old.version = 10;
+  delete old.events;
+  old.timers = old.timers.filter((x) => !x.type.startsWith('event'));
+  const m = migrate(structuredClone(old));
+  catchUp(m, t0 + H);
+  check('version 10 save gets an event calendar', m.version === SAVE_VERSION && m.events.list.length > 0);
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');

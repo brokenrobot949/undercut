@@ -432,6 +432,15 @@ Events shift demand or supply for a few hours to a few days, so the market keeps
 
 Events come from a seeded calendar that spreads them out, and two demand spikes never hit the same category at once.
 
+As built (Oct 31, 2026; all numbers are in `data/events.js`):
+
+- The calendar is planned 7 days ahead. Each gap varies by ±30%, and no event comes in a new shop's first 24 hours.
+- NPC sellers restock to normal demand, so a demand event leaves the market short. Over a day, demand events raise the price about 15–20% and sales 45–70%, and the item shows "Hot". An ore shortage raises the ore's price about 13%. A glut drops the price about 20%. `node tools/event-effects.js` measures this.
+- A glut is 50–80 units at 50–70% of fair price, and lasts until it sells or 3 days pass. It picks an item your professions make or use.
+- A guild drive is a commission for 40–80 consumables, delivered in parts over 3 days. It sits on top of the usual counter slots, and its reputation (1,200–2,000 by tier) isn't scaled down by repScale.
+- The town crier on the Shop tab lists running events and when they end. Starts appear in "While you were away".
+- Debug can force any event, and it shows the calendar.
+
 ## Economy and pacing
 
 The first profession should reach Artisan in about 2 to 3 weeks of regular check-ins, and the full endgame should take about 6 to 8 weeks. Every number here is a starting value in the data files, tuned with the balance simulator and playtests.

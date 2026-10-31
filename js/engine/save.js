@@ -79,6 +79,12 @@ const migrations = {
     save.upgrades = createUpgrades();
     return save;
   },
+  // Version 11 (Phase 3): market events. The calendar is planned on the next
+  // catch-up, with the first events at least a day away.
+  10: (save) => {
+    save.events = null;
+    return save;
+  },
 };
 
 export function migrate(save) {

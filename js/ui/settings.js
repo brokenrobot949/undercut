@@ -6,6 +6,8 @@ import { encodeExport } from '../engine/save.js';
 import { gameNow } from '../engine/clock.js';
 import { debugAddCopper, debugAddMaterials, debugStartTestTimer } from '../engine/game.js';
 import { debugSetSkill, debugLearnAll, debugUnlockProfessions, skillOf, hasProfession } from '../engine/skills.js';
+import { events, eventById } from '../../data/events.js';
+import { debugForceEvent } from '../engine/events.js';
 import { professions } from '../../data/professions.js';
 
 export function openSettings(ctx) {
@@ -124,6 +126,8 @@ export function openSettings(ctx) {
       el('div', { class: 'btn-row', style: 'margin-top:12px' },
         btn('Learn all recipes', () => ctx.act((s) => debugLearnAll(s))),
         btn('Open all professions', () => ctx.act((s) => debugUnlockProfessions(s)))),
+      el('p', { class: 'small dim', style: 'margin-top:12px' }, 'Force a market event now'),
+      el('div', { class: 'btn-row' }, events.map((e) => btn(e.name, () => ctx.act((s, t) => debugForceEvent(s, e.id, t))))),
       el('p', { class: 'small dim', style: 'margin-top:12px' }, 'Internals'),
       el('dl', { class: 'kv' },
         kv('Game time', new Date(now).toLocaleString()),
@@ -132,6 +136,7 @@ export function openSettings(ctx) {
         kv('Last tick', new Date(c.lastTickAt).toLocaleTimeString()),
         kv('RNG seed / state', `${state.rng.seed} / ${state.rng.state}`),
         kv('Timers waiting', state.timers.map((t) => `${t.type} in ${formatDuration(t.at - now)}`).join(', ') || 'none'),
+        kv('Event calendar', (state.events?.list ?? []).map((e) => `${eventById[e.type].name} ${e.status === 'active' ? 'running' : `in ${formatDuration(e.startsAt - now)}`}`).join(', ') || 'none'),
         kv('Save size', `${(JSON.stringify(state).length / 1024).toFixed(1)} KB`)),
     );
   }

@@ -3,7 +3,7 @@
 // premium over market value plus Trade Guild reputation. Only items you made
 // count (the maker's mark). Declining is free; unclaimed requests expire.
 
-import { commissionTuning as CT, commissionTypes, contractRequesters } from '../../data/commissions.js';
+import { commissionTuning as CT, commissionTypes, contractRequesters, driveRequester } from '../../data/commissions.js';
 import { recipes, recipeById } from '../../data/recipes.js';
 import { itemById } from '../../data/items.js';
 import { zones } from '../../data/zones.js';
@@ -76,7 +76,7 @@ function pickType(state) {
 
 export function postCommission(state, now, forced = null) {
   const type = forced ? commissionTypes.find((t) => t.id === forced) : pickType(state);
-  const category = type.id === 'contract' ? 'consumable' : type.id === 'regular' ? 'gear' : null;
+  const category = type.id === 'contract' || type.id === 'drive' ? 'consumable' : type.id === 'regular' ? 'gear' : null;
   let pool = candidates(state, category);
   let regular = null;
   if (type.id === 'regular') {
@@ -96,7 +96,8 @@ export function postCommission(state, now, forced = null) {
     id: state.commissions.nextId++,
     type: type.id,
     requester: regular ? { name: regular.name, race: regular.race, classId: regular.classId, level: regular.level, regularId: regular.id }
-      : type.id === 'contract' ? { name: rngPick(state.rng, contractRequesters) } : randomRequester(state, item.tier),
+      : type.id === 'contract' ? { name: rngPick(state.rng, contractRequesters) }
+        : type.id === 'drive' ? { name: driveRequester } : randomRequester(state, item.tier),
     itemId: item.id,
     recipeId: recipe.id,
     qty,
@@ -115,7 +116,7 @@ export function postCommission(state, now, forced = null) {
 // what the order is worth (see repValueRef in data/commissions.js).
 function commissionRep(type, item, orderValue) {
   const size = Math.min(1, Math.max(CT.repFloor, orderValue / (CT.repValueRef[item.tier - 1] * (type.repRefMult ?? 1))));
-  return Math.max(1, Math.round(type.rep[item.tier - 1] * size * CT.repScale));
+  return Math.max(1, Math.round(type.rep[item.tier - 1] * size * (type.noRepScale ? 1 : CT.repScale)));
 }
 
 // A hero from your faction, at a level that wears this tier.
@@ -138,7 +139,7 @@ export function deliverCommission(state, id, now) {
   const c = state.commissions.list.find((x) => x.id === id);
   if (!c) throw new Error('That commission is gone.');
   const n = canDeliver(state, c);
-  const partial = c.type === 'contract';
+  const partial = !!commissionTypes.find((t) => t.id === c.type)?.partial;
   if (n <= 0 || (!partial && n < c.qty)) {
     throw new Error(`You need ${c.qty - c.delivered} ${itemById[c.itemId].name.toLowerCase()} you made yourself.`);
   }

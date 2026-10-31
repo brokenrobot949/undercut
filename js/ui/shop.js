@@ -15,6 +15,8 @@ import { guildTips } from '../../data/guild.js';
 import { tuning } from '../../data/tuning.js';
 import { upgrades } from '../../data/upgrades.js';
 import { nextWing, buyWing } from '../engine/wings.js';
+import { activeEvents, crierLine, glutLeft } from '../engine/events.js';
+import { eventById } from '../../data/events.js';
 import { upgradeLevel, nextUpgrade, buyUpgrade, queueSlotsFor, craftTimeMult, bonusBarChance, bagSlotsFor, cutRate, depositMult,
   listingSlotsFor, boardSizeFor, expeditionSlotsFor, commissionPayMult } from '../engine/upgrades.js';
 import { itemById } from '../../data/items.js';
@@ -32,7 +34,7 @@ export function renderShop(ctx) {
     ctx.away || mailboxFull ? awayPanel(ctx) : null,
     goalPanel(ctx),
     commissionPanel(ctx),
-    el('section', { class: 'panel' }, el('h2', {}, 'Town crier'), el('p', { class: 'dim' }, 'No news in the city today.')),
+    crierPanel(ctx),
     el('section', { class: 'panel guild' },
       el('h2', {}, faction.guild),
       standingBlock(ctx),
@@ -107,6 +109,20 @@ function upgradeEffect(state, id) {
     case 'counter': return `${commissionSlots(state)} commission slots${commissionPayMult(state) > 1 ? `, pay +${pct(commissionPayMult(state) - 1)}` : ''}`;
     default: return '';
   }
+}
+
+// The town crier: market events running now, and when each one ends.
+function crierPanel(ctx) {
+  const running = activeEvents(ctx.state);
+  return el('section', { class: 'panel crier' },
+    el('h2', {}, 'Town crier'),
+    running.length ? el('ul', { class: 'crier-list' }, running.map((e) => el('li', {},
+      el('p', {}, crierLine(e)),
+      el('p', { class: 'small dim' },
+        e.itemId ? [el('button', { class: 'link', type: 'button', onclick: () => openItemSheet(ctx, e.itemId) }, itemById[e.itemId].name), ' · '] : null,
+        eventById[e.type].kind !== 'glut' ? ['Ends in ', countdown(e.endsAt)]
+          : glutLeft(ctx.state, e) ? [`${glutLeft(ctx.state, e)} left · gone in at most `, countdown(e.endsAt)] : 'All sold.'))))
+      : el('p', { class: 'dim' }, 'No news in the city today. A quiet market.'));
 }
 
 // Your standing, progress to the next one, what it unlocks, and the full ladder.
@@ -225,7 +241,7 @@ function commissionCard(ctx, c) {
   const left = c.qty - c.delivered;
   const made = madeCount(state, c.itemId);
   const n = canDeliver(state, c);
-  const partial = c.type === 'contract';
+  const partial = !!commissionTypes.find((t) => t.id === c.type)?.partial;
   const ready = partial ? n > 0 : n >= left;
   const hint = recipeHint(state, c);
   return el('div', { class: `commission-card type-${c.type}` },
@@ -243,7 +259,7 @@ function commissionCard(ctx, c) {
       el('button', { class: `btn${ready ? ' btn-primary' : ''}`, type: 'button', disabled: !ready, onclick: () => {
         const r = ctx.act((s, now) => deliverCommission(s, c.id, now));
         if (r && r.copper !== undefined) toast(`Handed in. +${coinText(r.copper)}, +${r.rep} reputation.`);
-      } }, partial && n < left ? `Deliver ${n}` : 'Hand in'),
+      } }, partial && n > 0 && n < left ? `Deliver ${n}` : 'Hand in'),
       el('button', { class: 'btn', type: 'button', onclick: () => ctx.act((s) => declineCommission(s, c.id)) }, 'Decline')));
 }
 

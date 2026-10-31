@@ -28,8 +28,13 @@ export const commissionTypes = [
     qty: { consumable: [2, 4], gear: [1, 1] }, rep: [150, 210, 275, 340, 400] },
   // Delivered in parts: gold and reputation are paid for each part handed in.
   // repRefMult: a contract counts as big at four times the usual order value.
-  { id: 'contract', name: 'Guild contract', weight: 10, hours: [48, 72], payMult: 1.25,
+  { id: 'contract', name: 'Guild contract', weight: 10, hours: [48, 72], payMult: 1.25, partial: true,
     qty: { consumable: [20, 40] }, rep: [500, 750, 1000, 1250, 1500], repRefMult: 4 },
+  // Guild drive: only posted by the market event of the same name (weight 0),
+  // on top of the usual slots. noRepScale: its reputation isn't multiplied by
+  // repScale, so a full drive is worth the table value (up to 2,000).
+  { id: 'drive', name: 'Guild drive', weight: 0, hours: [72, 72], payMult: 1.25, partial: true, noRepScale: true,
+    qty: { consumable: [40, 80] }, rep: [1200, 1400, 1600, 1800, 2000], repRefMult: 8 },
   // A regular wants gear for their class and level. Also builds loyalty and
   // gives the regular a level boost.
   { id: 'regular', name: "Regular's request", weight: 15, hours: [24, 24], payMult: 1.5,
@@ -37,4 +42,7 @@ export const commissionTypes = [
 ];
 
 // Who posts guild contracts.
+// Who posts guild drives.
+export const driveRequester = 'The Trade Guild';
+
 export const contractRequesters = ['The city garrison', 'The harbor watch', 'The Trade Guild stores', 'The royal stables', 'The road wardens'];

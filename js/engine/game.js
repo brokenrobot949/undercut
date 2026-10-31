@@ -14,11 +14,12 @@ import { createStations, syncStations, finishUnit } from './crafting.js';
 import { createTavern, refreshBoardTimer, expeditionReturns } from './heroes.js';
 import { createSkills, createKnownRecipes, syncSkills } from './skills.js';
 import { createUpgrades, syncUpgrades } from './upgrades.js';
+import { createEvents, planTimer, eventStartTimer, eventEndTimer } from './events.js';
 import { createCommissions, commissionPostTimer, commissionExpireTimer } from './commissions.js';
 export { collectMailbox } from './bags.js';
 export { getStanding } from './guild.js';
 
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 
 export function newGame({ name, factionId, professionId = 'blacksmithing', seed, now }) {
   const state = {
@@ -51,10 +52,13 @@ export function newGame({ name, factionId, professionId = 'blacksmithing', seed,
     firstCustomer: 'waiting',
     // Shop upgrade levels: { upgradeId: level }.
     upgrades: createUpgrades(),
+    // Market events: the calendar and what's running now (see events.js).
+    events: null,
   };
   createMarket(state, now);
   createTavern(state, now);
   createCommissions(state, now);
+  createEvents(state, now);
   return state;
 }
 
@@ -104,6 +108,9 @@ const handlers = {
     'tavern-refresh': (state, timer) => refreshBoardTimer(state, timer),
     'commission-post': (state, timer, summary) => commissionPostTimer(state, timer, summary),
     'commission-expire': (state, timer, summary) => commissionExpireTimer(state, timer, summary),
+    'event-plan': (state, timer) => planTimer(state, timer),
+    'event-start': (state, timer, summary) => eventStartTimer(state, timer, summary),
+    'event-end': (state, timer, summary) => eventEndTimer(state, timer, summary),
     // A customer looks at your first listing: buys it if the price is fair.
     'first-customer'(state, timer, summary) {
       const { itemId, listingId } = timer.data;
@@ -145,6 +152,7 @@ export function catchUp(state, realNow, summary = gameSummary(state)) {
   syncUpgrades(state);
   if (!state.tavern) createTavern(state, state.clock.lastSeenAt);
   if (!state.commissions) createCommissions(state, state.clock.lastSeenAt);
+  if (!state.events) createEvents(state, state.clock.lastSeenAt);
   return advance(state, gameNow(state, realNow), handlers, summary);
 }
 

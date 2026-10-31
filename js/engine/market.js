@@ -62,7 +62,18 @@ export function vendorPrice(item) {
   return Math.max(1, Math.floor(item.base * M.vendorShare));
 }
 
+// NPC buyers per hour, including any market event (raid night, tournament...).
 export function demandPerHour(state, item) {
+  return baseDemandPerHour(state, item) * eventDemandMult(state, item.id);
+}
+
+// Market events set these multipliers (see js/engine/events.js).
+const eventDemandMult = (state, itemId) => state.events?.demandMult?.[itemId] ?? 1;
+const eventSupplyMult = (state, itemId) => state.events?.supplyMult?.[itemId] ?? 1;
+
+// NPC buyers per hour without events. NPC sellers restock to this, so an event
+// that brings extra buyers leaves the market short and pushes the price up.
+export function baseDemandPerHour(state, item) {
   let rate = item.demand * (tuning.populationByTier[item.tier - 1] ?? 1) * (state.market?.items[item.id]?.drift ?? 1);
   if (item.category === 'gear') {
     const faction = factions.find((f) => f.id === state.player.factionId);
@@ -220,9 +231,9 @@ export function marketTick(state, at, hooks) {
     const demand = demandPerHour(state, item);
     rollHistory(m, at);
     expireListings(item, m, at, hooks);
-    restockNpc(state, item, m, demand, at);
+    restockNpc(state, item, m, baseDemandPerHour(state, item) * eventSupplyMult(state, item.id), at);
     serveBuyers(state, item, m, demand, at, hooks);
-    moveFairPrice(state, item, m, demand);
+    moveFairPrice(state, item, m, baseDemandPerHour(state, item));
   }
 }
 
@@ -332,11 +343,13 @@ export function sellToFirstCustomer(state, itemId, listingId, units, at, hooks) 
   return n;
 }
 
+// `demand` is the usual demand without events: during a raid night or a
+// tournament the extra buyers pile up against it, so the price climbs.
 function moveFairPrice(state, item, m, demand) {
   const extraStock = Math.max(0, supplyDays(state, item) - M.normalSupplyDays);
   // Waiting buyers only push the price up when stock is short. In a flooded
   // market they're waiting for it to get cheaper.
-  const waiting = extraStock > 0 ? 0 : Math.max(0, m.reservoir / (demand * M.reservoirHours) - M.normalScarcity);
+  const waiting = extraStock > 0 ? 0 : Math.max(0, Math.min(1, m.reservoir / (demand * M.reservoirHours)) - M.normalScarcity);
   const target = item.base / (1 + M.floodStrength * extraStock) * (1 + M.scarcityStrength * waiting);
   m.fair += (target - m.fair) * M.followRate;
   m.fair = Math.min(item.base * M.maxPriceMult, Math.max(vendorPrice(item) * 1.2, m.fair));
@@ -352,6 +365,21 @@ function affordability(ratio) {
 // ---- Helpers -------------------------------------------------------------
 
 // Keeps listings sorted: cheapest first, then oldest, then first posted.
+// A market event: an NPC dumps a big lot at a low price, until `expiresAt`.
+export function postGlut(state, itemId, qty, price, at, expiresAt) {
+  const item = itemById[itemId];
+  const listing = {
+    id: state.market.nextListingId++,
+    seller: 'npc',
+    price: Math.max(vendorPrice(item) + 1, Math.round(price)),
+    qty,
+    postedAt: at,
+    expiresAt,
+  };
+  insertListing(state.market.items[itemId].listings, listing);
+  return listing;
+}
+
 function insertListing(listings, listing) {
   let lo = 0;
   let hi = listings.length;
