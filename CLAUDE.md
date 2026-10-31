@@ -3,8 +3,8 @@
 ## Working with Rob
 - Rob is the game designer and has no coding experience. After each session, explain what changed in plain language.
 - `docs/DESIGN.md` is the source of truth. When Rob changes a design decision, update it.
-- Build in the phases from DESIGN.md, in small, testable slices. Current phase: Phase 1 (The market, with Blacksmithing tiers 1–2).
-- Rob commits and pushes with GitHub Desktop. Do not run `git push` unless Rob asks.
+- Build in the phases from DESIGN.md, in small, testable slices. Current phase: Phase 3 (Guild and progression). Phases 0–2 are done and live.
+- Claude commits and pushes. When a slice is finished and checked (`node tools/engine-check.js` all PASS and `node tools/balance-sim.js` clean), commit it to `main` and `git push` it, then tell Rob it's live and to hard refresh. Never force-push.
 
 ## Models and delegation
 - Opus 5.5 leads: architecture, the market engine, clock and catch-up, saves, balance tuning, and review of all delegated work.
