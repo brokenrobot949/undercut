@@ -35,10 +35,32 @@ export function openSettings(ctx) {
             onclick: () => { ctx.act((s) => { s.settings.mute = !s.settings.mute; }); draw(); } },
             uiIcon(state.settings.mute ? 'sound-off' : 'sound-on'), state.settings.mute ? ' Sound off' : ' Sound on'),
           el('button', { class: 'btn', type: 'button', onclick: showCredits }, uiIcon('credits'), ' Credits'))),
+      installPanel(),
       backupsPanel(),
       state.settings.debug ? debugPanel() : null,
       versionLine(),
     );
+  }
+
+  // Home-screen install: Chrome's own button when offered, else how-to steps.
+  function installPanel() {
+    const standalone = window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone;
+    if (standalone) return null;
+    const iphone = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    return el('section', { class: 'panel' },
+      el('h3', {}, 'Add to your home screen'),
+      el('p', { class: 'small dim' }, 'Undercut opens full screen from its own icon, like an app.'),
+      ctx.installPrompt
+        ? el('button', { class: 'btn btn-primary', type: 'button', onclick: async () => {
+          ctx.installPrompt.prompt();
+          await ctx.installPrompt.userChoice;
+          ctx.installPrompt = null;
+          draw();
+        } }, 'Install Undercut')
+        : el('p', { class: 'small' }, iphone
+          ? 'In Safari, tap the Share button, then "Add to Home Screen".'
+          : 'Open your browser menu and choose "Install app" or "Add to Home screen".'),
+      iphone ? el('p', { class: 'small dim' }, 'On iPhone the home-screen app keeps its own save, separate from Safari. Export your save code here first, then import it in the app.') : null);
   }
 
   function backupsPanel() {

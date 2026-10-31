@@ -26,6 +26,7 @@ const ctx = {
   version: VERSION,
   state: null,
   away: null,
+  installPrompt: null, // Android/desktop Chrome's "Install app" offer, when it comes
 
   // Current game time (real time plus any debug fast-forward).
   now() {
@@ -203,6 +204,10 @@ function showLoadError(error) {
       el('p', { class: 'small dim' }, 'Try a hard refresh first. Starting over keeps a backup copy of the old save on this device.'),
       el('button', { class: 'btn btn-danger', type: 'button', onclick: () => { backupAndClear(storage); showNewGame(); } }, 'Start over'))));
 }
+
+// Chrome offers installing the game as an app; keep the offer for Settings.
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); ctx.installPrompt = e; });
+window.addEventListener('appinstalled', () => { ctx.installPrompt = null; });
 
 // ---- Saving on the way out -------------------------------------------
 

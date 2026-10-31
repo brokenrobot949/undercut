@@ -602,6 +602,13 @@ undercut/
 - Versioned, with migrations for older saves.
 - Export and import as a copyable text code, for backups and moving between devices. iPhone Safari can clear a site's saved data after about a week without a visit.
 
+**Home-screen install** (Phase 4)
+
+- `manifest.webmanifest` and the app icon in `assets/app/` (Lorc's anvil on a dark tile) let phones add Undercut to the home screen, where it opens full screen.
+- Settings has an "Add to your home screen" panel: an Install button when Chrome offers one, otherwise the steps for Safari or other browsers. It hides once the game runs from the home screen.
+- On iPhone the home-screen app keeps its own save, separate from Safari, so the panel says to move the save with the export code.
+- No offline mode or service worker, so a hard refresh always brings the newest version.
+
 **Debug mode** (a hidden toggle): fast-forward 1 h, 8 h or 24 h; add gold and materials; set skill; learn all recipes; open all professions; force an event; show the market's internal numbers.
 
 **Balance simulator.** `node tools/balance-sim.js` plays 60 in-game days with simple bot strategies (cautious, flooder, flipper). It reports gold over time, the day each milestone was reached, and any items whose prices collapsed or never sold. It runs after every tuning change.
