@@ -4,7 +4,8 @@ import { el, setTheme, updateLive, uiIcon, tickingCoins } from './components.js'
 import { getFaction, getStanding } from '../engine/game.js';
 import { shopSigns } from '../../data/guild.js';
 import { openSettings } from './settings.js';
-import { renderShop } from './shop.js';
+import { renderShop, TUTORIAL_TABS } from './shop.js';
+import { tutorialStep, stepMet } from '../engine/tutorial.js';
 import { renderWorkshop } from './workshop.js';
 import { renderAuction } from './auction.js';
 import { renderTavern } from './tavern.js';
@@ -68,8 +69,12 @@ export function mountApp(root, ctx) {
   }
 
   function renderTabs() {
+    // During the tutorial, a glow shows where the current step is done, or the
+    // Shop tab once it's ready to claim.
+    const step = tutorialStep(ctx.state);
+    const hintTab = step && (stepMet(ctx.state) ? 'shop' : TUTORIAL_TABS[step.goal]);
     tabbar.replaceChildren(...TABS.map((tab) => el('button', {
-      class: 'tab', type: 'button', role: 'tab',
+      class: `tab${tab.id === hintTab && tab.id !== activeTab ? ' tab-hint' : ''}`, type: 'button', role: 'tab',
       'aria-selected': String(tab.id === activeTab),
       onclick: () => { activeTab = tab.id; render(); main.scrollTop = 0; },
     },
@@ -81,6 +86,7 @@ export function mountApp(root, ctx) {
   }
 
   ctx.render = render;
+  ctx.goTab = (id) => { activeTab = id; render(); main.scrollTop = 0; };
 
   function render() {
     if (pointerDown) { pendingRender = true; return; }

@@ -41,7 +41,7 @@ export function renderShop(ctx) {
     el('section', { class: 'panel guild' },
       el('h2', {}, faction.guild),
       standingBlock(ctx),
-      el('h3', {}, 'Trainer'),
+      el('h3', { id: 'trainer' }, 'Trainer'),
       el('p', { class: 'small dim' }, 'Each rank lets your skill climb higher. Train the next one once you reach the cap. Recipes go on sale as your skill reaches them.'),
       professions.filter((p) => hasProfession(ctx.state, p.id)).flatMap((p) => [trainerRow(ctx, p.id), recipeOffers(ctx, p.id)]),
       el('h3', {}, 'Quartermaster'),
@@ -247,6 +247,10 @@ function commissionPanel(ctx) {
       : tutorialStep(ctx.state) ? null : el('p', { class: 'small dim' }, 'No requests right now. A new one will be posted soon.'));
 }
 
+// Where each tutorial goal is done, for the "Show me" button.
+const TAB_NAMES = { workshop: 'the Workshop', auction: 'the Auction House', tavern: 'the Tavern', shop: 'the trainer' };
+export const TUTORIAL_TABS = { craft: 'workshop', smelt: 'workshop', list: 'auction', buy: 'auction', hire: 'tavern', learn: 'shop' };
+
 // The tutorial: one step at a time from the quartermaster. Do it anywhere, then claim it here.
 function tutorialCard(ctx) {
   const { state } = ctx;
@@ -260,10 +264,16 @@ function tutorialCard(ctx) {
     el('p', { class: 'small' }, `${tutorialMentor.name}, ${tutorialMentor.title}:`),
     el('p', {}, step.text),
     el('p', { class: 'small' }, 'Reward: ', coins(step.pay), ` and ${step.rep} reputation.`),
-    el('button', { class: `btn wide${met ? ' btn-primary' : ''}`, type: 'button', disabled: !met, onclick: () => {
-      const s = ctx.act((st, now) => claimTutorialStep(st, now));
-      if (s && s.pay) toast(`+${coinText(s.pay)}, +${s.rep} reputation.`);
-    } }, met ? 'Done! Claim reward' : 'Not done yet'));
+    met
+      ? el('button', { class: 'btn wide btn-primary', type: 'button', onclick: () => {
+        const s = ctx.act((st, now) => claimTutorialStep(st, now));
+        if (s && s.pay) toast(`+${coinText(s.pay)}, +${s.rep} reputation.`);
+      } }, 'Done! Claim reward')
+      : el('button', { class: 'btn wide', type: 'button', onclick: () => {
+        const tab = TUTORIAL_TABS[step.goal];
+        if (tab === 'shop') document.getElementById('trainer')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        else ctx.goTab(tab);
+      } }, `Show me: ${TAB_NAMES[TUTORIAL_TABS[step.goal]]}`));
 }
 
 function requesterText(c) {

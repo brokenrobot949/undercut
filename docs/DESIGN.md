@@ -352,6 +352,8 @@ The shop counter takes requests from named heroes: a specific item, a quantity a
 
 Existing saves skip the tutorial and the first customer.
 
+Onboarding polish (Phase 4): until a step is done, its card has a "Show me" button that opens the tab where it's done (Workshop, Auction House or Tavern, or scrolls to the trainer). The matching tab icon glows gently. Once the step is done, the Shop tab glows instead, so the player knows to come back and claim it.
+
 ## Trade Guild and reputation
 
 The Trade Guild is the long-term goal. Standing unlocks training ranks, recipes and shop expansions, and the endgame is Exalted standing with all three professions at 300.
