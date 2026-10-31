@@ -430,7 +430,7 @@ The first profession should reach Artisan in about 2 to 3 weeks of regular check
 | Milestone | Target |
 | --- | --- |
 | First sale | Under 5 minutes |
-| Journeyman (75) | Day 1 |
+| Journeyman (75) | Day 1, for a player who checks in about hourly on their first day |
 | Expert (150) and Friendly | Week 1 |
 | First profession at Artisan (300) and Honored | Weeks 2–3 |
 | Revered | Weeks 4–5 |
@@ -444,9 +444,9 @@ The layout is mobile-first in portrait, with five bottom tabs and a fixed header
 
 | Tab | What's on it |
 | --- | --- |
-| Shop (home) | "While you were away" summary, commission counter, town crier, guild standing, upgrades, and the Trade Guild trainer and quartermaster |
+| Shop (home) | "While you were away" summary, a "Next goal" line after the tutorial, commission counter, town crier, guild standing, upgrades, and the Trade Guild trainer and quartermaster |
 | Workshop | Profession switcher, skill bar and rank, recipe list colored by skill-up odds, craft queue, forge smelting queue |
-| Auction House | Browse and buy, Sell (price helpers and duration), My Listings (status, place in line, cancel), Ledger charts |
+| Auction House | My Listings (status, place in line, cancel), then Browse: a search box, "In your bags" and "For your craft" filters (the latter on by default), and category chips. Tap an item to buy or sell it (price helpers and duration). Ledger charts come later |
 | Tavern | Hire board, regulars row, active expeditions with timers, returns to collect |
 | Bags | Storage grid, vendor sales, trade goods vendor |
 

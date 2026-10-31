@@ -40,8 +40,8 @@ export function coins(copper) {
   const c = total % 100;
   const parts = [];
   if (g) parts.push(el('span', { class: 'coin g' }, g.toLocaleString()));
-  if (g || s) parts.push(el('span', { class: 'coin s' }, s));
-  parts.push(el('span', { class: 'coin c' }, c));
+  if (s) parts.push(el('span', { class: 'coin s' }, s));
+  if (c || !parts.length) parts.push(el('span', { class: 'coin c' }, c));
   return el('span', { class: 'coins', 'aria-label': `${g} gold ${s} silver ${c} copper` }, parts);
 }
 
@@ -50,7 +50,7 @@ export function coinText(copper) {
   const g = Math.floor(copper / 10000);
   const s = Math.floor((copper % 10000) / 100);
   const c = copper % 100;
-  return [g && `${g}g`, (g || s) && `${s}s`, `${c}c`].filter(Boolean).join(' ');
+  return [g && `${g}g`, s && `${s}s`, (c || (!g && !s)) && `${c}c`].filter((x) => x !== 0 && x).join(' ') || '0c';
 }
 
 // "2 h 15 min", "45 min", "3 days 4 h"

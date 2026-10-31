@@ -30,7 +30,7 @@ export const items = [
   { id: 'coarse-stone', name: 'Coarse stone', tier: 2, category: 'material', quality: 'common', base: 12, demand: 10 },
   { id: 'iron-ore', name: 'Iron ore', tier: 3, category: 'material', quality: 'common', base: 30, demand: 12 },
   { id: 'iron-bar', name: 'Iron bar', tier: 3, category: 'material', quality: 'common', base: 46, demand: 10 },
-  { id: 'steel-bar', name: 'Steel bar', tier: 3, category: 'material', quality: 'common', base: 80, demand: 8 },
+  { id: 'steel-bar', name: 'Steel bar', tier: 3, category: 'material', quality: 'common', base: 88, demand: 8 },
   { id: 'ironstone', name: 'Ironstone', tier: 3, category: 'material', quality: 'common', base: 18, demand: 9 },
   { id: 'moonsilver-ore', name: 'Moonsilver ore', tier: 4, category: 'material', quality: 'common', base: 45, demand: 10 },
   { id: 'moonsilver-bar', name: 'Moonsilver bar', tier: 4, category: 'material', quality: 'common', base: 68, demand: 8 },
@@ -213,8 +213,8 @@ export const items = [
   { id: 'drakewing-mantle', name: 'Drakewing mantle', tier: 5, category: 'gear', armor: 'leather', quality: 'uncommon', base: 2410, demand: 0.3 },
 
   // ---- Alchemy, tier 1 ----
-  { id: 'faint-mending-draught', name: 'Faint mending draught', tier: 1, category: 'consumable', quality: 'common', base: 16, demand: 14 },
-  { id: 'faint-focus-draught', name: 'Faint focus draught', tier: 1, category: 'consumable', quality: 'common', base: 18, demand: 12 },
+  { id: 'faint-mending-draught', name: 'Faint mending draught', tier: 1, category: 'consumable', quality: 'common', base: 18, demand: 14 },
+  { id: 'faint-focus-draught', name: 'Faint focus draught', tier: 1, category: 'consumable', quality: 'common', base: 20, demand: 12 },
   { id: 'ox-strength-tonic', name: 'Ox-strength tonic', tier: 1, category: 'consumable', quality: 'common', base: 40, demand: 6 },
   { id: 'owl-wit-tonic', name: 'Owl-wit tonic', tier: 1, category: 'consumable', quality: 'common', base: 42, demand: 6 },
   { id: 'bottled-sunrise', name: 'Bottled sunrise', tier: 1, category: 'consumable', quality: 'uncommon', base: 120, demand: 2 },

@@ -3,7 +3,10 @@
 import { el } from './components.js';
 import { professionById } from '../../data/professions.js';
 import { tuning } from '../../data/tuning.js';
-import { skillOf, rankOf, capOf } from '../engine/skills.js';
+import { skillOf, rankOf, capOf, MAX_SKILL, nextTraining, knowsRecipe, recipeColor, recipeProfession, startingProfession } from '../engine/skills.js';
+import { tutorialDone } from '../engine/tutorial.js';
+import { recipes } from '../../data/recipes.js';
+import { itemById } from '../../data/items.js';
 
 // `capHint` adds a reminder to train when skill is stuck at the rank cap.
 export function skillBar(state, professionId, { capHint = false } = {}) {
@@ -26,4 +29,36 @@ export function colorText(recipe, color) {
   if (!color) return 'No skill-ups (smelting)';
   if (color === 'red') return `Needs skill ${recipe.skill[0]}`;
   return `${COLOR_TEXT[color]}: ${Math.round(tuning.skillUpChance[color] * 100)}% skill-up chance`;
+}
+
+// One line saying what to aim for next with your starting profession, once the
+// tutorial is over. Plain text plus a cost, for the Shop tab.
+export function nextGoal(state) {
+  if (!tutorialDone(state)) return null;
+  const prof = startingProfession(state);
+  const name = professionById[prof].name;
+  const skill = skillOf(state, prof);
+  const t = nextTraining(state, prof);
+  const skillUps = recipes.some((r) => recipeProfession(r) === prof && knowsRecipe(state, r) &&
+    ['orange', 'yellow', 'green'].includes(recipeColor(state, r)));
+  if (t?.ready) return { text: `Train ${t.rank.name} at the trainer below, for `, cost: t.cost, after: '.' };
+  if (t && skill >= capOf(state, prof)) {
+    if (/standing/.test(t.reason)) return { text: `Fill commissions to reach ${tuning.standings.find((s) => s.id === t.rank.standing).name} standing with the guild, then train ${t.rank.name}.` };
+    return { text: `Save up `, cost: t.cost, after: ` to train ${t.rank.name} at the trainer below.` };
+  }
+  if (!skillUps && skill < MAX_SKILL) return { text: `None of your ${name} recipes give skill-ups now. Learn a new one at the trainer below.` };
+  if (t) return { text: `Reach ${name} ${capOf(state, prof)} (you're at ${skill}), then train ${t.rank.name}.` };
+  if (skill < MAX_SKILL) return { text: `Reach ${name} ${MAX_SKILL} (you're at ${skill}).` };
+  return { text: `You've mastered ${name}. Keep filling commissions to raise your standing with the guild.` };
+}
+
+// When the next recipe needs materials from a higher tier than anything you
+// make now, say which and where to get them.
+export function newTierHint(state, prof, recipe) {
+  const knownTier = Math.max(0, ...recipes.filter((r) => recipeProfession(r) === prof && knowsRecipe(state, r)).map((r) => r.tier));
+  if (recipe.tier <= knownTier) return null;
+  const raw = [...new Set(recipe.mats.map((m) => m.item))].filter((id) => !recipes.some((r) => r.makes.item === id && recipeProfession(r) === prof))
+    .map((id) => itemById[id]).filter((i) => i.category !== 'trade');
+  if (!raw.length) return null;
+  return `Tier ${recipe.tier} recipes need new materials (${raw.map((i) => i.name.toLowerCase()).join(', ')}). Buy them on the Auction tab, or hire a hero for a tier ${recipe.tier} zone.`;
 }

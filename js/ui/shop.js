@@ -13,7 +13,7 @@ import { getFaction, getStanding } from '../engine/game.js';
 import { itemById } from '../../data/items.js';
 import { professions, professionById } from '../../data/professions.js';
 import { nextTraining, trainRank, trainerRecipes, learnRecipe, recipeColor, hasProfession } from '../engine/skills.js';
-import { colorText } from './skill-bar.js';
+import { colorText, nextGoal } from './skill-bar.js';
 import { skillBar } from './skill-bar.js';
 
 export function renderShop(ctx) {
@@ -24,8 +24,9 @@ export function renderShop(ctx) {
 
   return el('div', { class: 'main-inner' },
     ctx.away || mailboxFull ? awayPanel(ctx) : null,
+    goalPanel(ctx),
     commissionPanel(ctx),
-    comingSoon('Town crier', 'Market events will be announced here. Arrives in Phase 3.'),
+    el('section', { class: 'panel' }, el('h2', {}, 'Town crier'), el('p', { class: 'dim' }, 'No news in the city today.')),
     el('section', { class: 'panel' },
       el('h2', {}, faction.guild),
       el('p', {}, `Standing: ${current.name}`,
@@ -33,7 +34,7 @@ export function renderShop(ctx) {
       el('h3', {}, 'Trainer'),
       el('p', { class: 'small dim' }, 'Each rank lets your skill climb higher. Train the next one once you reach the cap. Recipes go on sale as your skill reaches them.'),
       professions.filter((p) => hasProfession(ctx.state, p.id)).flatMap((p) => [trainerRow(ctx, p.id), recipeOffers(ctx, p.id)]),
-      el('p', { class: 'dim small' }, 'The quartermaster and shop upgrades arrive in Phase 3.')),
+    ),
   );
 }
 
@@ -66,6 +67,14 @@ function trainerRow(ctx, professionId) {
 
 // The commission counter: requests from heroes, paid in gold and reputation.
 // Only items you made yourself count.
+// What to aim for next, once the tutorial is done.
+function goalPanel(ctx) {
+  const g = nextGoal(ctx.state);
+  if (!g) return null;
+  return el('section', { class: 'panel goal' },
+    el('p', {}, el('strong', {}, 'Next goal: '), g.text, g.cost !== undefined ? coins(g.cost) : null, g.after ?? ''));
+}
+
 function commissionPanel(ctx) {
   const { list } = ctx.state.commissions;
   return el('section', { class: 'panel' },

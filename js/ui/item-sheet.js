@@ -4,7 +4,7 @@
 import { el, coins, openSheet, stepper, fill, coinInput, toast, coinText } from './components.js';
 import { itemById } from '../../data/items.js';
 import { recipes } from '../../data/recipes.js';
-import { knowsRecipe, learnFromScroll } from '../engine/skills.js';
+import { knowsRecipe, learnFromScroll, hasProfession } from '../engine/skills.js';
 import { recipeById } from '../../data/recipes.js';
 import { tuning } from '../../data/tuning.js';
 import { bagCount } from '../engine/bags.js';
@@ -57,7 +57,7 @@ export function openItemSheet(ctx, itemId) {
     const value = marketValue(state, itemId, ctx.now());
     return el('dl', { class: 'kv' },
       el('dt', {}, 'Lowest listing'), el('dd', {}, low ? coins(low) : 'none'),
-      el('dt', {}, 'Market value (24 h)'), el('dd', {}, value ? coins(value) : 'no sales yet'),
+      el('dt', {}, 'Market value (24 h)'), el('dd', {}, value ? coins(value) : ['about ', coins(state.market.items[itemId].fair), el('span', { class: 'dim' }, ' (no sales yet)')]),
       el('dt', {}, 'Demand'), el('dd', {}, el('span', { class: `tag tag-${demandTag(state, item)}` }, TAG_LABELS[demandTag(state, item)])),
       el('dt', {}, 'Vendor pays'), el('dd', {}, coins(vendorPrice(item))));
   }
@@ -165,9 +165,10 @@ export function openItemSheet(ctx, itemId) {
     const makes = recipes.filter((r) => r.makes.item === itemId);
     const uses = recipes.filter((r) => r.mats.some((m) => m.item === itemId));
     if (!makes.length && !uses.length) return null;
-    const name = (r) => `${itemById[r.makes.item].name}${r.station === 'forge' ? ' (forge)' : ''}${knowsRecipe(ctx.state, r) ? '' : ' (not learned)'}`;
+    const forgeName = hasProfession(ctx.state, 'blacksmithing') ? ' (forge)' : ' (City Smelter)';
+    const name = (r) => `${itemById[r.makes.item].name}${r.station === 'forge' ? forgeName : ''}${knowsRecipe(ctx.state, r) ? '' : ' (not learned)'}`;
     return el('section', {},
-      makes.length ? el('p', { class: 'small' }, el('strong', {}, 'Made by: '), makes.map(name).join(', ')) : null,
+      makes.length ? el('p', { class: 'small' }, el('strong', {}, makes.length > 1 ? 'Recipes: ' : 'Recipe: '), makes.map(name).join(', ')) : null,
       uses.length ? el('p', { class: 'small' }, el('strong', {}, 'Used in: '), uses.map(name).join(', ')) : null);
   }
 

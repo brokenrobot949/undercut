@@ -13,7 +13,7 @@ import { queueCraft, cancelOrder, queueSlots, smeltAtCity, smelterFee, maxCrafta
 import { openItemSheet } from './item-sheet.js';
 import { recipeColor, knowsRecipe, trainerRecipes, forgeRankNeeded, hasProfession, startingProfession } from '../engine/skills.js';
 import { professions, professionById, professionForStation, stationNames } from '../../data/professions.js';
-import { skillBar, colorText } from './skill-bar.js';
+import { skillBar, colorText, newTierHint } from './skill-bar.js';
 
 const filters = { canCraft: false, skillUps: false, profitable: false };
 // The profession shown, kept between visits to the tab.
@@ -79,9 +79,11 @@ function trainerHint(ctx, prof) {
   const offers = trainerRecipes(ctx.state, prof);
   const ready = offers.filter((o) => o.recipe.skill[0] <= ctx.state.skills[prof].skill).length;
   if (!offers.length) return null;
+  const tierHint = newTierHint(ctx.state, prof, offers[0].recipe);
   return el('p', { class: `small trainer-hint${ready ? ' ready' : ''}` },
     ready ? `${ready} new recipe${ready === 1 ? '' : 's'} for your skill at the Trade Guild trainer (Shop tab).`
-      : `Next recipe at the trainer: skill ${offers[0].recipe.skill[0]}.`);
+      : `Next recipe at the trainer: skill ${offers[0].recipe.skill[0]}.`,
+    tierHint ? ` ${tierHint}` : '');
 }
 
 function chip(ctx, key, label) {

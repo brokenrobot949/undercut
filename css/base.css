@@ -687,3 +687,6 @@ input[type="number"] {
 .commission-card .btn-row { margin-top: 8px; }
 .tutorial-card { margin-bottom: 10px; border-color: var(--highlight); }
 .tutorial-card.met { box-shadow: 0 0 0 2px var(--accent-strong); }
+.search { width: 100%; min-height: var(--tap); padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel-raised); color: var(--text); font: inherit; }
+.panel.goal { border-color: var(--highlight); }
+.panel.goal p { margin: 0; }
