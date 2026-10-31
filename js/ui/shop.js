@@ -15,6 +15,7 @@ import { guildTips } from '../../data/guild.js';
 import { tuning } from '../../data/tuning.js';
 import { upgrades } from '../../data/upgrades.js';
 import { nextWing, buyWing } from '../engine/wings.js';
+import { quartermasterRecipes, buyQuartermasterRecipe } from '../engine/quartermaster.js';
 import { activeEvents, crierLine, glutLeft, upcomingEvents } from '../engine/events.js';
 import { upgradeById } from '../../data/upgrades.js';
 const eventWarnHoursAt3 = upgradeById.ledger.warnHours;
@@ -23,7 +24,7 @@ import { upgradeLevel, nextUpgrade, buyUpgrade, queueSlotsFor, craftTimeMult, bo
   listingSlotsFor, boardSizeFor, expeditionSlotsFor, commissionPayMult, eventWarnHours } from '../engine/upgrades.js';
 import { itemById } from '../../data/items.js';
 import { professions, professionById } from '../../data/professions.js';
-import { nextTraining, trainRank, trainerRecipes, learnRecipe, recipeColor, hasProfession } from '../engine/skills.js';
+import { nextTraining, trainRank, trainerRecipes, learnRecipe, recipeColor, hasProfession, recipeProfession } from '../engine/skills.js';
 import { colorText, nextGoal } from './skill-bar.js';
 import { skillBar } from './skill-bar.js';
 
@@ -44,7 +45,8 @@ export function renderShop(ctx) {
       el('p', { class: 'small dim' }, 'Each rank lets your skill climb higher. Train the next one once you reach the cap. Recipes go on sale as your skill reaches them.'),
       professions.filter((p) => hasProfession(ctx.state, p.id)).flatMap((p) => [trainerRow(ctx, p.id), recipeOffers(ctx, p.id)]),
       el('h3', {}, 'Quartermaster'),
-      el('p', { class: 'small dim' }, `Sells better recipes to members in good standing, from ${tuning.standings[1].name}. Coming soon.`),
+      el('p', { class: 'small dim' }, `Better recipes for members in good standing, from ${tuning.standings[1].name}. Blue-quality ones from ${tuning.standings[2].name}.`),
+      quartermasterOffers(ctx),
     ),
     upgradesPanel(ctx),
   );
@@ -169,6 +171,23 @@ function standingBlock(ctx) {
 function unlockList(unlocks) {
   return el('ul', { class: 'unlock-list small' }, unlocks.map((u) =>
     el('li', {}, u.text, u.soon ? el('span', { class: 'soon-tag' }, 'coming soon') : null)));
+}
+
+// Recipes the quartermaster sells for your professions.
+function quartermasterOffers(ctx) {
+  const offers = quartermasterRecipes(ctx.state);
+  if (!offers.length) return el('p', { class: 'small dim' }, 'You know every recipe the quartermaster sells for your professions.');
+  return el('div', { class: 'market-list trainer-recipes' }, offers.map((o) => {
+    const out = itemById[o.recipe.makes.item];
+    return el('div', { class: 'my-listing' },
+      el('button', { class: `link item-name q-${out.quality}`, type: 'button', onclick: () => openItemSheet(ctx, out.id) }, out.name),
+      el('button', { class: `btn small-btn${o.ready ? ' btn-primary' : ''}`, type: 'button', disabled: !o.ready,
+        onclick: () => ctx.act((s) => {
+          buyQuartermasterRecipe(s, o.recipe.id);
+          toast(`Learned ${out.name}. Find it in the Workshop.`);
+        }) }, 'Learn ', coins(o.cost)),
+      el('span', { class: 'small dim market-sub' }, `${professionById[recipeProfession(o.recipe)].name} · `, o.reason ?? `skill ${o.recipe.skill[0]}`));
+  }));
 }
 
 // Recipes the trainer sells: everything you can learn now, then the next few.

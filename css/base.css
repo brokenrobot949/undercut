@@ -429,6 +429,11 @@ input[type="number"] {
   cursor: pointer;
   text-align: left;
 }
+/* Item links keep their quality color. */
+.link.q-poor { color: var(--q-poor); }
+.link.q-uncommon { color: var(--q-uncommon); }
+.link.q-rare { color: var(--q-rare); }
+.link.q-epic { color: var(--q-epic); }
 
 /* ---- Lists: my listings, queues, recipes --------------------------- */
 

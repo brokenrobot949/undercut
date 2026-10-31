@@ -26,6 +26,7 @@ import { listItem, cancelListing, undercutPrice, buyItems, buyFromVendor, quoteB
 import { bagSlots, slotsUsed, roomFor } from '../js/engine/bags.js';
 import { queueCraft, maxCraftable, smeltAtCity } from '../js/engine/crafting.js';
 import { upgrades } from '../data/upgrades.js';
+import { quartermasterRecipes, buyQuartermasterRecipe } from '../js/engine/quartermaster.js';
 import { nextUpgrade, buyUpgrade } from '../js/engine/upgrades.js';
 import { hireHero, hireFee, zonesFor, expeditionSlots, regularsInTown } from '../js/engine/heroes.js';
 import { canDeliver, deliverCommission, claimTutorialStep } from '../js/engine/commissions.js';
@@ -297,6 +298,11 @@ function botCheckIn(bot, state, now, stats) {
   // Learn every recipe the trainer offers at this skill, while it costs under half the purse.
   for (const o of trainerRecipes(state, PROF)) {
     if (o.ready && o.cost <= state.copper * 0.5) { learnRecipe(state, o.recipe.id); stats.recipeSpend += o.cost; }
+  }
+  // Quartermaster recipes, while they cost under half of what's left after
+  // saving for the next training rank.
+  for (const o of quartermasterRecipes(state)) {
+    if (o.ready && o.cost <= (state.copper - (nextTraining(state, PROF)?.cost ?? 0)) * 0.5) { buyQuartermasterRecipe(state, o.recipe.id); stats.recipeSpend += o.cost; }
   }
   // Shop upgrades: buy the cheapest one ready, while it costs under 30% of
   // what's left after saving for the next training rank.

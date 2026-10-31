@@ -17,7 +17,11 @@
 //             Trade Guild trainer, who sells it once your skill reaches its first number.
 //             It can also be 'scroll': only learned from a recipe scroll that heroes
 //             sometimes bring back.
+//             Or 'quartermaster': bought from the guild quartermaster for `price` copper once you
+//             have `standing` with the Trade Guild and your skill reaches the first number.
 //             Recipes with no skill (smelting) are always known.
+//   standing  quartermaster recipes only: the Trade Guild standing needed ('friendly', 'honored' or 'revered').
+//   price     quartermaster recipes only: cost in copper at the guild quartermaster.
 //
 // Every material named here must exist in data/items.js.
 
@@ -91,6 +95,9 @@ export const recipes = [
   { id: 'steel-war-pick', station: 'anvil', tier: 3, skill: [170, 185, 195, 205], learn: 'scroll', seconds: 70,
     makes: { item: 'steel-war-pick', qty: 1 },
     mats: [{ item: 'steel-bar', qty: 7 }, { item: 'ironstone-grit', qty: 1 }, { item: 'smithing-flux', qty: 2 }] },
+  { id: 'guildsteel-warhammer', station: 'anvil', tier: 3, skill: [180, 195, 205, 215], learn: 'quartermaster', standing: 'friendly', price: 10000, seconds: 75,
+    makes: { item: 'guildsteel-warhammer', qty: 1 },
+    mats: [{ item: 'steel-bar', qty: 8 }, { item: 'ironstone-grit', qty: 2 }, { item: 'smithing-flux', qty: 3 }, { item: 'gale-essence', qty: 1 }] },
 
   // ---- Anvil: Blacksmithing tier 4 ----
   { id: 'flintstone-grit', station: 'anvil', tier: 4, skill: [190, 205, 215, 225], learn: 3000, seconds: 12,
@@ -110,6 +117,9 @@ export const recipes = [
   { id: 'moonsilver-lamellar-vest', station: 'anvil', tier: 4, skill: [235, 250, 260, 270], learn: 'scroll', seconds: 90,
     makes: { item: 'moonsilver-lamellar-vest', qty: 1 },
     mats: [{ item: 'moonsilver-bar', qty: 12 }, { item: 'tough-leather', qty: 2 }, { item: 'smithing-flux', qty: 3 }] },
+  { id: 'moonsilver-bulwark-greaves', station: 'anvil', tier: 4, skill: [245, 260, 270, 280], learn: 'quartermaster', standing: 'honored', price: 25000, seconds: 95,
+    makes: { item: 'moonsilver-bulwark-greaves', qty: 1 },
+    mats: [{ item: 'moonsilver-bar', qty: 13 }, { item: 'flintstone-grit', qty: 2 }, { item: 'smithing-flux', qty: 3 }, { item: 'tourmaline', qty: 1 }, { item: 'stone-essence', qty: 1 }] },
 
   // ---- Anvil: Blacksmithing tier 5 ----
   { id: 'basalt-grit', station: 'anvil', tier: 5, skill: [250, 265, 275, 285], learn: 7500, seconds: 15,
@@ -129,6 +139,9 @@ export const recipes = [
   { id: 'starmetal-maul', station: 'anvil', tier: 5, skill: [280, 295, 305, 315], learn: 'scroll', seconds: 120,
     makes: { item: 'starmetal-maul', qty: 1 },
     mats: [{ item: 'starmetal-bar', qty: 14 }, { item: 'diamond', qty: 1 }, { item: 'basalt-grit', qty: 2 }, { item: 'smithing-flux', qty: 3 }] },
+  { id: 'starmetal-vanguard-cuirass', station: 'anvil', tier: 5, skill: [285, 300, 310, 320], learn: 'quartermaster', standing: 'revered', price: 50000, seconds: 125,
+    makes: { item: 'starmetal-vanguard-cuirass', qty: 1 },
+    mats: [{ item: 'starmetal-bar', qty: 15 }, { item: 'basalt-grit', qty: 2 }, { item: 'smithing-flux', qty: 4 }, { item: 'diamond', qty: 1 }, { item: 'aether-essence', qty: 1 }] },
 
   // ---- Workbench: Leatherworking tier 1 ----
   { id: 'cured-boar-hide', station: 'workbench', tier: 1, skill: [1, 16, 26, 36], learn: 'start', seconds: 5,
@@ -192,6 +205,9 @@ export const recipes = [
   { id: 'bear-claw-gauntlets', station: 'workbench', tier: 3, skill: [170, 185, 195, 205], learn: 'scroll', seconds: 70,
     makes: { item: 'bear-claw-gauntlets', qty: 1 },
     mats: [{ item: 'tough-leather', qty: 7 }, { item: 'cured-bear-hide', qty: 1 }, { item: 'topaz', qty: 1 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'guild-couriers-boots', station: 'workbench', tier: 3, skill: [180, 195, 205, 215], learn: 'quartermaster', standing: 'friendly', price: 10000, seconds: 75,
+    makes: { item: 'guild-couriers-boots', qty: 1 },
+    mats: [{ item: 'tough-leather', qty: 8 }, { item: 'cured-bear-hide', qty: 2 }, { item: 'waxed-thread', qty: 2 }, { item: 'gale-essence', qty: 1 }] },
 
   // ---- Workbench: Leatherworking tier 4 ----
   { id: 'cured-basilisk-hide', station: 'workbench', tier: 4, skill: [190, 205, 215, 225], learn: 3000, seconds: 12,
@@ -213,6 +229,9 @@ export const recipes = [
   { id: 'basilisk-eye-mask', station: 'workbench', tier: 4, skill: [235, 250, 260, 270], learn: 'scroll', seconds: 90,
     makes: { item: 'basilisk-eye-mask', qty: 1 },
     mats: [{ item: 'boiled-leather', qty: 8 }, { item: 'cured-basilisk-hide', qty: 1 }, { item: 'tourmaline', qty: 1 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'basilisk-trackers-vest', station: 'workbench', tier: 4, skill: [245, 260, 270, 280], learn: 'quartermaster', standing: 'honored', price: 25000, seconds: 95,
+    makes: { item: 'basilisk-trackers-vest', qty: 1 },
+    mats: [{ item: 'boiled-leather', qty: 9 }, { item: 'cured-basilisk-hide', qty: 2 }, { item: 'waxed-thread', qty: 2 }, { item: 'tourmaline', qty: 1 }, { item: 'stone-essence', qty: 1 }] },
 
   // ---- Workbench: Leatherworking tier 5 ----
   { id: 'cured-drakeling-hide', station: 'workbench', tier: 5, skill: [250, 265, 275, 285], learn: 7500, seconds: 15,
@@ -234,6 +253,9 @@ export const recipes = [
   { id: 'drakewing-mantle', station: 'workbench', tier: 5, skill: [280, 295, 305, 315], learn: 'scroll', seconds: 120,
     makes: { item: 'drakewing-mantle', qty: 1 },
     mats: [{ item: 'ironhide-leather', qty: 10 }, { item: 'cured-drakeling-hide', qty: 2 }, { item: 'diamond', qty: 1 }, { item: 'waxed-thread', qty: 2 }] },
+  { id: 'drakeling-far-rangers-cloak', station: 'workbench', tier: 5, skill: [285, 300, 310, 320], learn: 'quartermaster', standing: 'revered', price: 50000, seconds: 125,
+    makes: { item: 'drakeling-far-rangers-cloak', qty: 1 },
+    mats: [{ item: 'ironhide-leather', qty: 8 }, { item: 'samite-scraps', qty: 5 }, { item: 'cured-drakeling-hide', qty: 1 }, { item: 'waxed-thread', qty: 2 }, { item: 'diamond', qty: 1 }, { item: 'aether-essence', qty: 1 }] },
 
   // ---- Alchemy table: Alchemy tier 1 ----
   { id: 'faint-mending-draught', station: 'alchemy-table', tier: 1, skill: [1, 16, 26, 36], learn: 'start', seconds: 5,
@@ -281,6 +303,9 @@ export const recipes = [
   { id: 'philter-of-second-wind', station: 'alchemy-table', tier: 3, skill: [170, 185, 195, 205], learn: 'scroll', seconds: 20,
     makes: { item: 'philter-of-second-wind', qty: 1 },
     mats: [{ item: 'ironleaf', qty: 2 }, { item: 'wild-sage', qty: 2 }, { item: 'gale-essence', qty: 1 }, { item: 'stoppered-vial', qty: 1 }] },
+  { id: 'assayers-tonic', station: 'alchemy-table', tier: 3, skill: [180, 195, 205, 215], learn: 'quartermaster', standing: 'friendly', price: 10000, seconds: 20,
+    makes: { item: 'assayers-tonic', qty: 1 },
+    mats: [{ item: 'ironleaf', qty: 3 }, { item: 'wild-sage', qty: 3 }, { item: 'gale-essence', qty: 1 }, { item: 'stoppered-vial', qty: 1 }] },
 
   // ---- Alchemy table: Alchemy tier 4 ----
   { id: 'potent-mending-draught', station: 'alchemy-table', tier: 4, skill: [190, 205, 215, 225], learn: 3000, seconds: 12,
@@ -298,6 +323,9 @@ export const recipes = [
   { id: 'ghostlight-draught', station: 'alchemy-table', tier: 4, skill: [235, 250, 260, 270], learn: 'scroll', seconds: 25,
     makes: { item: 'ghostlight-draught', qty: 1 },
     mats: [{ item: 'sunbloom', qty: 2 }, { item: 'ghostcap', qty: 2 }, { item: 'stone-essence', qty: 1 }, { item: 'stoppered-vial', qty: 1 }] },
+  { id: 'elixir-of-the-steady-hand', station: 'alchemy-table', tier: 4, skill: [245, 260, 270, 280], learn: 'quartermaster', standing: 'honored', price: 25000, seconds: 25,
+    makes: { item: 'elixir-of-the-steady-hand', qty: 1 },
+    mats: [{ item: 'sunbloom', qty: 3 }, { item: 'ghostcap', qty: 3 }, { item: 'tourmaline', qty: 1 }, { item: 'stone-essence', qty: 1 }, { item: 'stoppered-vial', qty: 1 }] },
 
   // ---- Alchemy table: Alchemy tier 5 ----
   { id: 'grand-mending-draught', station: 'alchemy-table', tier: 5, skill: [250, 265, 275, 285], learn: 7500, seconds: 15,
@@ -315,6 +343,9 @@ export const recipes = [
   { id: 'draught-of-the-long-night', station: 'alchemy-table', tier: 5, skill: [280, 295, 305, 315], learn: 'scroll', seconds: 30,
     makes: { item: 'draught-of-the-long-night', qty: 1 },
     mats: [{ item: 'starlily', qty: 2 }, { item: 'barrowmoss', qty: 2 }, { item: 'aether-essence', qty: 1 }, { item: 'cut-glass-vial', qty: 1 }] },
+  { id: 'draught-of-the-iron-will', station: 'alchemy-table', tier: 5, skill: [285, 300, 310, 320], learn: 'quartermaster', standing: 'revered', price: 50000, seconds: 30,
+    makes: { item: 'draught-of-the-iron-will', qty: 1 },
+    mats: [{ item: 'starlily', qty: 3 }, { item: 'barrowmoss', qty: 3 }, { item: 'diamond', qty: 1 }, { item: 'aether-essence', qty: 1 }, { item: 'cut-glass-vial', qty: 1 }] },
 ];
 
 export const recipeById = Object.fromEntries(recipes.map((r) => [r.id, r]));

@@ -33,6 +33,8 @@ import { demandPerHour, baseDemandPerHour } from '../js/engine/market.js';
 import { priceHistory, estimateSale } from '../js/engine/market.js';
 import { eventWarnHours } from '../js/engine/upgrades.js';
 import { upcomingEvents } from '../js/engine/events.js';
+import { quartermasterRecipes, buyQuartermasterRecipe } from '../js/engine/quartermaster.js';
+import { recipeHint } from '../js/engine/commissions.js';
 import { encodeExport, decodeExport, migrate, writeSave, readSave } from '../js/engine/save.js';
 
 const H = 60 * 60 * 1000;
@@ -485,7 +487,8 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   check('during the tutorial, no other requests post', s.commissions.list.length === 0);
   s.tutorial.done = true;
   catchUp(s, t0 + 6.5 * H);
-  check('after the tutorial, requests post every 2 hours up to 3', s.commissions.list.length === 3, `${s.commissions.list.length}`);
+  // Count requests posted, not ones still up: a 2-4 h rush can already have expired.
+  check('after the tutorial, requests post every 2 hours up to 3', s.commissions.nextId - 1 === 3 && s.commissions.list.length <= 3, `${s.commissions.nextId - 1} posted, ${s.commissions.list.length} up`);
   for (const c of [...s.commissions.list]) declineCommission(s, c.id);
   check('declining clears the counter', s.commissions.list.length === 0);
 
@@ -739,6 +742,31 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   const e = { id: 999, type: 'tournament', startsAt: now + 5 * H, endsAt: now + 29 * H, status: 'planned', itemId: null };
   s.events.list.push(e);
   check('the top Ledger warns 6 hours ahead', eventWarnHours(s) === 6 && upcomingEvents(s, now, 6).includes(e) && !upcomingEvents(s, now - 2 * H, 6).includes(e));
+}
+
+// The quartermaster: recipes gated by standing and skill, bought for gold.
+{
+  const qm = recipes.filter((r) => r.learn === 'quartermaster');
+  check('nine quartermaster recipes, three per profession, none sold by the trainer', qm.length === 9 &&
+    ['anvil', 'workbench', 'alchemy-table'].every((st) => qm.filter((r) => r.station === st).length === 3) &&
+    !['blacksmithing', 'leatherworking', 'alchemy'].some((p) => trainerRecipes(game(), p).some((o) => o.recipe.learn === 'quartermaster')));
+  check('blue quartermaster items from Honored, green at Friendly', qm.every((r) => itemById[r.makes.item].quality === (r.standing === 'friendly' ? 'uncommon' : 'rare')));
+  const s = game();
+  s.copper = 10_000_000;
+  const warhammer = qm.find((r) => r.station === 'anvil' && r.standing === 'friendly');
+  const offer = () => quartermasterRecipes(s).find((o) => o.recipe.id === warhammer.id);
+  check('the quartermaster needs standing first', /Friendly/.test(offer().reason));
+  s.reputation = tuning.standings.find((x) => x.id === 'friendly').rep;
+  check('then skill', /skill/.test(offer().reason));
+  debugSetSkill(s, 'blacksmithing', warhammer.skill[0]);
+  const before = s.copper;
+  buyQuartermasterRecipe(s, warhammer.id);
+  check('buying a quartermaster recipe teaches it for its price', s.knownRecipes[warhammer.id] && before - s.copper === warhammer.price && !quartermasterRecipes(s).some((o) => o.recipe.id === warhammer.id));
+  check('only your professions are offered', quartermasterRecipes(s).every((o) => o.recipe.station === 'anvil' || o.recipe.station === 'forge'));
+  const tonic = qm.find((r) => r.station === 'alchemy-table');
+  let err = null; try { buyQuartermasterRecipe(s, tonic.id); } catch (e) { err = e.message; }
+  check('a profession you don’t have can’t buy', /profession/.test(err ?? ''));
+  check('a commission for a quartermaster item says where to buy it', /quartermaster/.test(recipeHint(s, { recipeId: qm.find((r) => r.station === 'anvil' && r.standing === 'honored').id }) ?? ''));
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');

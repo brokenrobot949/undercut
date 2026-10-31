@@ -377,6 +377,12 @@ Commission reputation scales with what the order is worth. An order worth at lea
 | Leatherworking | Guild courier's boots | Basilisk tracker's vest | Drakeling far-ranger's cloak |
 | Alchemy | Assayer's tonic | Elixir of the steady hand | Draught of the iron will |
 
+As built (Oct 31, 2026; in `data/recipes.js` with `learn: 'quartermaster'`):
+
+- Prices: 1 g at Friendly, 2.5 g at Honored and 5 g at Revered. Each also needs the recipe's skill: 180 for tier 3, 245 for tier 4 and 285 for tier 5.
+- Each one uses a bit more than the best normal recipe of its tier. The tier 3 ones add an essence, and the blue ones add a gem and an essence. Their base values are material cost × 1.7 (green) or × 2.1 (blue).
+- Once you have the standing, commissions can ask for quartermaster items, with a hint saying where to buy the recipe.
+
 **Masterwork recipes** (epic, Exalted; each needs an endgame material)
 
 | Profession | Recipes |

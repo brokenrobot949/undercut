@@ -15,15 +15,15 @@ export const standingUnlocks = [
   ] },
   { standing: 'friendly', unlocks: [
     { text: 'Your second profession wing' },
-    { text: 'Tier 3 quartermaster recipes', soon: true },
+    { text: 'Tier 3 quartermaster recipes' },
   ] },
   { standing: 'honored', unlocks: [
     { text: 'Your third profession wing' },
-    { text: 'Blue-quality quartermaster recipes', soon: true },
+    { text: 'Blue-quality quartermaster recipes' },
   ] },
   { standing: 'revered', unlocks: [
     { text: 'Raid expeditions and endgame materials', soon: true },
-    { text: 'Top blue quartermaster recipes', soon: true },
+    { text: 'Top blue quartermaster recipes' },
   ] },
   { standing: 'exalted', unlocks: [
     { text: 'Masterwork (epic) recipes', soon: true },

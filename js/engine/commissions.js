@@ -17,6 +17,8 @@ import { marketValue } from './market.js';
 import { hasProfession, knowsRecipe, recipeProfession, skillOf } from './skills.js';
 import { tutorialDone, claimTutorial } from './tutorial.js';
 import { commissionSlotsFor, commissionPayMult } from './upgrades.js';
+import { hasStanding } from './guild.js';
+import { quartermasterHint } from './quartermaster.js';
 
 const HOUR = 60 * 60 * 1000;
 
@@ -63,6 +65,8 @@ function candidates(state, category = null) {
     const item = itemById[r.makes.item];
     if (!['consumable', 'gear'].includes(item.category) || (category && item.category !== category)) return false;
     if (r.learn === 'scroll' && !knowsRecipe(state, r)) return false;
+    // Quartermaster recipes once you have the standing to buy them.
+    if (r.learn === 'quartermaster' && !knowsRecipe(state, r) && !hasStanding(state, r.standing)) return false;
     const skill = skillOf(state, prof);
     return r.skill[0] <= skill + CT.reachAbove && r.skill[0] >= skill - CT.reachBelow;
   });
@@ -191,5 +195,6 @@ function rewardRegular(state, regularId) {
 export function recipeHint(state, c) {
   const r = recipeById[c.recipeId];
   if (knowsRecipe(state, r)) return null;
+  if (r.learn === 'quartermaster') return quartermasterHint(r);
   return `Learn the recipe at the Trade Guild trainer (skill ${r.skill[0]}).`;
 }
