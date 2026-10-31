@@ -658,6 +658,11 @@ The auction house is the riskiest part of the design, so Phase 1 builds the full
 5. **Phase 4 · Polish and launch**
     - Icon pass and credits screen, motion, onboarding polish, home-screen install, sound effects.
     - Final tuning and a full phone test pass.
+    - Late-game gold sinks (decor, sign styles, guild donations, trophies), added for the Phase 3 carry-over.
+    - **Gate passed Oct 31, 2026:** a fresh reviewer ran the engine checks (167 PASS) and the sim. The steady bots reached the gate on days 38–55, with no sim problems and Hot at most 4% in a quiet market. They checked every tab, Settings, Credits and an item sheet at 390 × 844 in both themes, with no layout problems or console errors, and the IP and hard-constraint checks were clean. Fixed after the review: sound switched to Web Audio so iPhone Safari can play sounds that start from timers; the tutorial tab hint got a dot that shows in the blue theme and with reduced motion; the gilded sign's frame now shows only in the shop list, not in the header. Still open:
+      - Sound on a real iPhone hasn't been tried yet.
+      - In the sim, bots' spare endgame materials still show low sell-through (10–40%). A direct test sells every unit listed at market price, so this looks like how the bots list rather than the market.
+      - A few thin-market items sell about half of what bots list (some quartermaster gear, Fenlight tonic, Tourmaline, tin and iron bars).
 
 **Later updates:** Tailoring, Engineering, Enchanting (a shop service plus disenchanting), Cooking, First Aid, and a neutral port market.
 

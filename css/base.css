@@ -852,6 +852,8 @@ input[type="number"] {
 
 /* Tutorial: the tab where the current step is done glows gently. */
 .tab-hint { color: var(--highlight); }
+/* A dot that shows even with motion turned off, in both themes. */
+.tab-hint::after { content: ''; position: absolute; top: 8px; left: calc(50% - 22px); width: 9px; height: 9px; border-radius: 50%; background: var(--accent-strong); box-shadow: 0 0 0 2px var(--bg-deep); }
 .tab-hint .icon { animation: hint-glow 1.6s ease-in-out infinite; }
 @keyframes hint-glow { 50% { transform: translateY(-2px) scale(1.12); } }
 @media (prefers-reduced-motion: reduce) { .tab-hint .icon { animation: none; } }
@@ -863,7 +865,9 @@ input[type="number"] {
 /* Sign styles change the lettering; the standing banner (.sign-N) still shows. */
 .sign-style-oak { color: #d6a873; text-shadow: 0 1px 0 #3b2414, 0 0 6px rgb(120 70 30 / 0.5); letter-spacing: 0.03em; }
 .sign-style-ember { color: #ffb45e; text-shadow: 0 0 6px rgb(255 110 40 / 0.85), 0 0 14px rgb(255 70 20 / 0.45); }
-.sign-style-gilded { color: #f3d27a; text-shadow: 0 1px 0 #6b4e12; outline: 1px solid #c9a24a; outline-offset: 3px; border-radius: 3px; }
+.sign-style-gilded { color: #f3d27a; text-shadow: 0 1px 0 #6b4e12, 0 0 8px rgb(243 210 122 / 0.45); }
+/* The frame shows in the shop list; in the header it would cross the standing banner. */
+.sign-preview.sign-style-gilded { outline: 1px solid #c9a24a; outline-offset: 3px; border-radius: 3px; }
 .sign-preview { font-family: var(--font-heading); justify-self: start; }
 /* Rows with no second line keep their button beside the name. */
 .my-listing.one-line > .small-btn, .my-listing.one-line > .small { grid-row: 1; grid-column: -2; justify-self: end; }
