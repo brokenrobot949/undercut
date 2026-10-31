@@ -398,6 +398,12 @@ As built (Oct 31, 2026; in `data/recipes.js` with `learn: 'quartermaster'`):
 | Leatherworking | Wyrmscale hunter's mantle (Wyrm scale), Voidglass-studded jerkin (Voidglass shard) |
 | Alchemy | Phoenix-ember philter (Ember core), Voidglass tincture of clarity (Voidglass shard) |
 
+As built (Oct 31, 2026):
+
+- The quartermaster sells masterworks for 10 g each at Exalted and skill 300.
+- Each gear masterwork needs 2 of its endgame material plus about 1.2× the tier 5 materials of that station's Revered recipe. Each alchemy masterwork needs 1. Base values are material cost × 2.5: about 1.9 g for weapons and plate, 1.7 g for leatherworking gear, 92 s for the alchemy ones.
+- The shop sign in the header grows with standing: no banner at Neutral, a bronze underline at Friendly, silver at Honored, a gold double line at Revered, and a full banner at Exalted. At Exalted, "Guildmaster" appears next to your standing. Both are set in `shopSigns` in `data/guild.js`.
+
 Once Exalted, every commission still pays gold, and masterwork crafts become the high-end market. New professions in later updates add new goals on top.
 
 ## Shop upgrades

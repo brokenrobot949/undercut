@@ -91,6 +91,14 @@ export const items = [
   { id: 'voidglass-shard', name: 'Voidglass shard', tier: 5, category: 'material', quality: 'rare', base: 2500, demand: 0.3, npcStock: false },
   { id: 'wyrm-scale', name: 'Wyrm scale', tier: 5, category: 'material', quality: 'rare', base: 2500, demand: 0.3, npcStock: false },
 
+  // ---- Masterwork (epic) items: Exalted quartermaster recipes ----
+  { id: 'emberheart-greatsword', name: 'Emberheart greatsword', tier: 5, category: 'gear', armor: 'weapon', quality: 'epic', base: 19130, demand: 0.2 },
+  { id: 'wyrmscale-warplate', name: 'Wyrmscale warplate', tier: 5, category: 'gear', armor: 'plate', quality: 'epic', base: 19130, demand: 0.2 },
+  { id: 'wyrmscale-hunters-mantle', name: 'Wyrmscale hunter\'s mantle', tier: 5, category: 'gear', armor: 'mail', quality: 'epic', base: 16745, demand: 0.2 },
+  { id: 'voidglass-studded-jerkin', name: 'Voidglass-studded jerkin', tier: 5, category: 'gear', armor: 'leather', quality: 'epic', base: 16745, demand: 0.2 },
+  { id: 'phoenix-ember-philter', name: 'Phoenix-ember philter', tier: 5, category: 'consumable', quality: 'epic', base: 9193, demand: 2 },
+  { id: 'voidglass-tincture-of-clarity', name: 'Voidglass tincture of clarity', tier: 5, category: 'consumable', quality: 'epic', base: 9193, demand: 2 },
+
   // ---- Junk (gray vendor trash from hero trips; vendor only) ----
   { id: 'bent-horseshoe', name: 'Bent horseshoe', tier: 1, category: 'junk', quality: 'poor', base: 20, loot: 'junk' },
   { id: 'chipped-bone-dice', name: 'Chipped bone dice', tier: 1, category: 'junk', quality: 'poor', base: 28, loot: 'junk' },

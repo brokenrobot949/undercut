@@ -2,6 +2,7 @@
 
 import { el, coins, setTheme, updateLive } from './components.js';
 import { getFaction, getStanding } from '../engine/game.js';
+import { shopSigns } from '../../data/guild.js';
 import { openSettings } from './settings.js';
 import { renderShop } from './shop.js';
 import { renderWorkshop } from './workshop.js';
@@ -51,9 +52,9 @@ export function mountApp(root, ctx) {
 
     header.replaceChildren(
       el('div', { class: 'header-title' },
-        el('div', { class: 'shop-name' }, `${state.player.name}'s Shop`),
+        el('div', { class: `shop-name sign-${shopSigns[current.id].sign}` }, `${state.player.name}'s Shop`),
         el('div', { class: 'standing' },
-          el('span', {}, current.name),
+          el('span', {}, current.name, shopSigns[current.id].title ? el('span', { class: 'shop-title' }, ` · ${shopSigns[current.id].title}`) : null),
           el('div', { class: 'bar', role: 'progressbar', 'aria-label': 'Guild standing',
             'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(Math.round(pct)) },
             el('span', { style: `width:${pct}%` })))),

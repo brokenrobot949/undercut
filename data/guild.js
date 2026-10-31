@@ -26,10 +26,21 @@ export const standingUnlocks = [
     { text: 'Top blue quartermaster recipes' },
   ] },
   { standing: 'exalted', unlocks: [
-    { text: 'Masterwork (epic) recipes', soon: true },
-    { text: 'The Guildmaster title and a top-tier shop banner', soon: true },
+    { text: 'Masterwork (epic) recipes' },
+    { text: 'The Guildmaster title and a top-tier shop banner' },
   ] },
 ];
+
+// The shop sign in the header grows with your standing (cosmetic only).
+//   sign    the banner style, from css/base.css (.sign-0 to .sign-4)
+//   title   shown after your shop's name, or null
+export const shopSigns = {
+  neutral: { sign: 0, title: null },
+  friendly: { sign: 1, title: null },
+  honored: { sign: 2, title: null },
+  revered: { sign: 3, title: null },
+  exalted: { sign: 4, title: 'Guildmaster' },
+};
 
 // Short tips under the guild panel's standing bar.
 export const guildTips = {

@@ -739,3 +739,20 @@ input[type="number"] {
 .chart-head, .chart-foot { display: flex; justify-content: space-between; gap: 8px; margin: 2px 0; }
 .estimate { color: var(--highlight); }
 .raid-tag { color: var(--q-rare); border-color: var(--q-rare); }
+
+/* ---- Shop sign: a banner under the shop name that grows with standing ---- */
+
+.shop-name.sign-1, .shop-name.sign-2, .shop-name.sign-3, .shop-name.sign-4 { padding-bottom: 2px; border-bottom: 2px solid transparent; }
+.shop-name.sign-1 { border-bottom-color: #9a6b3c; }
+.shop-name.sign-2 { border-bottom-color: #b9c0c8; }
+.shop-name.sign-3 { border-bottom: 3px double var(--highlight); }
+.shop-name.sign-4 {
+  padding: 1px 8px 2px;
+  border: 1px solid var(--highlight);
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  color: var(--on-accent);
+  display: inline-block;
+  max-width: 100%;
+}
+.shop-title { color: var(--highlight); font-weight: 600; }

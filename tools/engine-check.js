@@ -747,7 +747,7 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
 
 // The quartermaster: recipes gated by standing and skill, bought for gold.
 {
-  const qm = recipes.filter((r) => r.learn === 'quartermaster');
+  const qm = recipes.filter((r) => r.learn === 'quartermaster' && !r.masterwork);
   check('nine quartermaster recipes, three per profession, none sold by the trainer', qm.length === 9 &&
     ['anvil', 'workbench', 'alchemy-table'].every((st) => qm.filter((r) => r.station === st).length === 3) &&
     !['blacksmithing', 'leatherworking', 'alchemy'].some((p) => trainerRecipes(game(), p).some((o) => o.recipe.learn === 'quartermaster')));
@@ -790,6 +790,27 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   const got = s.mailbox.items['ember-core'] ?? 0;
   check('a raid brings back its endgame material and tier 5 loot', got >= 1 && Object.keys(s.mailbox.items).some((id) => itemById[id].tier === 5 && id !== 'ember-core'), `${got} ember cores`);
   check('NPC sellers never list endgame materials', ['ember-core', 'voidglass-shard', 'wyrm-scale'].every((id) => s.market.items[id] && !s.market.items[id].listings.some((l) => l.seller === 'npc')));
+}
+
+// Masterworks: epic recipes from the quartermaster at Exalted, made with endgame materials.
+{
+  const mw = recipes.filter((r) => r.masterwork);
+  const endgame = ['ember-core', 'voidglass-shard', 'wyrm-scale'];
+  check('six masterworks, two per profession, epic, each needing an endgame material', mw.length === 6 &&
+    ['anvil', 'workbench', 'alchemy-table'].every((st) => mw.filter((r) => r.station === st).length === 2) &&
+    mw.every((r) => r.learn === 'quartermaster' && r.standing === 'exalted' && itemById[r.makes.item].quality === 'epic' && r.mats.some((m) => endgame.includes(m.item))));
+  const s = game();
+  s.copper = 10_000_000;
+  debugSetSkill(s, 'blacksmithing', 300);
+  s.reputation = tuning.standings.find((x) => x.id === 'revered').rep;
+  const sword = mw.find((r) => r.station === 'anvil');
+  check('masterworks need Exalted', /Exalted/.test(quartermasterRecipes(s).find((o) => o.recipe.id === sword.id).reason));
+  s.reputation = tuning.standings.find((x) => x.id === 'exalted').rep;
+  buyQuartermasterRecipe(s, sword.id);
+  for (const m of sword.mats) s.bags[m.item] = m.qty;
+  queueCraft(s, sword.id, 1, t0);
+  catchUp(s, t0 + 10 * 60 * 1000);
+  check('a masterwork can be bought and crafted', madeCount(s, sword.makes.item) === 1);
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');

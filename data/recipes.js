@@ -20,8 +20,9 @@
 //             Or 'quartermaster': bought from the guild quartermaster for `price` copper once you
 //             have `standing` with the Trade Guild and your skill reaches the first number.
 //             Recipes with no skill (smelting) are always known.
-//   standing  quartermaster recipes only: the Trade Guild standing needed ('friendly', 'honored' or 'revered').
+//   standing  quartermaster recipes only: the Trade Guild standing needed ('friendly', 'honored', 'revered', or 'exalted' for masterworks).
 //   price     quartermaster recipes only: cost in copper at the guild quartermaster.
+//   masterwork  true for Exalted masterwork (epic) recipes; they are sold by the quartermaster like the others.
 //
 // Every material named here must exist in data/items.js.
 
@@ -142,6 +143,12 @@ export const recipes = [
   { id: 'starmetal-vanguard-cuirass', station: 'anvil', tier: 5, skill: [285, 300, 310, 320], learn: 'quartermaster', standing: 'revered', price: 50000, seconds: 125,
     makes: { item: 'starmetal-vanguard-cuirass', qty: 1 },
     mats: [{ item: 'starmetal-bar', qty: 15 }, { item: 'basalt-grit', qty: 2 }, { item: 'smithing-flux', qty: 4 }, { item: 'diamond', qty: 1 }, { item: 'aether-essence', qty: 1 }] },
+  { id: 'emberheart-greatsword', station: 'anvil', tier: 5, skill: [300, 310, 320, 330], learn: 'quartermaster', masterwork: true, standing: 'exalted', price: 100000, seconds: 150,
+    makes: { item: 'emberheart-greatsword', qty: 1 },
+    mats: [{ item: 'ember-core', qty: 2 }, { item: 'starmetal-bar', qty: 18 }, { item: 'basalt-grit', qty: 2 }, { item: 'smithing-flux', qty: 5 }, { item: 'diamond', qty: 1 }, { item: 'aether-essence', qty: 1 }] },
+  { id: 'wyrmscale-warplate', station: 'anvil', tier: 5, skill: [300, 310, 320, 330], learn: 'quartermaster', masterwork: true, standing: 'exalted', price: 100000, seconds: 150,
+    makes: { item: 'wyrmscale-warplate', qty: 1 },
+    mats: [{ item: 'wyrm-scale', qty: 2 }, { item: 'starmetal-bar', qty: 18 }, { item: 'basalt-grit', qty: 2 }, { item: 'smithing-flux', qty: 5 }, { item: 'diamond', qty: 1 }, { item: 'aether-essence', qty: 1 }] },
 
   // ---- Workbench: Leatherworking tier 1 ----
   { id: 'cured-boar-hide', station: 'workbench', tier: 1, skill: [1, 16, 26, 36], learn: 'start', seconds: 5,
@@ -256,6 +263,12 @@ export const recipes = [
   { id: 'drakeling-far-rangers-cloak', station: 'workbench', tier: 5, skill: [285, 300, 310, 320], learn: 'quartermaster', standing: 'revered', price: 50000, seconds: 125,
     makes: { item: 'drakeling-far-rangers-cloak', qty: 1 },
     mats: [{ item: 'ironhide-leather', qty: 8 }, { item: 'samite-scraps', qty: 5 }, { item: 'cured-drakeling-hide', qty: 1 }, { item: 'waxed-thread', qty: 2 }, { item: 'diamond', qty: 1 }, { item: 'aether-essence', qty: 1 }] },
+  { id: 'wyrmscale-hunters-mantle', station: 'workbench', tier: 5, skill: [300, 310, 320, 330], learn: 'quartermaster', masterwork: true, standing: 'exalted', price: 100000, seconds: 150,
+    makes: { item: 'wyrmscale-hunters-mantle', qty: 1 },
+    mats: [{ item: 'wyrm-scale', qty: 2 }, { item: 'ironhide-leather', qty: 10 }, { item: 'samite-scraps', qty: 6 }, { item: 'cured-drakeling-hide', qty: 1 }, { item: 'waxed-thread', qty: 2 }, { item: 'diamond', qty: 1 }, { item: 'aether-essence', qty: 1 }] },
+  { id: 'voidglass-studded-jerkin', station: 'workbench', tier: 5, skill: [300, 310, 320, 330], learn: 'quartermaster', masterwork: true, standing: 'exalted', price: 100000, seconds: 150,
+    makes: { item: 'voidglass-studded-jerkin', qty: 1 },
+    mats: [{ item: 'voidglass-shard', qty: 2 }, { item: 'ironhide-leather', qty: 10 }, { item: 'samite-scraps', qty: 6 }, { item: 'cured-drakeling-hide', qty: 1 }, { item: 'waxed-thread', qty: 2 }, { item: 'diamond', qty: 1 }, { item: 'aether-essence', qty: 1 }] },
 
   // ---- Alchemy table: Alchemy tier 1 ----
   { id: 'faint-mending-draught', station: 'alchemy-table', tier: 1, skill: [1, 16, 26, 36], learn: 'start', seconds: 5,
@@ -346,6 +359,12 @@ export const recipes = [
   { id: 'draught-of-the-iron-will', station: 'alchemy-table', tier: 5, skill: [285, 300, 310, 320], learn: 'quartermaster', standing: 'revered', price: 50000, seconds: 30,
     makes: { item: 'draught-of-the-iron-will', qty: 1 },
     mats: [{ item: 'starlily', qty: 3 }, { item: 'barrowmoss', qty: 3 }, { item: 'diamond', qty: 1 }, { item: 'aether-essence', qty: 1 }, { item: 'cut-glass-vial', qty: 1 }] },
+  { id: 'phoenix-ember-philter', station: 'alchemy-table', tier: 5, skill: [300, 310, 320, 330], learn: 'quartermaster', masterwork: true, standing: 'exalted', price: 100000, seconds: 40,
+    makes: { item: 'phoenix-ember-philter', qty: 1 },
+    mats: [{ item: 'ember-core', qty: 1 }, { item: 'starlily', qty: 4 }, { item: 'barrowmoss', qty: 4 }, { item: 'diamond', qty: 1 }, { item: 'aether-essence', qty: 1 }, { item: 'cut-glass-vial', qty: 1 }] },
+  { id: 'voidglass-tincture-of-clarity', station: 'alchemy-table', tier: 5, skill: [300, 310, 320, 330], learn: 'quartermaster', masterwork: true, standing: 'exalted', price: 100000, seconds: 40,
+    makes: { item: 'voidglass-tincture-of-clarity', qty: 1 },
+    mats: [{ item: 'voidglass-shard', qty: 1 }, { item: 'starlily', qty: 4 }, { item: 'barrowmoss', qty: 4 }, { item: 'diamond', qty: 1 }, { item: 'aether-essence', qty: 1 }, { item: 'cut-glass-vial', qty: 1 }] },
 ];
 
 export const recipeById = Object.fromEntries(recipes.map((r) => [r.id, r]));

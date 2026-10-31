@@ -45,7 +45,7 @@ export function renderShop(ctx) {
       el('p', { class: 'small dim' }, 'Each rank lets your skill climb higher. Train the next one once you reach the cap. Recipes go on sale as your skill reaches them.'),
       professions.filter((p) => hasProfession(ctx.state, p.id)).flatMap((p) => [trainerRow(ctx, p.id), recipeOffers(ctx, p.id)]),
       el('h3', {}, 'Quartermaster'),
-      el('p', { class: 'small dim' }, `Better recipes for members in good standing, from ${tuning.standings[1].name}. Blue-quality ones from ${tuning.standings[2].name}.`),
+      el('p', { class: 'small dim' }, `Better recipes for members in good standing, from ${tuning.standings[1].name}. Blue-quality ones from ${tuning.standings[2].name}, and masterworks (epic) at ${tuning.standings[4].name}.`),
       quartermasterOffers(ctx),
     ),
     upgradesPanel(ctx),
