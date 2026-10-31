@@ -119,10 +119,11 @@ export function scarcity(state, item) {
 // 'hot', 'steady', 'slow' or 'flooded', for the item's demand tag.
 export function demandTag(state, item) {
   const m = state.market.items[item.id];
+  const T = M.tags;
   const days = supplyDays(state, item);
-  if (days > M.normalSupplyDays + 0.6) return 'flooded';
-  if (m.fair < item.base * 0.88 || days > M.normalSupplyDays + 0.25) return 'slow';
-  if (m.fair > item.base * 1.12 || scarcity(state, item) > M.normalScarcity + 0.15) return 'hot';
+  if (days > M.normalSupplyDays + T.floodedDays) return 'flooded';
+  if (m.fair < item.base * T.slowPrice || days > M.normalSupplyDays + T.slowDays) return 'slow';
+  if (m.fair > item.base * T.hotPrice || scarcity(state, item) > T.hotScarcity) return 'hot';
   return 'steady';
 }
 

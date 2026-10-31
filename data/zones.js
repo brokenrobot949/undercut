@@ -11,32 +11,32 @@
 
 export const zones = [
   {
-    id: 'rustvein-hollow', name: 'Rustvein Hollow', tier: 1, levels: [1, 15], minSkill: 1, feePerHour: 110,
+    id: 'rustvein-hollow', name: 'Rustvein Hollow', tier: 1, levels: [1, 15], minSkill: 1, feePerHour: 95,
     blurb: 'Red cliffs riddled with old copper workings.',
     loot: { mining: [{ item: 'copper-ore', perHour: 10 }, { item: 'rough-stone', perHour: 6 }] },
   },
   {
-    id: 'tinmouth-ridge', name: 'Tinmouth Ridge', tier: 2, levels: [15, 25], minSkill: 75, feePerHour: 170,
+    id: 'tinmouth-ridge', name: 'Tinmouth Ridge', tier: 2, levels: [15, 25], minSkill: 75, feePerHour: 145,
     blurb: 'Windy ridges where tin runs close to the surface.',
     loot: { mining: [{ item: 'tin-ore', perHour: 7 }, { item: 'coarse-stone', perHour: 5 }, { item: 'copper-ore', perHour: 3 }] },
   },
   {
-    id: 'emberfall-quarry', name: 'Emberfall Quarry', tier: 3, levels: [25, 35], minSkill: 125, feePerHour: 245,
+    id: 'emberfall-quarry', name: 'Emberfall Quarry', tier: 3, levels: [25, 35], minSkill: 125, feePerHour: 210,
     blurb: 'A smoking quarry cut deep into iron-red rock.',
     loot: { mining: [{ item: 'iron-ore', perHour: 7 }, { item: 'ironstone', perHour: 5 }, { item: 'tin-ore', perHour: 2 }] },
   },
   {
-    id: 'moonscar-basin', name: 'Moonscar Basin', tier: 4, levels: [35, 45], minSkill: 175, feePerHour: 310,
+    id: 'moonscar-basin', name: 'Moonscar Basin', tier: 4, levels: [35, 45], minSkill: 175, feePerHour: 265,
     blurb: 'A pale crater lake ringed with silver-veined cliffs.',
     loot: { mining: [{ item: 'moonsilver-ore', perHour: 6 }, { item: 'flintstone', perHour: 4 }, { item: 'iron-ore', perHour: 2 }] },
   },
   {
-    id: 'skyfall-crater', name: 'Skyfall Crater', tier: 5, levels: [45, 60], minSkill: 225, feePerHour: 400,
+    id: 'skyfall-crater', name: 'Skyfall Crater', tier: 5, levels: [45, 60], minSkill: 225, feePerHour: 340,
     blurb: 'Black glass and starmetal where a falling star struck.',
     loot: { mining: [{ item: 'starmetal-ore', perHour: 5 }, { item: 'basalt', perHour: 4 }, { item: 'moonsilver-ore', perHour: 2 }] },
   },
   {
-    id: 'fernwhistle-glade', name: 'Fernwhistle Glade', tier: 1, levels: [1, 15], minSkill: 1, feePerHour: 95,
+    id: 'fernwhistle-glade', name: 'Fernwhistle Glade', tier: 1, levels: [1, 15], minSkill: 1, feePerHour: 80,
     blurb: 'Sunny glades where the ferns hum in the wind.',
     loot: {
       herbalism: [{ item: 'dawnpetal', perHour: 8 }, { item: 'silverfern', perHour: 6 }],
@@ -44,7 +44,7 @@ export const zones = [
     },
   },
   {
-    id: 'bramblewick-fen', name: 'Bramblewick Fen', tier: 2, levels: [15, 25], minSkill: 75, feePerHour: 135,
+    id: 'bramblewick-fen', name: 'Bramblewick Fen', tier: 2, levels: [15, 25], minSkill: 75, feePerHour: 115,
     blurb: 'A bramble-choked fen full of wolves and thistles.',
     loot: {
       herbalism: [{ item: 'thistlebur', perHour: 6 }, { item: 'bruisewort', perHour: 5 }],
@@ -52,7 +52,7 @@ export const zones = [
     },
   },
   {
-    id: 'wildsage-downs', name: 'Wildsage Downs', tier: 3, levels: [25, 35], minSkill: 125, feePerHour: 215,
+    id: 'wildsage-downs', name: 'Wildsage Downs', tier: 3, levels: [25, 35], minSkill: 125, feePerHour: 185,
     blurb: 'Rolling sage-covered hills where bears roam.',
     loot: {
       herbalism: [{ item: 'ironleaf', perHour: 5 }, { item: 'wild-sage', perHour: 5 }],
@@ -60,7 +60,7 @@ export const zones = [
     },
   },
   {
-    id: 'ghostlight-marsh', name: 'Ghostlight Marsh', tier: 4, levels: [35, 45], minSkill: 175, feePerHour: 290,
+    id: 'ghostlight-marsh', name: 'Ghostlight Marsh', tier: 4, levels: [35, 45], minSkill: 175, feePerHour: 245,
     blurb: 'A misty marsh lit at night by pale glowing caps.',
     loot: {
       herbalism: [{ item: 'sunbloom', perHour: 5 }, { item: 'ghostcap', perHour: 4 }],
@@ -68,7 +68,7 @@ export const zones = [
     },
   },
   {
-    id: 'barrowmoor', name: 'Barrowmoor', tier: 5, levels: [45, 60], minSkill: 225, feePerHour: 365,
+    id: 'barrowmoor', name: 'Barrowmoor', tier: 5, levels: [45, 60], minSkill: 225, feePerHour: 310,
     blurb: 'Old burial mounds under moss, where drakelings nest.',
     loot: {
       herbalism: [{ item: 'starlily', perHour: 4 }, { item: 'barrowmoss', perHour: 4 }],

@@ -136,6 +136,13 @@ export const tuning = {
     scarcityStrength: 0.4,
     // The fair price never goes above base x this.
     maxPriceMult: 3,
+
+    // Demand tags on each item. Flooded and Slow: listed stock above normal,
+    // in days of demand, or a price below base x slowPrice. Hot: a price above
+    // base x hotPrice, or more than this share of the buyer reservoir waiting.
+    // Rare items (gems, scrolls, gear) have few listings, so their price and
+    // waiting buyers bounce around more; these keep Hot to about 1 check in 8.
+    tags: { floodedDays: 0.6, slowDays: 0.25, slowPrice: 0.88, hotPrice: 1.15, hotScarcity: 0.5 },
   },
 
   // Demand multiplier by hero level band (tier 1 to 5): the realm has the most

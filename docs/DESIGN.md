@@ -223,7 +223,7 @@ Hiring is one pick from a board, with no roster to manage. The tavern board show
 
 **No failed trips.** A trip never comes back empty. A bad haul comes with a short flavor line, like "Brakka was chased off by a bear and came home with half a load." This keeps the idle loop low-stress.
 
-**Zones.** Ten zones, two per tier: one leans toward ore, the other toward herbs and hides. Heroes only go to zones within their level band. Ore zones: Rustvein Hollow (tier 1), Tinmouth Ridge (tier 2), Emberfall Quarry (tier 3), Moonscar Basin (tier 4) and Skyfall Crater (tier 5). Herb and hide zones: Fernwhistle Glade (1), Bramblewick Fen (2), Wildsage Downs (3), Ghostlight Marsh (4) and Barrowmoor (5). The first hero on the board always gathers for your profession at the tier you're crafting in. At Revered standing, raid expeditions open: level-60 heroes only, 8 hours, a high fee, and the only source of endgame materials.
+**Zones.** Ten zones, two per tier: one leans toward ore, the other toward herbs and hides. Heroes only go to zones within their level band. Ore zones: Rustvein Hollow (tier 1), Tinmouth Ridge (tier 2), Emberfall Quarry (tier 3), Moonscar Basin (tier 4) and Skyfall Crater (tier 5). Herb and hide zones: Fernwhistle Glade (1), Bramblewick Fen (2), Wildsage Downs (3), Ghostlight Marsh (4) and Barrowmoor (5). The first hero on the board always gathers for your profession at the tier you're crafting in. At Revered standing, raid expeditions open: level-60 heroes only, 8 hours, a high fee, and the only source of endgame materials. There are three raid destinations: Cindermaw Caldera (Ember core), The Hollow Spire (Voidglass shard) and Drakesleep Peaks (Wyrm scale).
 
 **Races, classes and perks**
 
@@ -369,6 +369,22 @@ The Trade Guild is the long-term goal. Standing unlocks training ranks, recipes 
 
 Commission reputation scales with what the order is worth. An order worth at least a typical piece of gear at its tier (150 c, 450 c, 8 s, 14 s, 26 s for tiers 1–5) earns the full amount; a smaller one earns less, never under a quarter. Guild contracts count as full size at four times that. All commission reputation is then multiplied by 0.65 (repScale in data/commissions.js), tuned so a cautious player reaches Friendly in week 1, Honored in weeks 2–3, Revered in weeks 4–5 and Exalted in weeks 6–8.
 
+**Quartermaster recipes** (bought from the guild quartermaster once you reach the standing)
+
+| Profession | Friendly (green, tier 3) | Honored (blue, tier 4) | Revered (blue, tier 5) |
+| --- | --- | --- | --- |
+| Blacksmithing | Guildsteel warhammer | Moonsilver bulwark greaves | Starmetal vanguard cuirass |
+| Leatherworking | Guild courier's boots | Basilisk tracker's vest | Drakeling far-ranger's cloak |
+| Alchemy | Assayer's tonic | Elixir of the steady hand | Draught of the iron will |
+
+**Masterwork recipes** (epic, Exalted; each needs an endgame material)
+
+| Profession | Recipes |
+| --- | --- |
+| Blacksmithing | Emberheart greatsword (Ember core), Wyrmscale warplate (Wyrm scale) |
+| Leatherworking | Wyrmscale hunter's mantle (Wyrm scale), Voidglass-studded jerkin (Voidglass shard) |
+| Alchemy | Phoenix-ember philter (Ember core), Voidglass tincture of clarity (Voidglass shard) |
+
 Once Exalted, every commission still pays gold, and masterwork crafts become the high-end market. New professions in later updates add new goals on top.
 
 ## Shop upgrades
@@ -422,7 +438,8 @@ The first profession should reach Artisan in about 2 to 3 weeks of regular check
 - NPC buyers are an unlimited source of gold, so costs scale by tier to keep gold meaningful.
 - Margins before fees: about 20–40% on consumables and 40–80% on gear.
 - Listing more than a day's demand of one item should cut its price by at least 30%.
-- Hero-gathered materials should cost about 40–60% of the auction house price per unit, so hiring beats buying when you can wait.
+- Hero-gathered materials should cost about 40–60% of the auction house price per unit on 1- to 8-hour trips, so hiring beats buying when you can wait. 15-minute trips cost more (about 70%) as a convenience. Zone fees were cut 15% on Oct 31, 2026 to hit this.
+- In a quiet market, an item shows "Hot" no more than about 1 check in 8.
 - Every recipe should have a profitable use for at least part of its skill range, so no tier is pure junk.
 
 **Pacing targets** (checked by the balance simulator)
@@ -569,6 +586,7 @@ All open design calls are settled.
 | Faction, capital and guild names | Ember Pact and Kragmar, Azure Crown and Aldmere |
 | Race names | Hornkin and Risen |
 | Material and herb names | As written in Materials and smelting. Stones for tiers 3–5 use real rock names (ironstone, flintstone, basalt), and leathers, two herbs and two vials were renamed (Oct 30, 2026), to keep clear of the original game's names |
+| Phase 3 names | Quartermaster recipes, masterwork recipes and raid destinations as listed above (approved Oct 31, 2026). Wyrmrest, Windrunner, Shadowhide, "Flask of…" and "… Depths" or "Molten …" raid names were rejected as too close to the original game |
 | Sound | In scope: a small set of effects in Phase 4 |
 | Pacing | About 6 to 8 weeks to the full endgame |
 | Save slots | One save with export, plus "New game" |
