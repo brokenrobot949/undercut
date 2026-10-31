@@ -374,7 +374,7 @@ The Trade Guild is the long-term goal. Standing unlocks training ranks, recipes 
 | Regular's request | 50–150 |
 | Guild drive (event) | Up to 2,000 |
 
-Commission reputation scales with what the order is worth. An order worth at least a typical piece of gear at its tier (150 c, 450 c, 8 s, 14 s, 26 s for tiers 1–5) earns the full amount; a smaller one earns less, never under a quarter. Guild contracts count as full size at four times that. All commission reputation is then multiplied by 0.65 (repScale in data/commissions.js), tuned so a cautious player reaches Friendly in week 1, Honored in weeks 2–3, Revered in weeks 4–5 and Exalted in weeks 6–8.
+Commission reputation scales with what the order is worth. An order worth at least a typical piece of gear at its tier (150 c, 450 c, 8 s, 14 s, 26 s for tiers 1–5) earns the full amount; a smaller one earns less, never under a quarter. Guild contracts count as full size at four times that. All commission reputation is then multiplied by 0.68 (repScale in data/commissions.js; raised from 0.65 in the Phase 3 balance pass), tuned so a cautious player reaches Friendly in week 1, Honored in weeks 2–3, Revered in weeks 4–5 and Exalted in weeks 6–8.
 
 **Quartermaster recipes** (bought from the guild quartermaster once you reach the standing)
 
@@ -490,6 +490,19 @@ The first profession should reach Artisan in about 2 to 3 weeks of regular check
 | First profession at Artisan (300) and Honored | Weeks 2–3 |
 | Revered | Weeks 4–5 |
 | Exalted, all three professions at 300 | Weeks 6–8 |
+
+**Phase 3 balance pass** (Oct 31, 2026). The simulator now runs 70 days. Its bots:
+- open their second and third professions once every profession they have has Artisan trained and skill 270
+- level all their professions and share hero slots between them
+- buy upgrades and quartermaster recipes after saving for training and the next wing
+- sell materials for recipes they've outgrown
+- buy a recipe when nothing they know still gives skill-ups
+- raid once they know a masterwork
+
+Result: the steady bots (the cautious smith, the tanner, the alchemist and the flipper) reach Exalted with all three professions at 300 between days 43 and 52. A bot that checks in every hour gets there around day 37. The flooder strategy doesn't get there by day 70. Other changes in this pass:
+- repScale went from 0.65 to 0.68.
+- Blue quartermaster gear demand went from 0.25 to 0.35, so its price bounces less.
+- `SIM_ONLY=bots` runs only the bot section, and `SIM_TRACE=<bot>` prints one bot's day-by-day state.
 
 ## Interface
 

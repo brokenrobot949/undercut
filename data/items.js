@@ -173,7 +173,7 @@ export const items = [
   { id: 'moonsilver-scale-greaves', name: 'Moonsilver scale greaves', tier: 4, category: 'gear', armor: 'mail', quality: 'uncommon', base: 1460, demand: 0.35 },
   { id: 'moonsilver-plate-helm', name: 'Moonsilver plate helm', tier: 4, category: 'gear', armor: 'plate', quality: 'common', base: 1600, demand: 0.3 },
   { id: 'moonsilver-lamellar-vest', name: 'Moonsilver lamellar vest', tier: 4, category: 'gear', armor: 'mail', quality: 'uncommon', base: 1630, demand: 0.3 },
-  { id: 'moonsilver-bulwark-greaves', name: 'Moonsilver bulwark greaves', tier: 4, category: 'gear', armor: 'plate', quality: 'rare', base: 3104, demand: 0.25 },
+  { id: 'moonsilver-bulwark-greaves', name: 'Moonsilver bulwark greaves', tier: 4, category: 'gear', armor: 'plate', quality: 'rare', base: 3104, demand: 0.35 },
 
   // ---- Blacksmithing, tier 5 (starmetal) ----
   { id: 'basalt-grit', name: 'Basalt grit', tier: 5, category: 'material', quality: 'common', base: 99, demand: 4 },
@@ -183,7 +183,7 @@ export const items = [
   { id: 'starmetal-ringmail-cuirass', name: 'Starmetal ringmail cuirass', tier: 5, category: 'gear', armor: 'mail', quality: 'common', base: 2520, demand: 0.35 },
   { id: 'starmetal-plate-breastplate', name: 'Starmetal plate breastplate', tier: 5, category: 'gear', armor: 'plate', quality: 'uncommon', base: 2930, demand: 0.3 },
   { id: 'starmetal-maul', name: 'Starmetal maul', tier: 5, category: 'gear', armor: 'weapon', quality: 'uncommon', base: 3600, demand: 0.3 },
-  { id: 'starmetal-vanguard-cuirass', name: 'Starmetal vanguard cuirass', tier: 5, category: 'gear', armor: 'plate', quality: 'rare', base: 4931, demand: 0.25 },
+  { id: 'starmetal-vanguard-cuirass', name: 'Starmetal vanguard cuirass', tier: 5, category: 'gear', armor: 'plate', quality: 'rare', base: 4931, demand: 0.35 },
 
   // ---- Leatherworking, tier 1 (boar) ----
   { id: 'cured-boar-hide', name: 'Cured boar hide', tier: 1, category: 'material', quality: 'common', base: 25, demand: 5 },
@@ -221,7 +221,7 @@ export const items = [
   { id: 'basilisk-scale-cloak', name: 'Basilisk-scale cloak', tier: 4, category: 'gear', armor: 'cloak', quality: 'common', base: 695, demand: 0.6 },
   { id: 'basilisk-ammo-pouch', name: 'Basilisk ammo pouch', tier: 4, category: 'gear', armor: 'quiver', quality: 'common', base: 670, demand: 0.3 },
   { id: 'basilisk-eye-mask', name: 'Basilisk-eye mask', tier: 4, category: 'gear', armor: 'leather', quality: 'uncommon', base: 1320, demand: 0.3 },
-  { id: 'basilisk-trackers-vest', name: 'Basilisk tracker\'s vest', tier: 4, category: 'gear', armor: 'leather', quality: 'rare', base: 2062, demand: 0.25 },
+  { id: 'basilisk-trackers-vest', name: 'Basilisk tracker\'s vest', tier: 4, category: 'gear', armor: 'leather', quality: 'rare', base: 2062, demand: 0.35 },
 
   // ---- Leatherworking, tier 5 (drakeling) ----
   { id: 'cured-drakeling-hide', name: 'Cured drakeling hide', tier: 5, category: 'material', quality: 'common', base: 110, demand: 5 },
@@ -231,7 +231,7 @@ export const items = [
   { id: 'drakeling-cloak', name: 'Drakeling cloak', tier: 5, category: 'gear', armor: 'cloak', quality: 'common', base: 1170, demand: 0.6 },
   { id: 'drakeling-quiver', name: 'Drakeling quiver', tier: 5, category: 'gear', armor: 'quiver', quality: 'common', base: 1130, demand: 0.3 },
   { id: 'drakewing-mantle', name: 'Drakewing mantle', tier: 5, category: 'gear', armor: 'leather', quality: 'uncommon', base: 2410, demand: 0.3 },
-  { id: 'drakeling-far-rangers-cloak', name: 'Drakeling far-ranger\'s cloak', tier: 5, category: 'gear', armor: 'cloak', quality: 'rare', base: 3192, demand: 0.25 },
+  { id: 'drakeling-far-rangers-cloak', name: 'Drakeling far-ranger\'s cloak', tier: 5, category: 'gear', armor: 'cloak', quality: 'rare', base: 3192, demand: 0.35 },
 
   // ---- Alchemy, tier 1 ----
   { id: 'faint-mending-draught', name: 'Faint mending draught', tier: 1, category: 'consumable', quality: 'common', base: 18, demand: 14 },

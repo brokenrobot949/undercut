@@ -16,7 +16,7 @@ export const commissionTuning = {
   repValueRef: [150, 450, 800, 1400, 2600],
   repFloor: 0.25,
   // Multiplies all commission reputation. Lower it to slow standing down.
-  repScale: 0.65,
+  repScale: 0.68,
 };
 
 // The four kinds. `weight` is how often each kind posts (a regular's request

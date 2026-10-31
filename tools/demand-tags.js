@@ -5,6 +5,9 @@ import { newGame, debugFastForward } from '../js/engine/game.js';
 import { demandTag, scarcity, supplyDays } from '../js/engine/market.js';
 const t0 = Date.UTC(2026, 9, 30, 12, 3);
 const s = newGame({ name: 'T', factionId: 'red', seed: 5, now: t0 });
+// A quiet market: no events.
+s.events.list = [];
+s.timers = s.timers.filter((x) => !x.type.startsWith('event'));
 debugFastForward(s, t0, 24);
 const counts = {}; const why = {};
 let now = t0 + 24 * 3600e3;
