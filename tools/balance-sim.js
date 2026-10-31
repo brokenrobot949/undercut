@@ -16,6 +16,7 @@
 
 import { newGame, catchUp, collectMailbox } from '../js/engine/game.js';
 import { itemById, tradeableItems } from '../data/items.js';
+import { professionById } from '../data/professions.js';
 import { recipes, recipeById } from '../data/recipes.js';
 import { tuning } from '../data/tuning.js';
 import {
@@ -163,27 +164,39 @@ function priceVsSpeed() {
 }
 
 // ---- 4. Bot players -----------------------------------------------------------
-// Each bot checks in on a schedule and plays like a simple player: collect,
-// train the next rank when it can, level Blacksmithing on the cheapest
-// skill-ups, hire miners for the tier it needs, smelt, craft what's
-// profitable, list, and vendor leveling junk the market can't take.
+// Each bot runs one profession's shop and checks in on a schedule, playing
+// like a simple player: claim tutorial steps, fill commissions, train the next
+// rank when it can, level on the cheapest skill-ups, hire gatherers for the
+// tier it needs, smelt (smiths), craft what's profitable, list, and vendor
+// leveling junk the market can't take.
 //   cautious  every 4 h; lists a few hours' demand at a time, relists when undercut
 //   flooder   every 8 h; lists everything it has, never relists
 //   flipper   like cautious, and also buys stock listed under 80% of base value
 //             (a dip) and relists it once the price is back near base
+//   eager     like cautious, but checks in every hour (an engaged first day)
+// The tanner (Leatherworking) and alchemist play like the cautious smith.
 
 const BOTS = [
-  { name: 'cautious', every: 4, listHours: 6, relist: true, flip: false },
-  { name: 'flooder', every: 8, listHours: Infinity, relist: false, flip: false },
-  { name: 'flipper', every: 4, listHours: 6, relist: true, flip: true },
+  { name: 'eager', prof: 'blacksmithing', every: 1, listHours: 3, relist: true, flip: false },
+  { name: 'cautious', prof: 'blacksmithing', every: 4, listHours: 6, relist: true, flip: false },
+  { name: 'flooder', prof: 'blacksmithing', every: 8, listHours: Infinity, relist: false, flip: false },
+  { name: 'flipper', prof: 'blacksmithing', every: 4, listHours: 6, relist: true, flip: true },
+  { name: 'tanner', prof: 'leatherworking', every: 4, listHours: 6, relist: true, flip: false },
+  { name: 'alchemist', prof: 'alchemy', every: 4, listHours: 6, relist: true, flip: false },
 ];
 const SELL_CATEGORIES = new Set(['consumable', 'gear']);
-const PROF = 'blacksmithing';
 // Materials some recipe uses; the bots keep this many of each and sell the rest.
 const KEEP_MATS = 40;
-const USED_MATS = new Set(recipes.flatMap((r) => r.mats.map((m) => m.item)));
-// Anvil recipes that make a material other recipes use (grit).
-const GRITS = recipes.filter((r) => r.station === 'anvil' && itemById[r.makes.item].category === 'material').map((r) => r.id);
+// Materials each profession's recipes use.
+const USED_MATS = Object.fromEntries(['blacksmithing', 'leatherworking', 'alchemy'].map((prof) =>
+  [prof, new Set(recipes.filter((r) => recipeProfession(r) === prof || (prof === 'blacksmithing' && r.station === 'forge')).flatMap((r) => r.mats.map((m) => m.item)))]));
+// Recipes that make a material other recipes of the same profession use
+// (grit, cured hides), by profession.
+const INTERMEDIATES = Object.fromEntries(['blacksmithing', 'leatherworking', 'alchemy'].map((prof) => {
+  const own = recipes.filter((r) => recipeProfession(r) === prof);
+  const used = new Set(own.flatMap((r) => r.mats.map((m) => m.item)));
+  return [prof, own.filter((r) => itemById[r.makes.item].category === 'material' && used.has(r.makes.item)).map((r) => r.id)];
+}));
 // Skill milestones the sim records, with the pacing target from DESIGN.md (days).
 const MILESTONES = [
   { id: 'skill75', label: 'skill 75', target: null },
@@ -192,6 +205,10 @@ const MILESTONES = [
   { id: 'friendly', label: 'Friendly', target: 7 },
   { id: 'expert', label: 'Expert', target: 7 },
   { id: 'skill300', label: 'skill 300', target: 21 },
+  { id: 'artisan', label: 'Artisan', target: 21 },
+  { id: 'honored', label: 'Honored', target: 21 },
+  { id: 'revered', label: 'Revered', target: 35 },
+  { id: 'exalted', label: 'Exalted', target: 56 },
 ];
 
 function botValue(state, itemId, now) {
@@ -207,10 +224,10 @@ function botProfit(state, recipe, now) {
 
 // The skill-up recipe with the lowest cost per expected skill point, counting
 // that about half the product's value comes back when the junk is sold.
-function levelingRecipe(state, now) {
+function levelingRecipe(state, now, prof) {
   let best = null;
   for (const r of recipes) {
-    if (!knowsRecipe(state, r) || recipeProfession(r) !== PROF) continue;
+    if (!knowsRecipe(state, r) || recipeProfession(r) !== prof) continue;
     const chance = tuning.skillUpChance[recipeColor(state, r)];
     if (!chance) continue;
     const mats = r.mats.reduce((n, m) => n + botValue(state, m.item, now) * m.qty, 0);
@@ -235,6 +252,9 @@ function buyMissing(state, recipe, qty, budget, now) {
 }
 
 function botCheckIn(bot, state, now, stats) {
+  const PROF = bot.prof;
+  const gathering = professionById[PROF].gathering;
+  const stations = professionById[PROF].stations.filter((s) => s !== 'forge');
   const summary = catchUp(state, now);
   for (const [id, s] of Object.entries(summary.sold)) {
     stats.sold[id] = (stats.sold[id] || 0) + s.qty;
@@ -268,20 +288,20 @@ function botCheckIn(bot, state, now, stats) {
 
   // Train the next rank as soon as the bot can.
   if (nextTraining(state, PROF)?.ready) trainRank(state, PROF);
-  // Learn every recipe the trainer offers at this skill, while it costs under a quarter of the purse.
+  // Learn every recipe the trainer offers at this skill, while it costs under half the purse.
   for (const o of trainerRecipes(state, PROF)) {
-    if (o.ready && o.cost <= state.copper * 0.25) { learnRecipe(state, o.recipe.id); stats.recipeSpend += o.cost; }
+    if (o.ready && o.cost <= state.copper * 0.5) { learnRecipe(state, o.recipe.id); stats.recipeSpend += o.cost; }
   }
 
-  const lvl = levelingRecipe(state, now);
+  const lvl = levelingRecipe(state, now, PROF);
   const wantTier = lvl ? lvl.r.tier : 1;
 
   // Heroes: fill every expedition slot while the bags have room. The first goes
   // to the tier the bot is leveling in, the rest to the best zone it can use:
-  // no more than one tier up, and only ore its own forge can smelt.
-  // Blacksmith bots only hire miners for ore zones.
-  const usable = (z, h) => z.loot.mining && h.skills.mining >= z.minSkill && z.tier <= wantTier + 1 &&
-    !recipes.some((r) => r.station === 'forge' && r.mats.some((m) => m.item === z.loot.mining[0].item) && forgeRankNeeded(state, r));
+  // no more than one tier up, and (for smiths) only ore its own forge can smelt.
+  // Bots only hire heroes who gather for their profession.
+  const usable = (z, h) => z.loot[gathering] && h.skills[gathering] >= z.minSkill && z.tier <= wantTier + 1 &&
+    (gathering !== 'mining' || !recipes.some((r) => r.station === 'forge' && r.mats.some((m) => m.item === z.loot.mining[0].item) && forgeRankNeeded(state, r)));
   while (freeSlots() >= 8 && state.tavern.expeditions.length < expeditionSlots(state)) {
     const first = state.tavern.expeditions.length === 0;
     const rank = (z) => (first && z.tier !== wantTier ? 1 : 0);
@@ -297,7 +317,7 @@ function botCheckIn(bot, state, now, stats) {
 
   // Forge: smelt all ore the forge's rank allows; make alloys only up to 40
   // bars, buying coal for steel.
-  for (const r of recipes.filter((x) => x.station === 'forge' && !forgeRankNeeded(state, x))) {
+  for (const r of recipes.filter((x) => PROF === 'blacksmithing' && x.station === 'forge' && !forgeRankNeeded(state, x))) {
     const alloy = r.mats.length > 1;
     if (alloy && (state.bags[r.makes.item] || 0) >= 40) continue;
     if (r.mats.some((m) => m.item === 'coal') && (state.bags.coal || 0) < 10 && (state.bags['iron-bar'] || 0) >= 10) tryAct(() => buyFromVendor(state, 'coal', 10));
@@ -307,17 +327,19 @@ function botCheckIn(bot, state, now, stats) {
   }
 
   // Flux for gear.
-  if ((state.bags['smithing-flux'] || 0) < 6) tryAct(() => buyFromVendor(state, 'smithing-flux', 10));
+  if (PROF === 'blacksmithing' && (state.bags['smithing-flux'] || 0) < 6) tryAct(() => buyFromVendor(state, 'smithing-flux', 10));
 
-  // Grit for the recipes that need it.
-  for (const id of GRITS) {
-    if (!knowsRecipe(state, recipeById[id]) || recipeColor(state, recipeById[id]) === 'red') continue;
-    if ((state.bags[id] || 0) < 4 && maxCraftable(state, id) >= 4 && queueFree('anvil')) tryAct(() => queueCraft(state, id, 4, now));
+  // Intermediates (grit, cured hides) for the recipes that need them, buying
+  // vendor goods like salt when short.
+  for (const id of INTERMEDIATES[PROF]) {
+    const r = recipeById[id];
+    if (!knowsRecipe(state, r) || recipeColor(state, r) === 'red' || (state.bags[id] || 0) >= 4 || !queueFree(r.station)) continue;
+    if (maxCraftable(state, id) >= 4 || tryAct(() => buyMissing(state, r, 4, state.copper * 0.1, now))) tryAct(() => queueCraft(state, id, 4, now));
   }
 
   // Leveling: queue enough of the cheapest skill-up to reach its next color,
   // buying missing materials when they're affordable.
-  if (lvl && queueFree('anvil') && !state.stations.anvil.queue.some((o) => o.recipeId === lvl.r.id)) {
+  if (lvl && queueFree(lvl.r.station) && !state.stations[lvl.r.station].queue.some((o) => o.recipeId === lvl.r.id)) {
     const s = state.skills[PROF].skill;
     const nextColorAt = lvl.r.skill.find((n) => n > s) ?? s + 1;
     const capLeft = capOf(state, PROF) - s;
@@ -330,15 +352,15 @@ function botCheckIn(bot, state, now, stats) {
     }
   }
 
-  // Anvil: the most profitable recipes the bags allow, up to a day's demand of
-  // each item, counting what's already in bags, listed or queued.
-  const ranked = recipes.filter((r) => r.station === 'anvil' && knowsRecipe(state, r) && recipeColor(state, r) !== 'red' && SELL_CATEGORIES.has(itemById[r.makes.item].category))
+  // Crafting: the most profitable recipes the bags allow, up to a day's demand
+  // of each item, counting what's already in bags, listed or queued.
+  const ranked = recipes.filter((r) => stations.includes(r.station) && knowsRecipe(state, r) && recipeColor(state, r) !== 'red' && SELL_CATEGORIES.has(itemById[r.makes.item].category))
     .map((r) => ({ r, p: botProfit(state, r, now) })).filter((x) => x.p > 0).sort((a, b) => b.p - a.p);
   const onHand = (itemId) => (state.bags[itemId] || 0) +
     playerListings(state).filter((x) => x.itemId === itemId).reduce((n, x) => n + x.listing.qty, 0) +
-    state.stations.anvil.queue.filter((o) => recipeById[o.recipeId].makes.item === itemId).reduce((n, o) => n + o.qty - o.done, 0);
+    stations.flatMap((s) => state.stations[s].queue).filter((o) => recipeById[o.recipeId].makes.item === itemId).reduce((n, o) => n + o.qty - o.done, 0);
   for (const { r } of ranked) {
-    if (!queueFree('anvil')) break;
+    if (!queueFree(r.station)) continue;
     const room = Math.floor(demandPerHour(state, itemById[r.makes.item]) * 24) - onHand(r.makes.item);
     const n = Math.min(maxCraftable(state, r.id), room);
     if (n > 0) tryAct(() => queueCraft(state, r.id, n, now));
@@ -350,7 +372,7 @@ function botCheckIn(bot, state, now, stats) {
   for (const [itemId, have] of Object.entries(state.bags)) {
     const item = itemById[itemId];
     // Materials no recipe uses (herbs, hides, cloth, gems, essences from bonus loot) all go up for sale.
-    const keep = USED_MATS.has(itemId) ? KEEP_MATS : 0;
+    const keep = USED_MATS[PROF].has(itemId) ? KEEP_MATS : 0;
     const surplus = (item.category === 'material' && have > keep) || item.category === 'scroll';
     const flipReady = (stats.flipStock[itemId] || 0) > 0 && undercutPrice(state, itemId) >= item.base * 0.95;
     if (!SELL_CATEGORIES.has(item.category) && !surplus && !flipReady) continue;
@@ -407,16 +429,17 @@ function botCheckIn(bot, state, now, stats) {
 }
 
 function botRun(bot, seed) {
-  const state = newGame({ name: bot.name, factionId: 'red', seed, now: START });
+  const state = newGame({ name: bot.name, factionId: 'red', professionId: bot.prof, seed, now: START });
   const stats = { sold: {}, listed: {}, firstSale: null, heroFees: 0, deposits: 0, relists: 0, flips: 0, flipStock: {},
     levelCrafts: 0, vendored: 0, recipeSpend: 0, scrollsRead: 0, junkSold: 0, rep: {}, commissions: 0, commissionGold: 0, gold: {}, skill: {}, reached: {}, flooded: {} };
   const checkpoints = [1, 3, 7, 14, 30, 60];
   for (let t = START; t <= START + 60 * DAY; t += bot.every * HOUR) {
     botCheckIn(bot, state, t, stats);
     for (const item of tradeableItems) if (demandTag(state, item) === 'flooded') stats.flooded[item.id] = (stats.flooded[item.id] || 0) + 1;
-    const s = state.skills[PROF];
+    const s = state.skills[bot.prof];
     const reached = { skill75: s.skill >= 75, journeyman: s.rank >= 1, skill150: s.skill >= 150, skill300: s.skill >= 300,
-      friendly: state.reputation >= 3000, expert: s.rank >= 2 };
+      friendly: state.reputation >= 3000, expert: s.rank >= 2, artisan: s.rank >= 3,
+      honored: state.reputation >= 9000, revered: state.reputation >= 21000, exalted: state.reputation >= 42000 };
     for (const [id, ok] of Object.entries(reached)) if (ok && stats.reached[id] === undefined) stats.reached[id] = (t - START) / DAY;
     const day = (t - START) / DAY;
     if (checkpoints.includes(day)) { stats.gold[day] = state.copper; stats.skill[day] = s.skill; stats.rep[day] = state.reputation; }

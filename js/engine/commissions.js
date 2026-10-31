@@ -96,13 +96,20 @@ export function postCommission(state, now, forced = null) {
     qty,
     delivered: 0,
     pay: Math.round(type.payMult * value * qty),
-    rep: type.rep[item.tier - 1],
+    rep: commissionRep(type, item, value * qty),
     postedAt: now,
     expiresAt,
   };
   c.timerId = schedule(state, 'commission-expire', expiresAt, { id: c.id }).id;
   state.commissions.list.push(c);
   return c;
+}
+
+// Reputation for an order: the table value for its kind and tier, scaled by
+// what the order is worth (see repValueRef in data/commissions.js).
+function commissionRep(type, item, orderValue) {
+  const size = Math.min(1, Math.max(CT.repFloor, orderValue / (CT.repValueRef[item.tier - 1] * (type.repRefMult ?? 1))));
+  return Math.max(1, Math.round(type.rep[item.tier - 1] * size * CT.repScale));
 }
 
 // A hero from your faction, at a level that wears this tier.

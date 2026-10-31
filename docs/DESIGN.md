@@ -119,10 +119,10 @@ Cloaks are worn by every class and use bonus-loot cloth. Quivers and ammo pouche
 | --- | --- | --- | --- |
 | Apprentice | 1–75 | Free | Neutral |
 | Journeyman | 75–150 | 1 g | Neutral |
-| Expert | 150–225 | 50 g | Friendly |
-| Artisan | 225–300 | 250 g | Honored |
+| Expert | 150–225 | 4 g | Friendly |
+| Artisan | 225–300 | 10 g | Honored |
 
-Training costs are starting values.
+Training costs are starting values, tuned in the Phase 2 balance pass (Oct 30, 2026) so a cautious player reaches Expert in week 1 and Artisan in weeks 2–3.
 
 **Skill-ups use recipe colors.** Each recipe's color comes from your current skill against four thresholds set in its data.
 
@@ -145,7 +145,7 @@ A typical recipe is orange for 15 points after you learn it, then yellow for 10,
 **Recipes.** About 25 per profession at launch, 5 per material tier, 75 in total. Sources:
 
 - **Starting recipes:** every profession starts knowing its two skill-1 recipes (for Blacksmithing, rough grit and the copper cleaver). Smelting needs no recipe.
-- **Guild trainer:** core recipes, bought with gold once your skill reaches the recipe's orange number. Starting prices: 50 c to 5 s for tier 1, 3 s to 25 s for tier 2. The Workshop only lists recipes you know, and points to the trainer when a new one is for sale.
+- **Guild trainer:** core recipes, bought with gold once your skill reaches the recipe's orange number. Prices: 50 c to 5 s for tier 1, 3 s to 25 s for tier 2, 30 s to 1.5 g for tiers 3 and 4, and 75 s to 2.5 g for tier 5. The Workshop only lists recipes you know, and points to the trainer when a new one is for sale.
 - **Guild quartermaster:** better recipes, gated by guild standing.
 - **Rare drops:** heroes sometimes bring back a recipe scroll. It can be learned (once your skill reaches the recipe) or sold on the auction house. Each profession has one scroll-only recipe per tier. Blacksmithing: Copper spurred knuckles, Bronze crested helm, Steel war pick, Moonsilver lamellar vest, Starmetal maul.
 
@@ -361,11 +361,13 @@ The Trade Guild is the long-term goal. Standing unlocks training ranks, recipes 
 
 | Source | Reputation |
 | --- | --- |
-| Standard commission | 75–250, by tier |
+| Standard commission | Up to 75–250, by tier |
 | Rush commission | 150–400 |
 | Guild contract | 500–1,500 |
 | Regular's request | 50–150 |
 | Guild drive (event) | Up to 2,000 |
+
+Commission reputation scales with what the order is worth. An order worth at least a typical piece of gear at its tier (150 c, 450 c, 8 s, 14 s, 26 s for tiers 1–5) earns the full amount; a smaller one earns less, never under a quarter. Guild contracts count as full size at four times that. All commission reputation is then multiplied by 0.65 (repScale in data/commissions.js), tuned so a cautious player reaches Friendly in week 1, Honored in weeks 2–3, Revered in weeks 4–5 and Exalted in weeks 6–8.
 
 Once Exalted, every commission still pays gold, and masterwork crafts become the high-end market. New professions in later updates add new goals on top.
 
