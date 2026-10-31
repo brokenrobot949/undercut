@@ -4,6 +4,7 @@
 
 import { SAVE_VERSION, checkSave } from './game.js';
 import { createStations } from './crafting.js';
+import { createSkills } from './skills.js';
 
 // Every key starts with "undercut:" because other games share this web address.
 export const SAVE_KEY = 'undercut:save';
@@ -27,6 +28,12 @@ const migrations = {
   2: (save) => {
     save.stations = createStations();
     save.tavern = null;
+    return save;
+  },
+  // Version 4 (Phase 2): adds profession skill and ranks. Everyone starts at
+  // skill 1, Apprentice, whatever they crafted before.
+  3: (save) => {
+    save.skills = createSkills();
     return save;
   },
 };

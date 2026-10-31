@@ -1,5 +1,6 @@
 // Workshop tab: anvil and forge queues, recipes with profit at current
-// prices, and the City Smelter. Skill, ranks and recipe colors arrive in Phase 2.
+// prices, the City Smelter, and the Blacksmithing skill bar. Recipe names are
+// colored by skill-up odds: orange, yellow, green, gray, and red when too hard.
 
 import { el, coins, openSheet, stepper, progress, countdown, fill } from './components.js';
 import { recipes, recipeById } from '../../data/recipes.js';
@@ -9,12 +10,14 @@ import { marketValue, cutOn } from '../engine/market.js';
 import { lowestOtherPrice } from '../engine/trading.js';
 import { queueCraft, cancelOrder, queueSlots, smeltAtCity, smelterFee, maxCraftable } from '../engine/crafting.js';
 import { openItemSheet } from './item-sheet.js';
+import { recipeColor } from '../engine/skills.js';
+import { skillBar, colorText } from './skill-bar.js';
 
-const filters = { canCraft: false, profitable: false };
+const filters = { canCraft: false, skillUps: false, profitable: false };
 
 export function renderWorkshop(ctx) {
   return el('div', { class: 'main-inner' },
-    stationPanel(ctx, 'anvil', 'Anvil', 'Blacksmithing'),
+    stationPanel(ctx, 'anvil', 'Anvil', 'Each finished craft can raise your skill. Orange recipes always do, yellow usually, green sometimes, gray never.'),
     stationPanel(ctx, 'forge', 'Forge', 'Smelting is free here, but takes time. The City Smelter is instant, for a fee.'),
   );
 }
@@ -23,17 +26,20 @@ function stationPanel(ctx, stationId, title, blurb) {
   const { state } = ctx;
   const queue = state.stations[stationId].queue;
   let list = recipes.filter((r) => r.station === stationId);
-  if (filters.canCraft) list = list.filter((r) => maxCraftable(state, r.id) > 0);
+  if (filters.canCraft) list = list.filter((r) => maxCraftable(state, r.id) > 0 && recipeColor(state, r) !== 'red');
+  if (filters.skillUps) list = list.filter((r) => ['orange', 'yellow', 'green'].includes(recipeColor(state, r)));
   if (filters.profitable) list = list.filter((r) => profitEach(ctx, r) > 0);
 
   return el('section', { class: 'panel' },
     el('h2', {}, title),
+    stationId === 'anvil' ? skillBar(state, 'blacksmithing', { capHint: true }) : null,
     el('p', { class: 'small dim' }, blurb),
     el('h3', {}, `Queue (${queue.length} / ${queueSlots(state, stationId)})`),
     queue.length ? el('div', { class: 'queue' }, queue.map((order, i) => queueRow(ctx, stationId, order, i === 0)))
       : el('p', { class: 'small dim' }, 'Idle. Pick a recipe below.'),
     el('div', { class: 'btn-row chips' },
       chip(ctx, 'canCraft', 'Can craft now'),
+      stationId === 'anvil' ? chip(ctx, 'skillUps', 'Gives skill-ups') : null,
       chip(ctx, 'profitable', 'Profitable')),
     el('div', { class: 'market-list' }, list.length ? list.map((r) => recipeRow(ctx, r))
       : el('p', { class: 'small dim' }, 'No recipes match these filters.')),
@@ -84,12 +90,14 @@ function recipeRow(ctx, recipe) {
   const out = itemById[recipe.makes.item];
   const can = maxCraftable(state, recipe.id);
   const profit = profitEach(ctx, recipe);
-  return el('button', { class: 'market-row', type: 'button', onclick: () => openCraftSheet(ctx, recipe) },
-    el('span', { class: `item-name q-${out.quality}` }, `${out.name}${recipe.makes.qty > 1 ? ` × ${recipe.makes.qty}` : ''}`),
+  const color = recipeColor(state, recipe);
+  return el('button', { class: `market-row${color ? ` skill-${color}` : ''}`, type: 'button', onclick: () => openCraftSheet(ctx, recipe),
+    'aria-label': color ? `${out.name}, ${colorText(recipe, color)}` : null },
+    el('span', { class: `item-name ${color ? `skill-text-${color}` : `q-${out.quality}`}` }, `${out.name}${recipe.makes.qty > 1 ? ` × ${recipe.makes.qty}` : ''}`),
     el('span', { class: `market-price ${profit >= 0 ? 'profit' : 'loss'}` }, profit >= 0 ? '+' : '−', coins(Math.abs(profit))),
     el('span', { class: 'small dim market-sub' },
       recipe.mats.map((m) => `${m.qty} ${itemById[m.item].name.toLowerCase()} (${state.bags[m.item] || 0})`).join(', ')),
-    el('span', { class: 'small market-tag' }, can ? `can make ${can}` : ''),
+    el('span', { class: 'small market-tag' }, color === 'red' ? `needs ${recipe.skill[0]}` : can ? `can make ${can}` : ''),
   );
 }
 
@@ -105,7 +113,8 @@ function openCraftSheet(ctx, recipe) {
 
   function draw() {
     const { state } = ctx;
-    const can = maxCraftable(state, recipe.id);
+    const color = recipeColor(state, recipe);
+    const can = color === 'red' ? 0 : maxCraftable(state, recipe.id);
     qtyChoice = Math.max(1, Math.min(qtyChoice, Math.max(1, can)));
     const feeText = el('span', {});
     const qty = stepper({ value: qtyChoice, max: Math.max(1, can), onChange: (v) => { qtyChoice = v; updateFee(); } });
@@ -119,6 +128,8 @@ function openCraftSheet(ctx, recipe) {
       el('p', { class: 'small' }, `Makes ${recipe.makes.qty} × `,
         el('button', { class: `link q-${out.quality}`, type: 'button', onclick: () => openItemSheet(ctx, out.id) }, out.name),
         ` in ${recipe.seconds} s each.`),
+      color ? el('p', { class: `small skill-text-${color}` }, colorText(recipe, color),
+        color === 'red' ? '' : `. Turns ${['yellow', 'green', 'gray'].map((c, i) => `${c} at ${recipe.skill[i + 1]}`).join(', ')}.`) : null,
       el('table', { class: 'listings' },
         el('thead', {}, el('tr', {}, el('th', {}, 'Material'), el('th', {}, 'Need'), el('th', {}, 'Have'), el('th', {}, 'Buy price'))),
         el('tbody', {}, recipe.mats.map((m) => el('tr', { class: (state.bags[m.item] || 0) < m.qty ? 'short' : null },
@@ -128,7 +139,7 @@ function openCraftSheet(ctx, recipe) {
         coins(saleValue(ctx, recipe.makes.item) * recipe.makes.qty), ' after the cut. ',
         el('strong', { class: profit >= 0 ? 'profit' : 'loss' }, profit >= 0 ? 'Profit ' : 'Loss ', coins(Math.abs(profit))), ' each.'),
       can ? el('div', { class: 'field' }, el('label', {}, `How many (materials for ${can})`), qty.node)
-        : el('p', { class: 'small dim' }, 'You need more materials. Tap one above to buy it.'),
+        : el('p', { class: 'small dim' }, color === 'red' ? 'Your skill is too low to make this yet.' : 'You need more materials. Tap one above to buy it.'),
       can ? el('button', { class: 'btn btn-primary wide', type: 'button',
         onclick: () => act((s, now) => queueCraft(s, recipe.id, qty.value, now)) },
         recipe.station === 'forge' ? 'Smelt at your forge (free)' : 'Add to queue') : null,

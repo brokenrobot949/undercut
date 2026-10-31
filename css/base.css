@@ -635,3 +635,31 @@ input[type="number"] {
 .coin-input .coin { gap: 6px; }
 .coin-input .coin::after { flex: 0 0 auto; width: 14px; height: 14px; }
 .coin-input input { text-align: right; }
+
+/* ---- Skill and recipe colors ---------------------------------------- */
+/* Recipe colors show skill-up odds. Same in both themes. */
+:root {
+  --skill-orange: #ff8a3d;
+  --skill-yellow: #f2d04b;
+  --skill-green: #48c968;
+  --skill-gray: #8f8f8f;
+  --skill-red: #ff6b5b;
+}
+.skill-line { display: grid; gap: 6px; margin: 4px 0 10px; }
+.skill-line .skill-bar { max-width: none; height: 8px; }
+.skill-capped { color: var(--highlight); margin: 0; }
+.skill-text-orange { color: var(--skill-orange); }
+.skill-text-yellow { color: var(--skill-yellow); }
+.skill-text-green { color: var(--skill-green); }
+.skill-text-gray { color: var(--skill-gray); }
+.skill-text-red { color: var(--skill-red); }
+.market-row[class*="skill-"] { padding-left: 10px; border-left: 3px solid transparent; }
+.market-row.skill-orange { border-left-color: var(--skill-orange); }
+.market-row.skill-yellow { border-left-color: var(--skill-yellow); }
+.market-row.skill-green { border-left-color: var(--skill-green); }
+.market-row.skill-gray { border-left-color: var(--skill-gray); }
+.market-row.skill-red { border-left-color: var(--skill-red); }
+.market-row.skill-red .item-name { color: var(--text-dim); }
+.market-row.skill-red .market-tag { color: var(--skill-red); }
+.trainer-row { padding: 8px 0; border-top: 1px solid var(--border); }
+.trainer-row:first-of-type { border-top: 0; }

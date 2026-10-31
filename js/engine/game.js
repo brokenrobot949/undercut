@@ -10,9 +10,10 @@ import { createClock, advance, gameNow, schedule, newSummary } from './clock.js'
 import { createMarket, marketTick, freshMarket, saleProceeds } from './market.js';
 import { createStations, finishUnit } from './crafting.js';
 import { createTavern, refreshBoardTimer, expeditionReturns } from './heroes.js';
+import { createSkills } from './skills.js';
 export { collectMailbox } from './bags.js';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export function newGame({ name, factionId, seed, now }) {
   const state = {
@@ -21,6 +22,8 @@ export function newGame({ name, factionId, seed, now }) {
     player: { name, factionId },
     copper: tuning.startingCopper,
     reputation: 0,
+    // Profession skill and trained rank: { blacksmithing: { skill, rank } }.
+    skills: createSkills(),
     bags: { ...tuning.startingBags }, // itemId -> quantity
     // Gold and items waiting to be collected (sales, expired listings).
     mailbox: { copper: 0, items: {} },
@@ -41,7 +44,8 @@ export function newGame({ name, factionId, seed, now }) {
 // Throws if a loaded save is missing something the game can't run without.
 export function checkSave(state) {
   const ok = state.player && getFaction(state) && state.clock && Number.isFinite(state.clock.lastSeenAt) &&
-    state.rng && Number.isFinite(state.rng.state) && Array.isArray(state.timers) && Number.isFinite(state.copper);
+    state.rng && Number.isFinite(state.rng.state) && Array.isArray(state.timers) && Number.isFinite(state.copper) &&
+    state.skills && typeof state.skills === 'object';
   if (!ok) throw new Error('This save is damaged or incomplete.');
   return state;
 }
@@ -100,6 +104,8 @@ function gameSummary(state) {
   summary.crafted = {}; // itemId -> qty made
   summary.ordersDone = []; // whole orders finished: { item, qty }
   summary.returns = []; // heroes home: { name, zone, haul, line }
+  summary.skillUps = {}; // professionId -> { from, to }
+  summary.skillCapped = {}; // professionId -> true when skill-ups were lost at a rank cap
   return summary;
 }
 

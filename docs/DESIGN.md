@@ -61,7 +61,7 @@ Most gold comes from the auction house. Commissions add reputation, and reputati
 **A check-in**
 
 1. The "While you were away" summary opens: items sold, listings expired, heroes returned, crafts finished, commissions posted or expired, events started.
-2. Collect all: gold and returned items go to your bags.
+2. Collect all: gold and returned items go to your bags. Sales, expired listings and hero hauls wait in the mailbox for Collect all. Finished crafts and smelts go straight to bags.
 3. Act: relist, queue crafts, send heroes out, hand in commissions.
 4. Leave. A typical visit takes 1 to 3 minutes.
 
@@ -117,6 +117,12 @@ Training costs are starting values.
 
 A typical recipe is orange for 15 points after you learn it, then yellow for 10, green for 10, then gray. Leveling means crafting things the market may not want (see leveling junk under Auction House).
 
+- A recipe can't be crafted until your skill reaches its orange number. Until then it shows red with the skill it needs.
+- The skill-up roll happens as each craft finishes, using the recipe's color at that moment. A long queue of one recipe slows down as it turns yellow and green.
+- At a rank's cap, crafts give no skill until the next rank is trained.
+- Smelting gives no skill.
+- Each tier of recipes covers roughly 55 to 70 skill points, overlapping the next tier. Blacksmithing tier 1 starts at skill 1 (rough grit and the copper cleaver) and goes gray by 75. Tier 2 starts at 55 and goes gray by 140.
+
 **Recipes.** About 25 per profession at launch, 5 per material tier, 75 in total. Sources:
 
 - **Guild trainer:** core recipes, bought with gold as your skill reaches them.
@@ -138,7 +144,7 @@ Materials come in five tiers that follow hero level bands, with original names o
 | Tier | Hero levels | Ore and bars | Stone | Leather | Herbs | Vial |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | 1–15 | Copper ore → copper bar | Rough stone | Light leather | Dawnpetal, Silverfern | Simple vial |
-| 2 | 15–25 | Tin ore → tin bar; copper + tin → bronze bar | Coarse stone | Medium leather | Thornbriar, Bruisewort | Simple vial |
+| 2 | 15–25 | Tin ore → tin bar; 1 copper bar + 1 tin bar → 2 bronze bars | Coarse stone | Medium leather | Thornbriar, Bruisewort | Simple vial |
 | 3 | 25–35 | Iron ore → iron bar; iron + coal → steel bar | Heavy stone | Heavy leather | Ironleaf, Wild sage | Leaded vial |
 | 4 | 35–45 | Moonsilver ore → moonsilver bar | Solid stone | Thick leather | Sunbloom, Ghostcap | Leaded vial |
 | 5 | 45–60 | Starmetal ore → starmetal bar | Dense stone | Hardened leather | Starlily, Gravemoss | Crystal vial |
@@ -187,7 +193,7 @@ Hiring is one pick from a board, with no roster to manage. The tavern board show
 
 **No failed trips.** A trip never comes back empty. A bad haul comes with a short flavor line, like "Brakka was chased off by a bear and came home with half a load." This keeps the idle loop low-stress.
 
-**Zones.** Ten zones, two per tier: one leans toward ore, the other toward herbs and hides. At Revered standing, raid expeditions open: level-60 heroes only, 8 hours, a high fee, and the only source of endgame materials.
+**Zones.** Ten zones, two per tier: one leans toward ore, the other toward herbs and hides. Heroes only go to zones within their level band. Named so far: Rustvein Hollow (tier 1 ore) and Tinmouth Ridge (tier 2 ore). At Revered standing, raid expeditions open: level-60 heroes only, 8 hours, a high fee, and the only source of endgame materials.
 
 **Races, classes and perks**
 

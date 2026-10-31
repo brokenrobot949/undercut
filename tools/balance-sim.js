@@ -19,9 +19,11 @@ import { tuning } from '../data/tuning.js';
 import {
   demandPerHour, postPlayerListing, lowestListing, unitsSold, supplyDays, demandTag, marketValue, playerListings,
 } from '../js/engine/market.js';
-import { listItem, cancelListing, undercutPrice, buyItems, buyFromVendor } from '../js/engine/trading.js';
+import { listItem, cancelListing, undercutPrice, buyItems, buyFromVendor, quoteBuy, sellToVendor } from '../js/engine/trading.js';
+import { bagSlots, slotsUsed, roomFor } from '../js/engine/bags.js';
 import { queueCraft, maxCraftable } from '../js/engine/crafting.js';
 import { hireHero, hireFee, zonesFor, expeditionSlots } from '../js/engine/heroes.js';
+import { nextTraining, trainRank, recipeColor, capOf } from '../js/engine/skills.js';
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -155,11 +157,14 @@ function priceVsSpeed() {
 }
 
 // ---- 4. Bot players -----------------------------------------------------------
-// Each bot checks in on a schedule and does what a player would: collect, hire
-// miners, smelt at the forge, craft the most profitable recipes, and list.
+// Each bot checks in on a schedule and plays like a simple player: collect,
+// train the next rank when it can, level Blacksmithing on the cheapest
+// skill-ups, hire miners for the tier it needs, smelt, craft what's
+// profitable, list, and vendor leveling junk the market can't take.
 //   cautious  every 4 h; lists a few hours' demand at a time, relists when undercut
 //   flooder   every 8 h; lists everything it has, never relists
-//   flipper   like cautious, and also buys listings under 80% of fair to relist
+//   flipper   like cautious, and also buys stock listed under 80% of base value
+//             (a dip) and relists it once the price is back near base
 
 const BOTS = [
   { name: 'cautious', every: 4, listHours: 6, relist: true, flip: false },
@@ -167,6 +172,14 @@ const BOTS = [
   { name: 'flipper', every: 4, listHours: 6, relist: true, flip: true },
 ];
 const SELL_CATEGORIES = new Set(['consumable', 'gear']);
+const PROF = 'blacksmithing';
+// Skill milestones the sim records, with the pacing target from DESIGN.md (days).
+const MILESTONES = [
+  { id: 'skill75', label: 'skill 75', target: null },
+  { id: 'journeyman', label: 'Journeyman', target: 1 },
+  { id: 'skill150', label: 'skill 150', target: 7 },
+  { id: 'skill300', label: 'skill 300', target: 21 },
+];
 
 function botValue(state, itemId, now) {
   const item = itemById[itemId];
@@ -179,6 +192,34 @@ function botProfit(state, recipe, now) {
   return sale - recipe.mats.reduce((n, m) => n + botValue(state, m.item, now) * m.qty, 0);
 }
 
+// The skill-up recipe with the lowest cost per expected skill point, counting
+// that about half the product's value comes back when the junk is sold.
+function levelingRecipe(state, now) {
+  let best = null;
+  for (const r of recipes) {
+    const chance = tuning.skillUpChance[recipeColor(state, r)];
+    if (!chance) continue;
+    const mats = r.mats.reduce((n, m) => n + botValue(state, m.item, now) * m.qty, 0);
+    const back = botValue(state, r.makes.item, now) * r.makes.qty * 0.5;
+    const perPoint = Math.max(1, mats - back) / chance;
+    if (!best || perPoint < best.perPoint) best = { r, chance, perPoint };
+  }
+  return best;
+}
+
+// Buys whatever is missing for `qty` crafts, if it all costs under `budget`.
+function buyMissing(state, recipe, qty, budget, now) {
+  const need = recipe.mats.map((m) => ({ item: m.item, qty: m.qty * qty - (state.bags[m.item] || 0) })).filter((m) => m.qty > 0);
+  const vendor = (id) => itemById[id].category === 'trade';
+  const cost = need.reduce((n, m) => n + (vendor(m.item) ? itemById[m.item].vendorBuy * m.qty : quoteBuy(state, m.item, m.qty).cost), 0);
+  if (cost > budget || need.some((m) => !vendor(m.item) && quoteBuy(state, m.item, m.qty).qty < m.qty)) return false;
+  for (const m of need) {
+    if (vendor(m.item)) buyFromVendor(state, m.item, m.qty);
+    else buyItems(state, m.item, m.qty, now);
+  }
+  return true;
+}
+
 function botCheckIn(bot, state, now, stats) {
   const summary = catchUp(state, now);
   for (const [id, s] of Object.entries(summary.sold)) {
@@ -187,13 +228,22 @@ function botCheckIn(bot, state, now, stats) {
   }
   collectMailbox(state);
   const tryAct = (fn) => { try { return fn(); } catch { return null; } };
+  const freeSlots = () => bagSlots(state) - slotsUsed(state);
+  const queueFree = (station) => state.stations[station].queue.length < tuning.queueSlots;
 
-  // Heroes: fill every expedition slot, best zone first, trip until the next
-  // check-in, unless the bags already hold plenty of raw materials.
-  const raw = Object.entries(state.bags).filter(([id]) => itemById[id].category === 'material').reduce((n, [, q]) => n + q, 0);
-  while (raw < 200 && state.tavern.expeditions.length < expeditionSlots(state)) {
+  // Train the next rank as soon as the bot can.
+  if (nextTraining(state, PROF)?.ready) trainRank(state, PROF);
+
+  const lvl = levelingRecipe(state, now);
+  const wantTier = lvl ? lvl.r.tier : 2;
+
+  // Heroes: fill every expedition slot while the bags have room. The first goes
+  // to the tier the bot is leveling in, the rest to the best zone.
+  while (freeSlots() >= 8 && state.tavern.expeditions.length < expeditionSlots(state)) {
+    const first = state.tavern.expeditions.length === 0;
+    const rank = (z) => (first && z.tier !== wantTier ? 1 : 0);
     const options = state.tavern.board.flatMap((h) => zonesFor(h).map((z) => ({ h, z })))
-      .sort((a, b) => b.z.tier - a.z.tier);
+      .sort((a, b) => rank(a.z) - rank(b.z) || b.z.tier - a.z.tier);
     if (!options.length) break;
     const { h, z } = options[0];
     const fee = hireFee(h, z, bot.every);
@@ -201,61 +251,98 @@ function botCheckIn(bot, state, now, stats) {
     stats.heroFees += fee;
   }
 
-  // Forge: smelt all ore, alloy bronze from matching bars.
-  for (const id of ['smelt-copper', 'smelt-tin', 'alloy-bronze']) {
+  // Forge: smelt all ore; alloy bronze only up to what the bot can use.
+  for (const id of ['smelt-copper', 'smelt-tin']) {
     const n = maxCraftable(state, id);
-    if (n > 0 && state.stations.forge.queue.length < tuning.queueSlots) tryAct(() => queueCraft(state, id, n, now));
+    if (n > 0 && queueFree('forge')) tryAct(() => queueCraft(state, id, n, now));
   }
+  const bronzeWanted = Math.floor((40 - (state.bags['bronze-bar'] || 0)) / 2);
+  const alloy = Math.min(maxCraftable(state, 'alloy-bronze'), bronzeWanted);
+  if (alloy > 0 && queueFree('forge')) tryAct(() => queueCraft(state, 'alloy-bronze', alloy, now));
 
   // Flux for bronze gear.
   if ((state.bags['bronze-bar'] || 0) >= 6 && (state.bags['smithing-flux'] || 0) < 4) tryAct(() => buyFromVendor(state, 'smithing-flux', 6));
 
-  // Anvil: keep some grit on hand, then the most profitable recipes the bags allow.
-  if ((state.bags['rough-grit'] || 0) < 3 && maxCraftable(state, 'rough-grit') >= 3) tryAct(() => queueCraft(state, 'rough-grit', 3, now));
-  if ((state.bags['coarse-grit'] || 0) < 3 && maxCraftable(state, 'coarse-grit') >= 3) tryAct(() => queueCraft(state, 'coarse-grit', 3, now));
-  const ranked = recipes.filter((r) => r.station === 'anvil' && SELL_CATEGORIES.has(itemById[r.makes.item].category))
+  // Grit for the recipes that need it.
+  for (const id of ['rough-grit', 'coarse-grit']) {
+    if (recipeColor(state, recipeById[id]) === 'red') continue;
+    if ((state.bags[id] || 0) < 4 && maxCraftable(state, id) >= 4 && queueFree('anvil')) tryAct(() => queueCraft(state, id, 4, now));
+  }
+
+  // Leveling: queue enough of the cheapest skill-up to reach its next color,
+  // buying missing materials when they're affordable.
+  if (lvl && queueFree('anvil') && !state.stations.anvil.queue.some((o) => o.recipeId === lvl.r.id)) {
+    const s = state.skills[PROF].skill;
+    const nextColorAt = lvl.r.skill.find((n) => n > s) ?? s + 1;
+    const capLeft = capOf(state, PROF) - s;
+    const qty = Math.max(0, Math.min(20, Math.ceil(Math.min(nextColorAt - s, capLeft) / lvl.chance)));
+    if (qty > 0) {
+      const have = maxCraftable(state, lvl.r.id);
+      if (have >= qty || tryAct(() => buyMissing(state, lvl.r, qty, state.copper * 0.4, now))) {
+        if (tryAct(() => queueCraft(state, lvl.r.id, qty, now))) stats.levelCrafts += qty;
+      } else if (have > 0 && tryAct(() => queueCraft(state, lvl.r.id, have, now))) stats.levelCrafts += have;
+    }
+  }
+
+  // Anvil: the most profitable recipes the bags allow, up to a day's demand of
+  // each item, counting what's already in bags, listed or queued.
+  const ranked = recipes.filter((r) => r.station === 'anvil' && recipeColor(state, r) !== 'red' && SELL_CATEGORIES.has(itemById[r.makes.item].category))
     .map((r) => ({ r, p: botProfit(state, r, now) })).filter((x) => x.p > 0).sort((a, b) => b.p - a.p);
-  // Make up to a day's demand of each item, counting what's already in bags,
-  // listed or queued. Flooding one item is what the market punishes.
   const onHand = (itemId) => (state.bags[itemId] || 0) +
     playerListings(state).filter((x) => x.itemId === itemId).reduce((n, x) => n + x.listing.qty, 0) +
     state.stations.anvil.queue.filter((o) => recipeById[o.recipeId].makes.item === itemId).reduce((n, o) => n + o.qty - o.done, 0);
   for (const { r } of ranked) {
-    if (state.stations.anvil.queue.length >= tuning.queueSlots) break;
+    if (!queueFree('anvil')) break;
     const room = Math.floor(demandPerHour(state, itemById[r.makes.item]) * 24) - onHand(r.makes.item);
     const n = Math.min(maxCraftable(state, r.id), room);
     if (n > 0) tryAct(() => queueCraft(state, r.id, n, now));
   }
 
-  // Selling: finished goods, plus raw materials beyond what the bot can use.
+  // Selling: finished goods, raw materials beyond what the bot can use, and
+  // anything it bought to flip once the price is back near base.
   const mine = playerListings(state);
   for (const [itemId, have] of Object.entries(state.bags)) {
     const item = itemById[itemId];
-    const surplus = item.category === 'material' && have > 150;
-    if (!SELL_CATEGORIES.has(item.category) && !surplus) continue;
+    const surplus = item.category === 'material' && have > 100;
+    const flipReady = (stats.flipStock[itemId] || 0) > 0 && undercutPrice(state, itemId) >= item.base * 0.95;
+    if (!SELL_CATEGORIES.has(item.category) && !surplus && !flipReady) continue;
     const existing = mine.filter((x) => x.itemId === itemId);
     if (bot.relist) {
       for (const x of existing) if (x.place > 0) { tryAct(() => cancelListing(state, itemId, x.listing.id)); stats.relists++; }
     } else if (existing.length) continue;
     const listedNow = playerListings(state).filter((x) => x.itemId === itemId).reduce((n, x) => n + x.listing.qty, 0);
-    const want = Math.min(state.bags[itemId] || 0, Math.ceil(demandPerHour(state, item) * bot.listHours) - listedNow);
+    let want = Math.min(state.bags[itemId] || 0, Math.ceil(demandPerHour(state, item) * bot.listHours) - listedNow);
+    if (surplus && !SELL_CATEGORIES.has(item.category)) want = Math.min(want, have - 100);
+    if (flipReady) want = Math.max(want, Math.min(state.bags[itemId] || 0, stats.flipStock[itemId]));
     if (want > 0) {
       const before = state.copper;
       if (tryAct(() => listItem(state, { itemId, qty: want, price: undercutPrice(state, itemId), hours: 24 }, now))) {
         stats.deposits += before - state.copper;
         stats.listed[itemId] = (stats.listed[itemId] || 0) + want;
+        if (stats.flipStock[itemId]) stats.flipStock[itemId] = Math.max(0, stats.flipStock[itemId] - want);
       }
     }
   }
 
-  // Flipping: buy anything listed well under fair, relist next time at market.
+  // Leveling junk: vendor finished goods beyond two days of demand.
+  for (const [itemId, have] of Object.entries(state.bags)) {
+    const item = itemById[itemId];
+    if (!SELL_CATEGORIES.has(item.category)) continue;
+    const extra = have - Math.max(2, Math.ceil(demandPerHour(state, item) * 48));
+    if (extra > 0 && tryAct(() => sellToVendor(state, itemId, extra))) stats.vendored += extra;
+  }
+
+  // Flipping: buy listings under 80% of base value, spending at most a fifth
+  // of the purse per item. They're relisted above once the price recovers.
   if (bot.flip) {
     for (const item of tradeableItems) {
-      if (!SELL_CATEGORIES.has(item.category)) continue;
-      const m = state.market.items[item.id];
-      const cheap = m.listings.find((l) => l.seller === 'npc' && l.price < m.fair * 0.8);
-      if (cheap && cheap.price * cheap.qty < state.copper * 0.2) {
-        if (tryAct(() => buyItems(state, item.id, cheap.qty, now))) stats.flips += cheap.qty;
+      const cheap = state.market.items[item.id].listings.filter((l) => l.seller === 'npc' && l.price < item.base * 0.8);
+      const qty = cheap.reduce((n, l) => n + l.qty, 0);
+      if (!qty) continue;
+      const afford = Math.min(qty, Math.floor((state.copper * 0.2) / item.base), roomFor(state, item.id));
+      if (afford > 0 && tryAct(() => buyItems(state, item.id, afford, now))) {
+        stats.flips += afford;
+        stats.flipStock[item.id] = (stats.flipStock[item.id] || 0) + afford;
       }
     }
   }
@@ -263,13 +350,17 @@ function botCheckIn(bot, state, now, stats) {
 
 function botRun(bot, seed) {
   const state = newGame({ name: bot.name, factionId: 'red', seed, now: START });
-  const stats = { sold: {}, listed: {}, firstSale: null, heroFees: 0, deposits: 0, relists: 0, flips: 0, gold: {}, flooded: {} };
+  const stats = { sold: {}, listed: {}, firstSale: null, heroFees: 0, deposits: 0, relists: 0, flips: 0, flipStock: {},
+    levelCrafts: 0, vendored: 0, gold: {}, skill: {}, reached: {}, flooded: {} };
   const checkpoints = [1, 3, 7, 14, 30, 60];
   for (let t = START; t <= START + 60 * DAY; t += bot.every * HOUR) {
     botCheckIn(bot, state, t, stats);
     for (const item of tradeableItems) if (demandTag(state, item) === 'flooded') stats.flooded[item.id] = (stats.flooded[item.id] || 0) + 1;
+    const s = state.skills[PROF];
+    const reached = { skill75: s.skill >= 75, journeyman: s.rank >= 1, skill150: s.skill >= 150, skill300: s.skill >= 300 };
+    for (const [id, ok] of Object.entries(reached)) if (ok && stats.reached[id] === undefined) stats.reached[id] = (t - START) / DAY;
     const day = (t - START) / DAY;
-    if (checkpoints.includes(day)) stats.gold[day] = state.copper;
+    if (checkpoints.includes(day)) { stats.gold[day] = state.copper; stats.skill[day] = s.skill; }
   }
   stats.checkIns = Math.floor((60 * 24) / bot.every) + 1;
   return stats;
@@ -283,12 +374,15 @@ function botReport() {
   const problems = [];
   const allListed = {};
   const allSold = {};
+  const pacing = [];
   for (const bot of BOTS) {
     const runs = [101, 202].map((seed) => botRun(bot, seed));
     const avg = (f) => runs.reduce((n, r) => n + f(r), 0) / runs.length;
     const gold = [1, 3, 7, 14, 30, 60].map((d) => lpad(gsc(avg((r) => r.gold[d] ?? 0)), 9)).join('');
     const first = avg((r) => r.firstSale ?? 60 * DAY) / (60 * 1000);
     console.log(`${pad(bot.name, 10)}${gold}${lpad(`${Math.round(first)} min`, 10)}${lpad(gsc(avg((r) => r.heroFees)), 11)}${lpad(gsc(avg((r) => r.deposits)), 10)}`);
+    console.log(`${pad('', 10)}skill ${[1, 3, 7, 14, 30, 60].map((d) => `d${d} ${Math.round(avg((r) => r.skill[d] ?? 0))}`).join(', ')}` +
+      `; ${Math.round(avg((r) => r.levelCrafts))} leveling crafts, ${Math.round(avg((r) => r.vendored))} vendored`);
     for (const r of runs) {
       for (const [id, n] of Object.entries(r.listed)) allListed[id] = (allListed[id] || 0) + n;
       for (const [id, n] of Object.entries(r.sold)) allSold[id] = (allSold[id] || 0) + n;
@@ -297,7 +391,19 @@ function botReport() {
     if (flooded.length) console.log(`${pad('', 10)}flooded over 25% of the time: ${flooded.join(', ')}`);
     if (bot.flip) console.log(`${pad('', 10)}flipped ${Math.round(avg((r) => r.flips))} units`);
     if (avg((r) => r.gold[60]) < tuning.startingCopper) problems.push(`${bot.name} bot ends with less gold than it started with`);
+    pacing.push({ runs, first });
   }
+
+  // Pacing targets from DESIGN.md. Phase 2 content is still being built, so
+  // misses show here but don't count as problems until the Phase 2 gate.
+  console.log('\nPacing (day each milestone was reached, one column per seed):');
+  console.log(`${pad('milestone', 14)}${lpad('target', 8)}${BOTS.map((b) => lpad(b.name, 18)).join('')}`);
+  const fmt = (d) => (d === undefined ? 'never' : d.toFixed(1));
+  console.log(`${pad('first sale', 14)}${lpad('5 min', 8)}${pacing.map((p) => lpad(`${Math.round(p.first)} min`, 18)).join('')}`);
+  for (const m of MILESTONES) {
+    console.log(`${pad(m.label, 14)}${lpad(m.target ? `day ${m.target}` : '', 8)}${pacing.map((p) => lpad(p.runs.map((r) => fmt(r.reached[m.id])).join(' / '), 18)).join('')}`);
+  }
+
   console.log('\nItems the bots listed vs sold (all bots):');
   for (const [id, n] of Object.entries(allListed).sort((a, b) => b[1] - a[1])) {
     const sold = allSold[id] || 0;

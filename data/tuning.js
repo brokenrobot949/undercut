@@ -28,6 +28,11 @@ export const tuning = {
   // The City Smelter smelts instantly for this share of the bars' base value.
   smelterFee: 0.25,
 
+  // ---- Skill ----
+  // Chance of +1 skill per craft, by recipe color. A recipe's color comes from
+  // your skill against the four numbers in its `skill` list (data/recipes.js).
+  skillUpChance: { orange: 1, yellow: 0.75, green: 0.25, gray: 0 },
+
   // ---- Tavern ----
   tavern: {
     // Heroes on the hire board, and how often it refreshes (hours).

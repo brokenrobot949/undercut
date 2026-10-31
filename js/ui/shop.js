@@ -1,8 +1,12 @@
-// Shop tab (home): "While you were away", commissions, town crier, guild.
+// Shop tab (home): "While you were away", commissions, town crier, and the
+// Trade Guild with its skill trainer.
 
 import { el, coins, comingSoon, formatDuration } from './components.js';
 import { getFaction, getStanding } from '../engine/game.js';
 import { itemById } from '../../data/items.js';
+import { professions, professionById } from '../../data/professions.js';
+import { nextTraining, trainRank } from '../engine/skills.js';
+import { skillBar } from './skill-bar.js';
 
 export function renderShop(ctx) {
   const { state } = ctx;
@@ -18,8 +22,21 @@ export function renderShop(ctx) {
       el('h2', {}, faction.guild),
       el('p', {}, `Standing: ${current.name}`,
         next ? el('span', { class: 'dim' }, ` · ${state.reputation.toLocaleString()} / ${next.rep.toLocaleString()} reputation`) : null),
-      el('p', { class: 'dim small' }, 'Training, the quartermaster and shop upgrades arrive in later phases.')),
+      el('h3', {}, 'Trainer'),
+      el('p', { class: 'small dim' }, 'Each rank lets your skill climb higher. Train the next one once you reach the cap.'),
+      professions.map((p) => trainerRow(ctx, p.id)),
+      el('p', { class: 'dim small' }, 'The quartermaster and shop upgrades arrive in Phase 3.')),
   );
+}
+
+function trainerRow(ctx, professionId) {
+  const t = nextTraining(ctx.state, professionId);
+  return el('div', { class: 'trainer-row' },
+    skillBar(ctx.state, professionId),
+    t ? el('button', { class: `btn wide${t.ready ? ' btn-primary' : ''}`, type: 'button', disabled: !t.ready,
+      onclick: () => ctx.act((s) => trainRank(s, professionId)) },
+      `Train ${t.rank.name} (skill to ${t.rank.cap}) · `, t.cost ? coins(t.cost) : 'free') : el('p', { class: 'small dim' }, 'Highest rank trained.'),
+    t && !t.ready ? el('p', { class: 'small dim' }, t.reason) : null);
 }
 
 function awayPanel(ctx) {
@@ -41,6 +58,12 @@ function awayPanel(ctx) {
     for (const r of s.returns || []) {
       const haul = r.haul.map((h) => `${h.qty} ${itemById[h.item].name.toLowerCase()}`).join(', ');
       items.push(r.line ? `${r.line} (${haul})` : `${r.name} came back from ${r.zone} with ${haul}.`);
+    }
+    for (const [id, up] of Object.entries(s.skillUps || {})) {
+      items.push(`${professionById[id].name} rose from ${up.from} to ${up.to}.`);
+    }
+    for (const id of Object.keys(s.skillCapped || {})) {
+      items.push(`${professionById[id].name} is at its rank cap. Train the next rank to keep improving.`);
     }
     items.push(...s.lines);
   }

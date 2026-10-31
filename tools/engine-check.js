@@ -10,6 +10,8 @@ import { roomFor, addOrMail } from '../js/engine/bags.js';
 import { saleProceeds } from '../js/engine/market.js';
 import { advance, schedule, TICK_MS } from '../js/engine/clock.js';
 import { createRng, rngNext } from '../js/engine/rng.js';
+import { recipeColor, nextTraining, trainRank, debugSetSkill } from '../js/engine/skills.js';
+import { recipeById } from '../data/recipes.js';
 import { encodeExport, decodeExport, migrate, writeSave, readSave } from '../js/engine/save.js';
 
 const H = 60 * 60 * 1000;
@@ -190,6 +192,7 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
 {
   const s = game(6);
   s.bags = { 'rough-stone': 20 };
+  s.skills.blacksmithing.skill = 10;
   queueCraft(s, 'rough-honing-stone', 10, t0); // 5 s each
   queueCraft(s, 'rough-grit', 5, t0); // 5 s each, 2 stone each
   check('queueing takes materials', !s.bags['rough-stone']);
@@ -234,6 +237,49 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   check('board refreshes after 4 hours', s.tavern.board.length === 3);
 }
 
+// Skill: recipe colors, skill-ups on finished crafts, rank caps and training.
+{
+  const s = game(11);
+  const cleaver = recipeById['copper-cleaver']; // skill [1, 16, 26, 36]
+  const colors = [1, 16, 26, 36].map((n) => { s.skills.blacksmithing.skill = n; return recipeColor(s, cleaver); });
+  check('recipe colors follow its skill levels', colors.join() === 'orange,yellow,green,gray', colors.join());
+  check('smelting has no color', recipeColor(s, recipeById['smelt-copper']) === null);
+  s.skills.blacksmithing.skill = 1;
+  let threw = false;
+  try { queueCraft(s, 'copper-plate-cuffs', 1, t0); } catch { threw = true; }
+  check('a recipe above your skill is refused', threw);
+
+  s.bags = { 'rough-stone': 20 };
+  queueCraft(s, 'rough-grit', 10, t0); // orange until 16: every craft is +1
+  const sum = catchUp(s, t0 + 60 * 1000);
+  check('orange crafts give +1 skill each', s.skills.blacksmithing.skill === 11 && sum.skillUps.blacksmithing?.to === 11,
+    `skill ${s.skills.blacksmithing.skill}`);
+  s.bags = { 'copper-ore': 5 };
+  queueCraft(s, 'smelt-copper', 5, t0 + 60 * 1000);
+  catchUp(s, t0 + 4 * 60 * 1000);
+  check('smelting gives no skill', s.skills.blacksmithing.skill === 11);
+}
+{
+  const s = game(12);
+  debugSetSkill(s, 'blacksmithing', 75);
+  s.bags = { 'coarse-stone': 12 };
+  queueCraft(s, 'coarse-balance-weight', 3, t0); // orange, but Apprentice caps skill at 75
+  const sum = catchUp(s, t0 + 60 * 1000);
+  check('skill stops at the rank cap', s.skills.blacksmithing.skill === 75 && sum.skillCapped.blacksmithing === true);
+  s.copper = 1000;
+  check('training needs the gold', nextTraining(s, 'blacksmithing').reason === 'Not enough gold.');
+  s.copper = 60000;
+  trainRank(s, 'blacksmithing');
+  check('training Journeyman costs 5 g and lifts the cap', s.copper === 10000 && s.skills.blacksmithing.rank === 1);
+  queueCraft(s, 'coarse-balance-weight', 3, t0 + 60 * 1000);
+  catchUp(s, t0 + 2 * 60 * 1000);
+  check('skill rises again after training', s.skills.blacksmithing.skill === 78, `skill ${s.skills.blacksmithing.skill}`);
+  s.reputation = 0;
+  debugSetSkill(s, 'blacksmithing', 150);
+  s.copper = 1e7;
+  check('Expert training needs Friendly standing', /Friendly/.test(nextTraining(s, 'blacksmithing').reason));
+}
+
 // Bags: stacks of 20, gear one per slot, overflow waits in the mailbox.
 {
   const s = game(10);
@@ -251,7 +297,7 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
     timers: [], nextTimerId: 1, settings: { debug: false, mute: false } };
   const s = migrate(structuredClone(v1));
   catchUp(s, t0 + H);
-  check('version 1 save upgrades and runs', s.version === 3 && s.market && s.tavern.board.length === 3 && s.stations.anvil);
+  check('version 1 save upgrades and runs', s.version === 4 && s.skills.blacksmithing.skill === 1 && s.market && s.tavern.board.length === 3 && s.stations.anvil);
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');

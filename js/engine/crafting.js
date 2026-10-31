@@ -4,13 +4,14 @@
 // Materials are taken when the order is queued. The order at the front works
 // one unit at a time; each unit finishes on a clock timer, so crafting carries
 // on exactly while the game is closed. Finished items go to bags (or the
-// mailbox when bags are full).
+// mailbox when bags are full), and each finished craft may give +1 skill.
 
 import { tuning } from '../../data/tuning.js';
 import { recipeById } from '../../data/recipes.js';
 import { itemById } from '../../data/items.js';
 import { schedule, cancelTimer } from './clock.js';
 import { checkMats, takeFromBags, addOrMail } from './bags.js';
+import { checkSkill, rollSkillUp } from './skills.js';
 
 export const STATIONS = ['anvil', 'forge'];
 
@@ -31,6 +32,7 @@ export function queueCraft(state, recipeId, qty, now) {
   if (station.queue.length >= queueSlots(state, recipe.station)) {
     throw new Error(`The ${recipe.station} queue is full (${queueSlots(state, recipe.station)} orders).`);
   }
+  checkSkill(state, recipe);
   checkMats(state, recipe.mats, qty);
 
   for (const m of recipe.mats) takeFromBags(state, m.item, m.qty * qty);
@@ -67,6 +69,7 @@ export function finishUnit(state, timer, summary) {
   if (!order) return;
   const recipe = recipeById[order.recipeId];
   addOrMail(state, recipe.makes.item, recipe.makes.qty);
+  rollSkillUp(state, recipe, summary);
   summary.crafted[recipe.makes.item] = (summary.crafted[recipe.makes.item] || 0) + recipe.makes.qty;
   order.done++;
   order.timerId = null;
