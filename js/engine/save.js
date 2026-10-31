@@ -47,6 +47,12 @@ const migrations = {
     }
     return save;
   },
+  // Version 6 (Phase 2): adds regulars to the tavern. Heroes already out on a
+  // trip come home as before but don't become regulars.
+  5: (save) => {
+    if (save.tavern) save.tavern.regulars = [];
+    return save;
+  },
 };
 
 export function migrate(save) {

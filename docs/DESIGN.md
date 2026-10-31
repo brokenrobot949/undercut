@@ -226,6 +226,11 @@ Class decides what gear a hero buys, which shapes demand on the auction house. I
 
 Regulars also gain levels from trips, so a regular you keep hiring eventually reaches higher-tier zones. Filling a regular's commission gives them a large level boost. The game keeps up to 12 regulars.
 
+- The first hire makes a hero a regular at loyalty 0. Each later hire adds a level.
+- At each board refresh, each regular not out gathering is in town 40% of the time. A regular who got back from a trip in the last 4 hours is always in town.
+- Trips earn about one level per 6 hours away. Each level adds 5 to every gathering skill the hero has. A regular can level out of a zone's band, which moves them up to the next tier's zones.
+- When the tavern already remembers 12 regulars, a new hire replaces the least loyal one who isn't away.
+
 ## Auction House
 
 The auction house simulates one realm's market: NPC sellers list goods, NPC buyers arrive over time, and the cheapest acceptable listing sells first. Every tradeable item (about 150 at launch) runs this model every 10-minute tick.

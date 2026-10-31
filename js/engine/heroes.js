@@ -3,6 +3,11 @@
 // with every one of them the zone has loot for. Every trip also brings home
 // bonus loot (data/loot.js). A trip never fails: a bad haul just brings home
 // half the gathered load.
+//
+// Regulars: the first hire makes a hero a regular. Each later hire adds a
+// loyalty level (cheaper fee, bigger haul), and every trip earns levels, so a
+// regular you keep hiring grows into higher zones. Regulars in town show in
+// their own row, next to the board.
 
 import { tuning } from '../../data/tuning.js';
 import { zones, zoneById } from '../../data/zones.js';
@@ -20,7 +25,7 @@ const HOUR = 60 * 60 * 1000;
 const TV = tuning.tavern;
 
 export function createTavern(state, now) {
-  state.tavern = { board: [], expeditions: [], nextHeroId: 1, nextRefreshAt: now + TV.refreshHours * HOUR };
+  state.tavern = { board: [], expeditions: [], regulars: [], nextHeroId: 1, nextRefreshAt: now + TV.refreshHours * HOUR };
   rollBoard(state);
   schedule(state, 'tavern-refresh', state.tavern.nextRefreshAt);
 }
@@ -52,13 +57,16 @@ function workingTier(state) {
 function rollHero(state, { band = null, pair = null } = {}) {
   const factionRaces = races.filter((r) => r.faction === state.player.factionId);
   const race = rngPick(state.rng, factionRaces);
+  // New faces only: skip names your regulars already have.
+  const taken = new Set(state.tavern.regulars.map((r) => r.name));
+  const names = heroNames[race.id].filter((n) => !taken.has(n));
   const [minLevel, maxLevel] = TV.heroLevels;
   // More low-level heroes than high ones.
   const level = band ? rngInt(state.rng, Math.max(minLevel, band[0]), band[1])
     : minLevel + Math.floor((maxLevel - minLevel + 1) * rngNext(state.rng) ** 1.4);
   return {
     id: state.tavern.nextHeroId++,
-    name: rngPick(state.rng, heroNames[race.id]),
+    name: rngPick(state.rng, names.length ? names : heroNames[race.id]),
     race: race.id,
     classId: rngPick(state.rng, race.classes),
     level,
@@ -73,9 +81,15 @@ function rollGathering(state, level, pair) {
   return Object.fromEntries(profs.map((p) => [p, Math.min(300, level * 5 + rngInt(state.rng, 0, 20))]));
 }
 
-// Clock timer: the board refreshes every few hours.
+// Clock timer: the board refreshes every few hours, and regulars drift in and out of town.
 export function refreshBoardTimer(state, timer) {
   rollBoard(state);
+  // A regular back from a trip in the last few hours stays; the rest come and go.
+  for (const r of state.tavern.regulars) {
+    if (r.away) continue;
+    const justBack = timer.at - (r.backAt ?? 0) < TV.refreshHours * HOUR;
+    r.inTown = justBack || rngChance(state.rng, TV.regulars.inTownChance);
+  }
   state.tavern.nextRefreshAt = timer.at + TV.refreshHours * HOUR;
   schedule(state, 'tavern-refresh', state.tavern.nextRefreshAt);
 }
@@ -116,7 +130,7 @@ export function perkApplies(hero, zone = null) {
 
 export function hireFee(hero, zone, hours) {
   const p = perk(hero);
-  const mult = p.type === 'fee' ? p.value : 1;
+  const mult = (p.type === 'fee' ? p.value : 1) * (1 - (hero.loyalty ?? 0) * TV.regulars.feeCutPerLoyalty);
   return Math.max(1, Math.round(zone.feePerHour * hours ** TV.feeExponent * mult));
 }
 
@@ -131,7 +145,8 @@ function yieldMult(hero, zone, prof) {
   const p = perk(hero);
   const skillBonus = 1 + Math.min(0.5, (hero.skills[prof] - zone.minSkill) / 200);
   const share = gatheredProfessions(hero, zone).length > 1 ? TV.dualGatherShare : 1;
-  return skillBonus * share * (p.type === 'yield' && p.profession === prof ? p.value : 1);
+  const loyal = 1 + (hero.loyalty ?? 0) * TV.regulars.yieldPerLoyalty;
+  return skillBonus * share * loyal * (p.type === 'yield' && p.profession === prof ? p.value : 1);
 }
 
 // Average gathered haul, for the hire screen: [{ item, qty }]. Bonus loot not included.
@@ -144,8 +159,14 @@ export function expeditionSlots(state) {
   return TV.expeditionSlots;
 }
 
+// Regulars who are in town and free to hire.
+export function regularsInTown(state) {
+  return state.tavern.regulars.filter((r) => r.inTown && !r.away);
+}
+
 export function hireHero(state, heroId, zoneId, hours, now) {
-  const hero = state.tavern.board.find((h) => h.id === heroId);
+  const regular = regularsInTown(state).find((r) => r.id === heroId);
+  const hero = regular ?? state.tavern.board.find((h) => h.id === heroId);
   if (!hero) throw new Error('That hero has left the tavern.');
   const zone = zoneById[zoneId];
   if (!zone || !zonesFor(hero).includes(zone)) throw new Error(`${hero.name} can't gather there.`);
@@ -157,11 +178,50 @@ export function hireHero(state, heroId, zoneId, hours, now) {
   if (fee > state.copper) throw new Error(`${hero.name} wants ${fee} copper and you can't cover it.`);
 
   state.copper -= fee;
-  state.tavern.board = state.tavern.board.filter((h) => h.id !== heroId);
-  const returnsAt = now + tripLength(hero, hours);
+  const r = regular ?? makeRegular(state, hero);
+  if (regular) r.loyalty = Math.min(TV.regulars.maxLoyalty, r.loyalty + 1);
+  r.away = true;
+  r.inTown = false;
+  r.lastHiredAt = now;
+  const returnsAt = now + tripLength(r, hours);
   const timer = schedule(state, 'expedition', returnsAt, { heroId });
-  state.tavern.expeditions.push({ hero, zoneId, hours, fee, startedAt: now, returnsAt, timerId: timer.id });
+  // The trip keeps its own copy of the hero; levels earned go back to the regular on return.
+  state.tavern.expeditions.push({ hero: { ...r }, zoneId, hours, fee, startedAt: now, returnsAt, timerId: timer.id });
   return fee;
+}
+
+// A first hire: the hero leaves the board and joins your regulars. If the
+// tavern already remembers the most regulars it can, the least loyal one who
+// isn't away is forgotten.
+function makeRegular(state, hero) {
+  const t = state.tavern;
+  t.board = t.board.filter((h) => h.id !== hero.id);
+  if (t.regulars.length >= TV.regulars.max) {
+    const home = t.regulars.filter((x) => !x.away).sort((a, b) => a.loyalty - b.loyalty || a.lastHiredAt - b.lastHiredAt);
+    if (home.length) t.regulars = t.regulars.filter((x) => x !== home[0]);
+  }
+  const r = { ...hero, loyalty: 0, xp: 0, inTown: false, away: false, lastHiredAt: 0 };
+  t.regulars.push(r);
+  return r;
+}
+
+// Levels earned on a trip: every level adds 5 to each gathering skill.
+function gainLevels(state, trip, summary) {
+  const r = state.tavern.regulars.find((x) => x.id === trip.hero.id);
+  if (!r) return;
+  r.away = false;
+  r.inTown = true; // a hero just back stays in town for at least one full board refresh
+  r.backAt = trip.returnsAt;
+  const [, maxLevel] = TV.heroLevels;
+  r.xp += trip.hours * TV.regulars.levelsPerTripHour;
+  const from = r.level;
+  while (r.xp >= 1 && r.level < maxLevel) {
+    r.xp -= 1;
+    r.level++;
+    for (const p of Object.keys(r.skills)) r.skills[p] = Math.min(300, r.skills[p] + 5);
+  }
+  if (r.level >= maxLevel) r.xp = 0;
+  if (r.level > from) summary.lines.push(`${r.name} is now level ${r.level}.`);
 }
 
 // Clock timer: a hero comes home. The haul is rolled now, in order, so
@@ -194,6 +254,7 @@ export function expeditionReturns(state, timer, summary) {
   const lines = badHaulLines[profs[0]] ?? badHaulLines.mining;
   const line = bad ? rngPick(state.rng, lines).replace('{name}', hero.name).replace('{zone}', zone.name) : null;
   summary.returns.push({ name: hero.name, zone: zone.name, haul, line });
+  gainLevels(state, trip, summary);
 }
 
 // Bonus loot from the zone's tier: cloth, junk, essences, gems, and now and

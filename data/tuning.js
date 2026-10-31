@@ -54,6 +54,15 @@ export const tuning = {
     heroLevels: [3, 60],
     // Chance a hero knows two gathering professions instead of one.
     dualProfessionChance: 0.3,
+    // Regulars: heroes you've hired before. Each re-hire adds a loyalty level.
+    regulars: {
+      max: 12, // regulars the tavern remembers; past this, the least loyal is forgotten
+      maxLoyalty: 5,
+      feeCutPerLoyalty: 0.04, // 4% cheaper per loyalty level
+      yieldPerLoyalty: 0.03, // 3% more gathered per loyalty level
+      inTownChance: 0.4, // chance each regular is in town at a board refresh
+      levelsPerTripHour: 1 / 6, // levels gained per hour away (an 8 h trip = 1.3 levels)
+    },
     // A hero gathering with two professions on one trip gathers each at this
     // share (0.6 each = a bit more in total, less of each).
     dualGatherShare: 0.6,

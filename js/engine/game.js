@@ -13,7 +13,7 @@ import { createTavern, refreshBoardTimer, expeditionReturns } from './heroes.js'
 import { createSkills, createKnownRecipes } from './skills.js';
 export { collectMailbox } from './bags.js';
 
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 export function newGame({ name, factionId, seed, now }) {
   const state = {

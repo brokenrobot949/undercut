@@ -22,7 +22,7 @@ import {
 import { listItem, cancelListing, undercutPrice, buyItems, buyFromVendor, quoteBuy, sellToVendor } from '../js/engine/trading.js';
 import { bagSlots, slotsUsed, roomFor } from '../js/engine/bags.js';
 import { queueCraft, maxCraftable } from '../js/engine/crafting.js';
-import { hireHero, hireFee, zonesFor, expeditionSlots } from '../js/engine/heroes.js';
+import { hireHero, hireFee, zonesFor, expeditionSlots, regularsInTown } from '../js/engine/heroes.js';
 import { nextTraining, trainRank, recipeColor, capOf, knowsRecipe, trainerRecipes, learnRecipe, forgeRankNeeded, learnFromScroll } from '../js/engine/skills.js';
 
 const HOUR = 60 * 60 * 1000;
@@ -173,7 +173,8 @@ const BOTS = [
 ];
 const SELL_CATEGORIES = new Set(['consumable', 'gear']);
 const PROF = 'blacksmithing';
-// Materials some recipe uses; the bots keep a stock of these.
+// Materials some recipe uses; the bots keep this many of each and sell the rest.
+const KEEP_MATS = 40;
 const USED_MATS = new Set(recipes.flatMap((r) => r.mats.map((m) => m.item)));
 // Anvil recipes that make a material other recipes use (grit).
 const GRITS = recipes.filter((r) => r.station === 'anvil' && itemById[r.makes.item].category === 'material').map((r) => r.id);
@@ -255,7 +256,8 @@ function botCheckIn(bot, state, now, stats) {
   while (freeSlots() >= 8 && state.tavern.expeditions.length < expeditionSlots(state)) {
     const first = state.tavern.expeditions.length === 0;
     const rank = (z) => (first && z.tier !== wantTier ? 1 : 0);
-    const options = state.tavern.board.flatMap((h) => zonesFor(h).filter((z) => usable(z, h)).map((z) => ({ h, z })))
+    // Regulars in town come first: loyalty makes them cheaper and better.
+    const options = [...regularsInTown(state), ...state.tavern.board].flatMap((h) => zonesFor(h).filter((z) => usable(z, h)).map((z) => ({ h, z })))
       .sort((a, b) => rank(a.z) - rank(b.z) || b.z.tier - a.z.tier);
     if (!options.length) break;
     const { h, z } = options[0];
@@ -319,7 +321,7 @@ function botCheckIn(bot, state, now, stats) {
   for (const [itemId, have] of Object.entries(state.bags)) {
     const item = itemById[itemId];
     // Materials no recipe uses (herbs, hides, cloth, gems, essences from bonus loot) all go up for sale.
-    const keep = USED_MATS.has(itemId) ? 100 : 0;
+    const keep = USED_MATS.has(itemId) ? KEEP_MATS : 0;
     const surplus = (item.category === 'material' && have > keep) || item.category === 'scroll';
     const flipReady = (stats.flipStock[itemId] || 0) > 0 && undercutPrice(state, itemId) >= item.base * 0.95;
     if (!SELL_CATEGORIES.has(item.category) && !surplus && !flipReady) continue;
@@ -390,6 +392,10 @@ function botRun(bot, seed) {
     if (checkpoints.includes(day)) { stats.gold[day] = state.copper; stats.skill[day] = s.skill; }
   }
   stats.checkIns = Math.floor((60 * 24) / bot.every) + 1;
+  const regs = state.tavern.regulars;
+  stats.regulars = regs.length;
+  stats.bestLoyalty = Math.max(0, ...regs.map((r) => r.loyalty));
+  stats.topLevel = Math.max(0, ...regs.map((r) => r.level));
   return stats;
 }
 
@@ -416,7 +422,8 @@ function botReport() {
     }
     const flooded = Object.entries(runs[0].flooded).filter(([, n]) => n > runs[0].checkIns * 0.25).map(([id]) => itemById[id].name);
     if (flooded.length) console.log(`${pad('', 10)}flooded over 25% of the time: ${flooded.join(', ')}`);
-    console.log(`${pad('', 10)}${avg((r) => r.scrollsRead).toFixed(1)} recipe scrolls read, ${Math.round(avg((r) => r.junkSold))} junk vendored`);
+    console.log(`${pad('', 10)}${avg((r) => r.scrollsRead).toFixed(1)} recipe scrolls read, ${Math.round(avg((r) => r.junkSold))} junk vendored, ` +
+      `${avg((r) => r.regulars).toFixed(1)} regulars (best loyalty ${avg((r) => r.bestLoyalty).toFixed(1)}, top level ${Math.round(avg((r) => r.topLevel))})`);
     if (bot.flip) console.log(`${pad('', 10)}flipped ${Math.round(avg((r) => r.flips))} units`);
     if (avg((r) => r.gold[60]) < tuning.startingCopper) problems.push(`${bot.name} bot ends with less gold than it started with`);
     pacing.push({ runs, first });

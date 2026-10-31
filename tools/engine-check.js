@@ -5,7 +5,8 @@
 import { newGame, debugFastForward, catchUp, collectMailbox } from '../js/engine/game.js';
 import { listItem, undercutPrice, lowestOtherPrice, quoteBuy, buyItems, sellToVendor } from '../js/engine/trading.js';
 import { queueCraft, cancelOrder, smeltAtCity } from '../js/engine/crafting.js';
-import { hireHero, zonesFor, expectedHaul } from '../js/engine/heroes.js';
+import { hireHero, zonesFor, expectedHaul, hireFee, regularsInTown } from '../js/engine/heroes.js';
+import { tuning } from '../data/tuning.js';
 import { zoneById } from '../data/zones.js';
 import { itemById } from '../data/items.js';
 import { roomFor, addOrMail } from '../js/engine/bags.js';
@@ -400,6 +401,42 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   check('scroll recipes are not sold by the trainer', !trainerRecipes(s, 'blacksmithing').some((o) => o.recipe.learn === 'scroll'));
 }
 
+// Regulars: the first hire makes a regular; re-hires build loyalty; trips earn levels.
+{
+  const s = game(21);
+  s.copper = 1e7;
+  const hero = s.tavern.board[0];
+  const zone = zonesFor(hero)[0];
+  const firstFee = hireFee(hero, zone, 8);
+  hireHero(s, hero.id, zone.id, 8, t0);
+  const reg = () => s.tavern.regulars.find((r) => r.id === hero.id);
+  check('a first hire makes the hero a regular', reg() && reg().loyalty === 0 && !s.tavern.board.some((h) => h.id === hero.id));
+  const sum = catchUp(s, t0 + 9 * H);
+  check('a trip earns levels', reg().level === hero.level + 1 && sum.lines.some((l) => l.includes('is now level')), `level ${reg().level}`);
+  check('a regular just home is in town', regularsInTown(s).some((r) => r.id === hero.id));
+  hireHero(s, hero.id, zone.id, 8, t0 + 9 * H);
+  check('hiring again adds loyalty', reg().loyalty === 1);
+  catchUp(s, t0 + 18 * H);
+  const loyal = { ...reg(), level: hero.level, skills: { ...hero.skills } };
+  check('loyalty cuts the fee 4% a level', hireFee(loyal, zone, 8) === Math.round(firstFee * (1 - tuning.tavern.regulars.feeCutPerLoyalty)), `${hireFee(loyal, zone, 8)} vs ${firstFee}`);
+  const more = expectedHaul({ ...loyal, loyalty: 5 }, zone, 8).reduce((n, h) => n + h.qty, 0);
+  const base = expectedHaul({ ...loyal, loyalty: 0 }, zone, 8).reduce((n, h) => n + h.qty, 0);
+  check('loyalty raises the haul', more > base, `${more} vs ${base}`);
+}
+{
+  const s = game(22);
+  s.copper = 1e8;
+  const max = tuning.tavern.regulars.max;
+  for (let i = 0; i < max + 2; i++) {
+    const h = s.tavern.board.find((x) => zonesFor(x).length);
+    if (!h) { catchUp(s, s.clock.lastSeenAt + 4 * H + 60000); i--; continue; }
+    const now = s.clock.lastSeenAt;
+    hireHero(s, h.id, zonesFor(h)[0].id, 0.25, now);
+    catchUp(s, now + 0.5 * H);
+  }
+  check(`the tavern remembers at most ${max} regulars`, s.tavern.regulars.length === max, `${s.tavern.regulars.length}`);
+}
+
 // Old saves upgrade.
 {
   const v1 = { version: 1, createdAt: t0, player: { name: 'Old', factionId: 'blue' }, copper: 5000, reputation: 0,
@@ -407,7 +444,7 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
     timers: [], nextTimerId: 1, settings: { debug: false, mute: false } };
   const s = migrate(structuredClone(v1));
   catchUp(s, t0 + H);
-  check('version 1 save upgrades and runs', s.version === 5 && s.knownRecipes['copper-cleaver'] && s.skills.blacksmithing.skill === 1 && s.market && s.tavern.board.length === 3 && s.stations.anvil);
+  check('version 1 save upgrades and runs', s.version === 6 && Array.isArray(s.tavern.regulars) && s.knownRecipes['copper-cleaver'] && s.skills.blacksmithing.skill === 1 && s.market && s.tavern.board.length === 3 && s.stations.anvil);
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');

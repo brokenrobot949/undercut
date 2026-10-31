@@ -515,6 +515,7 @@ input[type="number"] {
 .hero-card:disabled { opacity: 0.55; cursor: default; }
 .hero-name { font-family: var(--font-heading); font-weight: 700; font-size: 1.05rem; color: var(--highlight); }
 .hero-fee { justify-self: end; }
+.loyalty { color: var(--highlight); }
 
 /* ---- Bottom sheet (settings, item sheet, confirmations) ------------- */
 
