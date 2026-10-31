@@ -14,11 +14,11 @@ export const standingUnlocks = [
     { text: 'Tier 1 and 2 recipes from the trainer' },
   ] },
   { standing: 'friendly', unlocks: [
-    { text: 'Your second profession wing', soon: true },
+    { text: 'Your second profession wing' },
     { text: 'Tier 3 quartermaster recipes', soon: true },
   ] },
   { standing: 'honored', unlocks: [
-    { text: 'Your third profession wing', soon: true },
+    { text: 'Your third profession wing' },
     { text: 'Blue-quality quartermaster recipes', soon: true },
   ] },
   { standing: 'revered', unlocks: [

@@ -14,6 +14,7 @@ import { standingLadder } from '../engine/guild.js';
 import { guildTips } from '../../data/guild.js';
 import { tuning } from '../../data/tuning.js';
 import { upgrades } from '../../data/upgrades.js';
+import { nextWing, buyWing } from '../engine/wings.js';
 import { upgradeLevel, nextUpgrade, buyUpgrade, queueSlotsFor, craftTimeMult, bonusBarChance, bagSlotsFor, cutRate, depositMult,
   listingSlotsFor, boardSizeFor, expeditionSlotsFor, commissionPayMult } from '../engine/upgrades.js';
 import { itemById } from '../../data/items.js';
@@ -51,7 +52,7 @@ function upgradesPanel(ctx) {
   return el('section', { class: 'panel' },
     el('h2', {}, 'Shop upgrades'),
     el('p', { class: 'small dim' }, 'Spend gold to grow your shop. Higher levels need better standing with the guild.'),
-    el('div', { class: 'upgrade-list' }, upgrades.map((u) => {
+    el('div', { class: 'upgrade-list' }, wingRow(ctx), upgrades.map((u) => {
       const level = upgradeLevel(state, u.id);
       const n = nextUpgrade(state, u.id);
       const nextState = n && { ...state, upgrades: { ...state.upgrades, [u.id]: n.level } };
@@ -69,6 +70,26 @@ function upgradesPanel(ctx) {
           }) }, `Upgrade to level ${n.level} · `, coins(n.cost)) : el('p', { class: 'small' }, 'Top level reached.'),
         n && !n.ready ? el('p', { class: 'small dim' }, n.reason) : null);
     })));
+}
+
+// Profession wing: pick which profession the next wing opens.
+function wingRow(ctx) {
+  const { state } = ctx;
+  const n = nextWing(state);
+  const owned = state.player.professions.length;
+  return el('div', { class: 'upgrade-row' },
+    el('div', { class: 'upgrade-head' },
+      el('strong', {}, 'Profession wing'),
+      el('span', { class: 'small dim' }, `${owned} / ${professions.length} professions`)),
+    el('p', { class: 'small dim' }, n
+      ? `Opens a new profession, with its workstation and starter materials. Costs `
+      : 'Your shop has every profession.', n ? coins(n.cost) : null, n ? '.' : null),
+    n ? n.choices.map((p) => el('button', { class: `btn wide${n.ready ? ' btn-primary' : ''}`, type: 'button', disabled: !n.ready,
+      onclick: () => ctx.act((s) => {
+        buyWing(s, p.id);
+        toast(`Your ${p.name} wing is open. Find it in the Workshop.`);
+      }) }, `Open ${p.name}`)) : null,
+    n && !n.ready ? el('p', { class: 'small dim' }, n.reason) : null);
 }
 
 // What an upgrade does at the level in `state`, as a short phrase.

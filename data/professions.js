@@ -9,7 +9,7 @@
 //   blurb      one line for the new-game screen.
 //
 // The player picks one profession when starting a shop; it is permanent. The
-// other two open with profession wings (Phase 3).
+// other two open with profession wings (see wings below).
 //
 // Ranks (shared by every profession), in order:
 //   cap        highest skill this rank allows. Skill stops here until you train the next rank.
@@ -23,6 +23,17 @@ export const professions = [
     blurb: 'Leather armor, armor kits, cloaks, quivers and ammo pouches. Skinners bring your hides.' },
   { id: 'alchemy', name: 'Alchemy', gathering: 'herbalism', stations: ['alchemy-table'],
     blurb: 'Mending and focus draughts, tonics, elixirs, wards and transmutes. Herbalists bring your herbs.' },
+];
+
+// Profession wings, bought on the Shop tab: the first wing opens your second
+// profession, the next your third. You pick which profession each opens.
+//   standing   Trade Guild standing needed (ids from data/tuning.js)
+//   cost       price in copper (10,000 = 1 gold)
+// A new wing also comes with that profession's starter materials
+// (tuning.startingBags), so you can craft right away.
+export const wings = [
+  { standing: 'friendly', cost: 30000 },
+  { standing: 'honored', cost: 80000 },
 ];
 
 // Workstation names, as shown in the Workshop.

@@ -25,6 +25,8 @@ import { upgradeById } from '../data/upgrades.js';
 import { bagSlots } from '../js/engine/bags.js';
 import { depositFor } from '../js/engine/market.js';
 import { commissionSlots } from '../js/engine/commissions.js';
+import { buyWing, nextWing } from '../js/engine/wings.js';
+import { wings } from '../data/professions.js';
 import { encodeExport, decodeExport, migrate, writeSave, readSave } from '../js/engine/save.js';
 
 const H = 60 * 60 * 1000;
@@ -643,6 +645,26 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   s.version = 9;
   const m = migrate(structuredClone(s));
   check('version 9 save gets upgrades at level 0', m.version === SAVE_VERSION && Object.values(m.upgrades).every((v) => v === 0) && m.upgrades.seal === 0);
+}
+
+// Profession wings: second at Friendly, third at Honored, with starter materials.
+{
+  const s = game();
+  s.copper = 1_000_000;
+  let err = null; try { buyWing(s, 'alchemy'); } catch (e) { err = e.message; }
+  check('the second wing needs Friendly', /Friendly/.test(err ?? '') && !s.player.professions.includes('alchemy'));
+  s.reputation = tuning.standings.find((x) => x.id === 'friendly').rep;
+  const copper = s.copper;
+  buyWing(s, 'alchemy');
+  check('a wing opens the profession, costs gold and brings starter materials', s.player.professions.includes('alchemy') && copper - s.copper === wings[0].cost && s.bags.dawnpetal === tuning.startingBags.alchemy.dawnpetal);
+  check('the new profession can craft', !!queueCraft(s, recipes.find((r) => r.station === 'alchemy-table' && r.learn === 'start').id, 1, t0));
+  err = null; try { buyWing(s, 'leatherworking'); } catch (e) { err = e.message; }
+  check('the third wing needs Honored', /Honored/.test(err ?? ''));
+  s.reputation = tuning.standings.find((x) => x.id === 'honored').rep;
+  err = null; try { buyWing(s, 'alchemy'); } catch (e) { err = e.message; }
+  check('a wing can’t reopen a profession you have', /already/.test(err ?? ''));
+  buyWing(s, 'leatherworking');
+  check('after the third wing there are no more', s.player.professions.length === 3 && nextWing(s) === null);
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');
