@@ -230,7 +230,7 @@ As built (Oct 31, 2026; in `data/zones.js` under raidZones):
 - Any level-60 hero can raid, whatever their gathering professions. From Revered, the last hero on the board is always level 60, and level-60 regulars can raid too.
 - A raid brings back about 2.4 of its material (base value 25 s each), and loyalty raises that. It also brings the usual tier 5 bonus loot.
 - The fee is about 30 s, roughly half the haul's value.
-- NPC sellers never stock endgame materials, but NPC buyers still want them.
+- NPC sellers never stock endgame materials, but NPC buyers still want them. Demand is 0.45 buyers an hour each (raised from 0.3 in Phase 4), so spares sell steadily at about base value.
 
 **Races, classes and perks**
 
@@ -478,6 +478,7 @@ The first profession should reach Artisan in about 2 to 3 weeks of regular check
 - Listing more than a day's demand of one item should cut its price by at least 30%.
 - Hero-gathered materials should cost about 40–60% of the auction house price per unit on 1- to 8-hour trips, so hiring beats buying when you can wait. 15-minute trips cost more (about 70%) as a convenience. Zone fees were cut 15% on Oct 31, 2026 to hit this.
 - In a quiet market, an item shows "Hot" no more than about 1 check in 8.
+- Thin markets (fewer than 1 buyer an hour: most gear, scrolls, gems) need a bigger move to show "Hot": a price 22% over base or 70% of the buyer reservoir waiting, against 15% and 50% for busy items. Endgame materials, which no NPC sells, show "Hot" only on price, and waiting buyers don't raise their price (Phase 4, Oct 31, 2026).
 - Every recipe should have a profitable use for at least part of its skill range, so no tier is pure junk.
 
 **Pacing targets** (checked by the balance simulator)

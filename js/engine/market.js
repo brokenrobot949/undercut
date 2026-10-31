@@ -134,7 +134,11 @@ export function demandTag(state, item) {
   const days = supplyDays(state, item);
   if (days > M.normalSupplyDays + T.floodedDays) return 'flooded';
   if (m.fair < item.base * T.slowPrice || days > M.normalSupplyDays + T.slowDays) return 'slow';
-  if (m.fair > item.base * T.hotPrice || scarcity(state, item) > T.hotScarcity) return 'hot';
+  // Thin markets (few buyers an hour) bounce more, so they need a bigger move to
+  // count as Hot. Items no NPC sells always have buyers waiting, so only price counts.
+  const thin = baseDemandPerHour(state, item) < T.thinDemand;
+  const waiting = item.npcStock === false ? 0 : scarcity(state, item);
+  if (m.fair > item.base * (thin ? T.hotPriceThin : T.hotPrice) || waiting > (thin ? T.hotScarcityThin : T.hotScarcity)) return 'hot';
   return 'steady';
 }
 
@@ -401,7 +405,8 @@ function moveFairPrice(state, item, m, demand) {
   const extraStock = Math.max(0, supplyDays(state, item) - M.normalSupplyDays);
   // Waiting buyers only push the price up when stock is short. In a flooded
   // market they're waiting for it to get cheaper.
-  const waiting = extraStock > 0 ? 0 : Math.max(0, Math.min(1, m.reservoir / (demand * M.reservoirHours)) - M.normalScarcity);
+  // Items no NPC sells always have buyers waiting, so waiting doesn't raise their price.
+  const waiting = extraStock > 0 || item.npcStock === false ? 0 : Math.max(0, Math.min(1, m.reservoir / (demand * M.reservoirHours)) - M.normalScarcity);
   const target = item.base / (1 + M.floodStrength * extraStock) * (1 + M.scarcityStrength * waiting);
   m.fair += (target - m.fair) * M.followRate;
   m.fair = Math.min(item.base * M.maxPriceMult, Math.max(vendorPrice(item) * 1.2, m.fair));

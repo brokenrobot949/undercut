@@ -87,9 +87,9 @@ export const items = [
 
   // ---- Endgame materials: only raid expeditions bring these back, so NPC
   // sellers never stock them (npcStock: false). Buyers still want them. ----
-  { id: 'ember-core', name: 'Ember core', tier: 5, category: 'material', quality: 'rare', base: 2500, demand: 0.3, npcStock: false },
-  { id: 'voidglass-shard', name: 'Voidglass shard', tier: 5, category: 'material', quality: 'rare', base: 2500, demand: 0.3, npcStock: false },
-  { id: 'wyrm-scale', name: 'Wyrm scale', tier: 5, category: 'material', quality: 'rare', base: 2500, demand: 0.3, npcStock: false },
+  { id: 'ember-core', name: 'Ember core', tier: 5, category: 'material', quality: 'rare', base: 2500, demand: 0.45, npcStock: false },
+  { id: 'voidglass-shard', name: 'Voidglass shard', tier: 5, category: 'material', quality: 'rare', base: 2500, demand: 0.45, npcStock: false },
+  { id: 'wyrm-scale', name: 'Wyrm scale', tier: 5, category: 'material', quality: 'rare', base: 2500, demand: 0.45, npcStock: false },
 
   // ---- Masterwork (epic) items: Exalted quartermaster recipes ----
   { id: 'emberheart-greatsword', name: 'Emberheart greatsword', tier: 5, category: 'gear', armor: 'weapon', quality: 'epic', base: 19130, demand: 0.2 },

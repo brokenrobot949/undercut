@@ -145,7 +145,9 @@ export const tuning = {
     // base x hotPrice, or more than this share of the buyer reservoir waiting.
     // Rare items (gems, scrolls, gear) have few listings, so their price and
     // waiting buyers bounce around more; these keep Hot to about 1 check in 8.
-    tags: { floodedDays: 0.6, slowDays: 0.25, slowPrice: 0.88, hotPrice: 1.15, hotScarcity: 0.5 },
+    // Items with fewer than thinDemand buyers an hour use the "Thin" limits.
+    tags: { floodedDays: 0.6, slowDays: 0.25, slowPrice: 0.88, hotPrice: 1.15, hotScarcity: 0.5,
+      thinDemand: 1, hotPriceThin: 1.22, hotScarcityThin: 0.7 },
   },
 
   // Demand multiplier by hero level band (tier 1 to 5): the realm has the most
