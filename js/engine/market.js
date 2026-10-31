@@ -128,8 +128,9 @@ export function demandTag(state, item) {
 }
 
 // The auction house cut on one sale, rounded down (cheap items pay none).
-export function cutOn(price) {
-  return Math.floor(price * M.cut);
+// `rate` is the cut after upgrades (see cutRate in upgrades.js).
+export function cutOn(price, rate = M.cut) {
+  return Math.floor(price * rate);
 }
 
 // What the seller gets for one unit: the price, minus the cut, plus that
@@ -139,19 +140,21 @@ export function saleProceeds(listing, price) {
   const sold = listing.startQty - listing.qty;
   const share = Math.floor((listing.deposit * sold) / listing.startQty) -
     Math.floor((listing.deposit * (sold - 1)) / listing.startQty);
-  return price - cutOn(price) + share;
+  return price - cutOn(price, listing.cut ?? M.cut) + share;
 }
 
-export function depositFor(item, qty, hours) {
+// `mult` is the deposit multiplier after upgrades (see depositMult in upgrades.js).
+export function depositFor(item, qty, hours, mult = 1) {
   const d = M.durations.find((x) => x.hours === hours);
   if (!d) throw new Error(`No ${hours} h listing duration.`);
-  return Math.ceil(vendorPrice(item) * d.deposit * qty);
+  return Math.ceil(vendorPrice(item) * d.deposit * qty * mult);
 }
 
 // ---- Player listings -----------------------------------------------------
 
 // Posts a player listing. The caller has already taken the items and deposit.
-export function postPlayerListing(state, itemId, { price, qty, hours, at }) {
+// The cut is fixed when listed, so a later upgrade doesn't change it.
+export function postPlayerListing(state, itemId, { price, qty, hours, at, deposit, cut = M.cut }) {
   const item = itemById[itemId];
   const listing = {
     id: state.market.nextListingId++,
@@ -161,7 +164,8 @@ export function postPlayerListing(state, itemId, { price, qty, hours, at }) {
     startQty: qty,
     postedAt: at,
     expiresAt: at + hours * HOUR,
-    deposit: depositFor(item, qty, hours),
+    deposit: deposit ?? depositFor(item, qty, hours),
+    cut,
   };
   insertListing(state.market.items[itemId].listings, listing);
   return listing;

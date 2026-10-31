@@ -21,6 +21,7 @@ import { rngNext, rngInt, rngPick, rngChance, rngRange } from './rng.js';
 import { recipes } from '../../data/recipes.js';
 import { knowsRecipe, recipeColor, recipeProfession, startingProfession } from './skills.js';
 import { noteTutorial } from './tutorial.js';
+import { boardSizeFor, expeditionSlotsFor } from './upgrades.js';
 
 const HOUR = 60 * 60 * 1000;
 const TV = tuning.tavern;
@@ -40,7 +41,7 @@ function rollBoard(state) {
   state.tavern.board = [];
   const band = zones.find((z) => z.tier === workingTier(state))?.levels;
   const pair = professionById[startingProfession(state)].gathering;
-  for (let i = 0; i < TV.boardSize; i++) state.tavern.board.push(rollHero(state, i === 0 ? { band, pair } : {}));
+  for (let i = 0; i < boardSizeFor(state); i++) state.tavern.board.push(rollHero(state, i === 0 ? { band, pair } : {}));
 }
 
 // Highest tier among known recipes of your starting profession that still give
@@ -158,7 +159,7 @@ export function expectedHaul(hero, zone, hours) {
 }
 
 export function expeditionSlots(state) {
-  return TV.expeditionSlots;
+  return expeditionSlotsFor(state);
 }
 
 // Regulars who are in town and free to hire.

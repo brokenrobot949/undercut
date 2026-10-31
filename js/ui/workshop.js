@@ -9,7 +9,8 @@ import { itemById } from '../../data/items.js';
 import { tuning } from '../../data/tuning.js';
 import { marketValue, cutOn } from '../engine/market.js';
 import { lowestOtherPrice } from '../engine/trading.js';
-import { queueCraft, cancelOrder, queueSlots, smeltAtCity, smelterFee, maxCraftable } from '../engine/crafting.js';
+import { queueCraft, cancelOrder, queueSlots, smeltAtCity, smelterFee, maxCraftable, unitMs } from '../engine/crafting.js';
+import { cutRate } from '../engine/upgrades.js';
 import { openItemSheet } from './item-sheet.js';
 import { recipeColor, knowsRecipe, trainerRecipes, forgeRankNeeded, hasProfession, startingProfession } from '../engine/skills.js';
 import { professions, professionById, professionForStation, stationNames } from '../../data/professions.js';
@@ -93,7 +94,7 @@ function chip(ctx, key, label) {
 
 function queueRow(ctx, stationId, order, active) {
   const recipe = recipeById[order.recipeId];
-  const seconds = recipe.seconds * 1000;
+  const seconds = unitMs(ctx.state, recipe);
   const unitEnd = order.unitStartedAt + seconds;
   const orderEnd = order.unitStartedAt + (order.qty - order.done) * seconds;
   return el('div', { class: 'queue-row' },
@@ -114,7 +115,7 @@ function unitCost(ctx, itemId) {
 // What one unit sells for after the auction house cut.
 function saleValue(ctx, itemId) {
   const price = marketValue(ctx.state, itemId, ctx.now()) ?? lowestOtherPrice(ctx.state, itemId) ?? itemById[itemId].base;
-  return price - cutOn(price);
+  return price - cutOn(price, cutRate(ctx.state));
 }
 
 function matCost(ctx, recipe) {
@@ -171,7 +172,7 @@ function openCraftSheet(ctx, recipe) {
     fill(sheet.body, 
       el('p', { class: 'small' }, `Makes ${recipe.makes.qty} × `,
         el('button', { class: `link q-${out.quality}`, type: 'button', onclick: () => openItemSheet(ctx, out.id) }, out.name),
-        ` in ${recipe.seconds} s each.`),
+        ` in ${+(unitMs(state, recipe) / 1000).toFixed(1)} s each.`),
       color ? el('p', { class: `small skill-text-${color}` }, colorText(recipe, color),
         color === 'red' ? '' : `. Turns ${['yellow', 'green', 'gray'].map((c, i) => `${c} at ${recipe.skill[i + 1]}`).join(', ')}.`) : null,
       el('table', { class: 'listings' },

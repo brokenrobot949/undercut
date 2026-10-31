@@ -16,8 +16,14 @@ import { madeCount, takeFromBags } from './bags.js';
 import { marketValue } from './market.js';
 import { hasProfession, knowsRecipe, recipeProfession, skillOf } from './skills.js';
 import { tutorialDone, claimTutorial } from './tutorial.js';
+import { commissionSlotsFor, commissionPayMult } from './upgrades.js';
 
 const HOUR = 60 * 60 * 1000;
+
+// Commission slots at the counter, after upgrades.
+export function commissionSlots(state) {
+  return commissionSlotsFor(state, CT.slots);
+}
 
 export function createCommissions(state, now) {
   state.commissions = { list: [], nextId: 1 };
@@ -28,7 +34,7 @@ export function createCommissions(state, now) {
 // Clock timer: a new request every couple of hours, if the counter has room.
 export function commissionPostTimer(state, timer, summary) {
   // While the tutorial runs, its steps are the only requests.
-  const c = tutorialDone(state) && state.commissions.list.length < CT.slots ? postCommission(state, timer.at) : null;
+  const c = tutorialDone(state) && state.commissions.list.length < commissionSlots(state) ? postCommission(state, timer.at) : null;
   if (c) summary.lines.push(`New commission: ${requestText(c)}.`);
   schedule(state, 'commission-post', timer.at + CT.postEveryHours * HOUR);
 }
@@ -95,7 +101,7 @@ export function postCommission(state, now, forced = null) {
     recipeId: recipe.id,
     qty,
     delivered: 0,
-    pay: Math.round(type.payMult * value * qty),
+    pay: Math.round(type.payMult * commissionPayMult(state) * value * qty),
     rep: commissionRep(type, item, value * qty),
     postedAt: now,
     expiresAt,

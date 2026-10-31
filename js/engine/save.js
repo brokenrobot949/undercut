@@ -6,6 +6,7 @@ import { SAVE_VERSION, checkSave } from './game.js';
 import { createStations } from './crafting.js';
 import { createSkills, createKnownRecipes, recipeProfession } from './skills.js';
 import { recipes } from '../../data/recipes.js';
+import { createUpgrades } from './upgrades.js';
 
 // Every key starts with "undercut:" because other games share this web address.
 export const SAVE_KEY = 'undercut:save';
@@ -71,6 +72,11 @@ const migrations = {
   8: (save) => {
     save.tutorial = { step: 0, done: true, did: { crafted: {} }, professionId: save.player.professions[0] };
     save.firstCustomer = 'done';
+    return save;
+  },
+  // Version 10 (Phase 3): shop upgrades, all at level 0.
+  9: (save) => {
+    save.upgrades = createUpgrades();
     return save;
   },
 };

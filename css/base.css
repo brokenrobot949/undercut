@@ -707,3 +707,10 @@ input[type="number"] {
 .standing-ladder ol > li { padding: 8px 0; border-top: 1px solid var(--border); }
 .standing-ladder ol > li:not(.reached) { opacity: 0.75; }
 .ladder-head { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
+
+/* ---- Shop upgrades ------------------------------------------------------- */
+
+.upgrade-row { padding: 10px 0; border-top: 1px solid var(--border); }
+.upgrade-row:first-child { border-top: 0; }
+.upgrade-row p { margin: 2px 0 6px; }
+.upgrade-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }

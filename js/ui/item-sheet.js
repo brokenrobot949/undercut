@@ -8,6 +8,7 @@ import { knowsRecipe, learnFromScroll, hasProfession } from '../engine/skills.js
 import { recipeById } from '../../data/recipes.js';
 import { tuning } from '../../data/tuning.js';
 import { bagCount } from '../engine/bags.js';
+import { depositMult, cutRate } from '../engine/upgrades.js';
 import {
   marketValue, demandTag, demandPerHour, supplyDays, scarcity, vendorPrice, depositFor, listedUnits, cutOn,
 } from '../engine/market.js';
@@ -79,10 +80,10 @@ export function openItemSheet(ctx, itemId) {
         : choice.price < low ? ['You will be the cheapest (lowest other: ', coins(low), ').']
           : choice.price === low ? ['Same as the lowest. Older listings sell first at the same price.']
             : ['Above the lowest (', coins(low), '). Sells only once cheaper ones are gone.']);
-      const deposit = depositFor(item, choice.listQty, choice.hours);
-      const net = choice.price - cutOn(choice.price);
+      const deposit = depositFor(item, choice.listQty, choice.hours, depositMult(ctx.state));
+      const net = choice.price - cutOn(choice.price, cutRate(ctx.state));
       fill(summary, 'Deposit ', coins(deposit), ' (back if it sells). You get ', coins(net * choice.listQty),
-        ` for all ${choice.listQty} after the ${tuning.market.cut * 100}% cut.`);
+        ` for all ${choice.listQty} after the ${+(cutRate(ctx.state) * 100).toFixed(1)}% cut.`);
     }
     const setPrice = (p) => priceInput.set(p);
     update();

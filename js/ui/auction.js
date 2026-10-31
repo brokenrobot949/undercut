@@ -7,6 +7,7 @@ import { tradeableItems, itemById } from '../../data/items.js';
 import { tuning } from '../../data/tuning.js';
 import { lowestListing, listedUnits, demandTag, playerListings } from '../engine/market.js';
 import { cancelListing } from '../engine/trading.js';
+import { listingSlotsFor } from '../engine/upgrades.js';
 import { openItemSheet, TAG_LABELS } from './item-sheet.js';
 import { recipes } from '../../data/recipes.js';
 import { hasProfession, recipeProfession } from '../engine/skills.js';
@@ -75,7 +76,7 @@ export function renderAuction(ctx) {
 function myListings(ctx) {
   const mine = playerListings(ctx.state);
   return el('section', { class: 'panel' },
-    el('h2', {}, `My listings (${mine.length} / ${tuning.listingSlots})`),
+    el('h2', {}, `My listings (${mine.length} / ${listingSlotsFor(ctx.state)})`),
     mine.length ? el('div', { class: 'market-list' }, mine.map(({ itemId, place, listing }) => el('div', { class: 'my-listing' },
       el('button', { class: `link item-name q-${itemById[itemId].quality}`, type: 'button', onclick: () => openItemSheet(ctx, itemId) },
         `${listing.qty} × ${itemById[itemId].name}`),

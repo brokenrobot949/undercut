@@ -14,6 +14,8 @@ import { schedule, cancelTimer } from './clock.js';
 import { checkMats, takeFromBags, addOrMail, markMade } from './bags.js';
 import { checkSkill, checkKnown, checkForgeRank, checkProfession, rollSkillUp } from './skills.js';
 import { noteTutorial } from './tutorial.js';
+import { rngChance } from './rng.js';
+import { queueSlotsFor, craftTimeMult, bonusBarChance } from './upgrades.js';
 
 export const STATIONS = professions.flatMap((p) => p.stations);
 
@@ -27,7 +29,12 @@ export function syncStations(state) {
 }
 
 export function queueSlots(state, station) {
-  return tuning.queueSlots;
+  return queueSlotsFor(state);
+}
+
+// How long one unit of a recipe takes at a workstation, in ms, after upgrades.
+export function unitMs(state, recipe) {
+  return Math.round(recipe.seconds * 1000 * craftTimeMult(state, recipe.station));
 }
 
 export function queueCraft(state, recipeId, qty, now) {
@@ -68,7 +75,7 @@ function startUnit(state, stationId, at) {
   const order = state.stations[stationId].queue[0];
   const recipe = recipeById[order.recipeId];
   order.unitStartedAt = at;
-  order.timerId = schedule(state, 'craft', at + recipe.seconds * 1000, { station: stationId }).id;
+  order.timerId = schedule(state, 'craft', at + unitMs(state, recipe), { station: stationId }).id;
 }
 
 // Clock timer handler: one unit finished.
@@ -78,12 +85,14 @@ export function finishUnit(state, timer, summary) {
   const order = station.queue[0];
   if (!order) return;
   const recipe = recipeById[order.recipeId];
-  addOrMail(state, recipe.makes.item, recipe.makes.qty);
-  markMade(state, recipe.makes.item, recipe.makes.qty);
+  // Top-level bellows: each smelt has a chance of an extra bar.
+  const extra = stationId === 'forge' && bonusBarChance(state) && rngChance(state.rng, bonusBarChance(state)) ? 1 : 0;
+  addOrMail(state, recipe.makes.item, recipe.makes.qty + extra);
+  markMade(state, recipe.makes.item, recipe.makes.qty + extra);
   noteTutorial(state, 'craft', recipe.id);
   if (stationId === 'forge') noteTutorial(state, 'smelt');
   rollSkillUp(state, recipe, summary);
-  summary.crafted[recipe.makes.item] = (summary.crafted[recipe.makes.item] || 0) + recipe.makes.qty;
+  summary.crafted[recipe.makes.item] = (summary.crafted[recipe.makes.item] || 0) + recipe.makes.qty + extra;
   order.done++;
   order.timerId = null;
   if (order.done >= order.qty) {
@@ -99,7 +108,7 @@ export function queueEndsAt(state, stationId) {
   const queue = state.stations[stationId].queue;
   if (!queue.length) return null;
   let t = queue[0].unitStartedAt;
-  for (const o of queue) t += (o.qty - o.done) * recipeById[o.recipeId].seconds * 1000;
+  for (const o of queue) t += (o.qty - o.done) * unitMs(state, recipeById[o.recipeId]);
   return t;
 }
 

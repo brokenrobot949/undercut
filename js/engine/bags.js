@@ -4,13 +4,14 @@
 
 import { tuning } from '../../data/tuning.js';
 import { itemById } from '../../data/items.js';
+import { bagSlotsFor } from './upgrades.js';
 
 export function bagCount(state, itemId) {
   return state.bags[itemId] || 0;
 }
 
 export function bagSlots(state) {
-  return tuning.bagSlots;
+  return bagSlotsFor(state);
 }
 
 function stacks(itemId) {

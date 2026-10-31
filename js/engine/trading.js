@@ -8,6 +8,7 @@ import { rngInt } from './rng.js';
 import { firstCustomer } from '../../data/tutorial.js';
 import { tuning } from '../../data/tuning.js';
 import { itemById } from '../../data/items.js';
+import { listingSlotsFor, depositMult, cutRate } from './upgrades.js';
 import { bagCount, roomFor, takeFromBags, addToBags, addOrMail } from './bags.js';
 import {
   postPlayerListing, cancelPlayerListing, playerListings, buyFromMarket, depositFor, vendorPrice,
@@ -46,15 +47,15 @@ export function listItem(state, { itemId, qty, price, hours }, now) {
   if (!(qty >= 1)) throw new Error('Choose how many to list.');
   if (!(price >= 1)) throw new Error('Set a price of at least 1 copper.');
   if (qty > bagCount(state, itemId)) throw new Error(`You only have ${bagCount(state, itemId)}.`);
-  if (playerListings(state).length >= tuning.listingSlots) {
-    throw new Error(`All ${tuning.listingSlots} listing slots are in use.`);
+  if (playerListings(state).length >= listingSlotsFor(state)) {
+    throw new Error(`All ${listingSlotsFor(state)} listing slots are in use.`);
   }
-  const deposit = depositFor(item, qty, hours);
+  const deposit = depositFor(item, qty, hours, depositMult(state));
   if (deposit > state.copper) throw new Error(`The deposit is ${coinText(deposit)} and you can't cover it.`);
 
   takeFromBags(state, itemId, qty);
   state.copper -= deposit;
-  const listing = postPlayerListing(state, itemId, { price, qty, hours, at: now });
+  const listing = postPlayerListing(state, itemId, { price, qty, hours, at: now, deposit, cut: cutRate(state) });
   noteTutorial(state, 'list');
   // Once per game, a customer comes by soon after your first listing.
   if (state.firstCustomer === 'waiting') {

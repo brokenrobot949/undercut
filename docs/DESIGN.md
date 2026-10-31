@@ -408,6 +408,14 @@ Upgrades are bought with gold, and a few also need guild standing. Most have 5 l
 
 First-level costs range from 50 s to 5 g. All costs are starting values in the data files.
 
+As built (Oct 31, 2026; costs and standing gates are in `data/upgrades.js`):
+
+- First-level costs: bags 50 s, listing board 75 s, queue and bellows 1 g, tools 1.5 g, tavern table 2 g, counter 2.5 g, expedition charter 3 g, auctioneer's seal 5 g. Buying every level of all nine costs about 270 g.
+- Standing gates: the first level of each needs none. Later levels need Friendly, then Honored, and the top levels of the seal and charter need Revered.
+- Tools speed up every workstation except the forge, and bellows speed up the forge.
+- A listing keeps the auction house cut it was posted with.
+- In the sim, bots buy upgrades only with gold left over after saving for their next training rank. They end day 60 with 30–230 g instead of 130–400 g.
+
 ## Market events
 
 Events shift demand or supply for a few hours to a few days, so the market keeps moving and reading it pays off. A town crier line on the Shop tab announces each event as it starts, and Ledger level 3 warns 6 hours early.

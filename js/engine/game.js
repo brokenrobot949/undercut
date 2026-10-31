@@ -13,11 +13,12 @@ import { firstCustomer } from '../../data/tutorial.js';
 import { createStations, syncStations, finishUnit } from './crafting.js';
 import { createTavern, refreshBoardTimer, expeditionReturns } from './heroes.js';
 import { createSkills, createKnownRecipes, syncSkills } from './skills.js';
+import { createUpgrades, syncUpgrades } from './upgrades.js';
 import { createCommissions, commissionPostTimer, commissionExpireTimer } from './commissions.js';
 export { collectMailbox } from './bags.js';
 export { getStanding } from './guild.js';
 
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 
 export function newGame({ name, factionId, professionId = 'blacksmithing', seed, now }) {
   const state = {
@@ -48,6 +49,8 @@ export function newGame({ name, factionId, professionId = 'blacksmithing', seed,
     // The five-step tutorial, and the one-time first customer ('waiting', 'coming', 'done').
     tutorial: createTutorial(professionId),
     firstCustomer: 'waiting',
+    // Shop upgrade levels: { upgradeId: level }.
+    upgrades: createUpgrades(),
   };
   createMarket(state, now);
   createTavern(state, now);
@@ -139,6 +142,7 @@ export function catchUp(state, realNow, summary = gameSummary(state)) {
   else syncMarketItems(state, state.clock.lastSeenAt);
   syncStations(state);
   syncSkills(state);
+  syncUpgrades(state);
   if (!state.tavern) createTavern(state, state.clock.lastSeenAt);
   if (!state.commissions) createCommissions(state, state.clock.lastSeenAt);
   return advance(state, gameNow(state, realNow), handlers, summary);

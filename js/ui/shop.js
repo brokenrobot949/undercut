@@ -4,7 +4,7 @@
 import { el, coins, comingSoon, formatDuration, countdown, toast, coinText } from './components.js';
 import { commissionTypes, commissionTuning } from '../../data/commissions.js';
 import { raceById, classById } from '../../data/races.js';
-import { canDeliver, deliverCommission, declineCommission, recipeHint, claimTutorialStep } from '../engine/commissions.js';
+import { commissionSlots, canDeliver, deliverCommission, declineCommission, recipeHint, claimTutorialStep } from '../engine/commissions.js';
 import { tutorialStep, stepMet } from '../engine/tutorial.js';
 import { tutorialSteps, tutorialMentor } from '../../data/tutorial.js';
 import { madeCount } from '../engine/bags.js';
@@ -13,6 +13,9 @@ import { getFaction, getStanding } from '../engine/game.js';
 import { standingLadder } from '../engine/guild.js';
 import { guildTips } from '../../data/guild.js';
 import { tuning } from '../../data/tuning.js';
+import { upgrades } from '../../data/upgrades.js';
+import { upgradeLevel, nextUpgrade, buyUpgrade, queueSlotsFor, craftTimeMult, bonusBarChance, bagSlotsFor, cutRate, depositMult,
+  listingSlotsFor, boardSizeFor, expeditionSlotsFor, commissionPayMult } from '../engine/upgrades.js';
 import { itemById } from '../../data/items.js';
 import { professions, professionById } from '../../data/professions.js';
 import { nextTraining, trainRank, trainerRecipes, learnRecipe, recipeColor, hasProfession } from '../engine/skills.js';
@@ -38,7 +41,51 @@ export function renderShop(ctx) {
       el('h3', {}, 'Quartermaster'),
       el('p', { class: 'small dim' }, `Sells better recipes to members in good standing, from ${tuning.standings[1].name}. Coming soon.`),
     ),
+    upgradesPanel(ctx),
   );
+}
+
+// Shop upgrades: one row each with its level, what it does now and next, and a buy button.
+function upgradesPanel(ctx) {
+  const { state } = ctx;
+  return el('section', { class: 'panel' },
+    el('h2', {}, 'Shop upgrades'),
+    el('p', { class: 'small dim' }, 'Spend gold to grow your shop. Higher levels need better standing with the guild.'),
+    el('div', { class: 'upgrade-list' }, upgrades.map((u) => {
+      const level = upgradeLevel(state, u.id);
+      const n = nextUpgrade(state, u.id);
+      const nextState = n && { ...state, upgrades: { ...state.upgrades, [u.id]: n.level } };
+      return el('div', { class: 'upgrade-row' },
+        el('div', { class: 'upgrade-head' },
+          el('strong', {}, u.name),
+          el('span', { class: 'small dim' }, `Level ${level} / ${u.levels}`)),
+        el('p', { class: 'small dim' }, u.blurb),
+        el('p', { class: 'small' }, 'Now: ', upgradeEffect(state, u.id),
+          n ? el('span', { class: 'dim' }, ` → next: ${upgradeEffect(nextState, u.id)}`) : null),
+        n ? el('button', { class: `btn wide${n.ready ? ' btn-primary' : ''}`, type: 'button', disabled: !n.ready,
+          onclick: () => ctx.act((s) => {
+            buyUpgrade(s, u.id);
+            toast(`${u.name} is now level ${n.level}.${u.id === 'table' ? ' The extra hero arrives at the next board refresh.' : ''}`);
+          }) }, `Upgrade to level ${n.level} · `, coins(n.cost)) : el('p', { class: 'small' }, 'Top level reached.'),
+        n && !n.ready ? el('p', { class: 'small dim' }, n.reason) : null);
+    })));
+}
+
+// What an upgrade does at the level in `state`, as a short phrase.
+function upgradeEffect(state, id) {
+  const pct = (x) => `${+(x * 100).toFixed(1)}%`;
+  switch (id) {
+    case 'queue': return `${queueSlotsFor(state)} orders per workstation`;
+    case 'tools': return craftTimeMult(state, 'anvil') < 1 ? `crafting ${pct(1 - craftTimeMult(state, 'anvil'))} faster` : 'normal crafting speed';
+    case 'bellows': return `${craftTimeMult(state, 'forge') < 1 ? `smelting ${pct(1 - craftTimeMult(state, 'forge'))} faster` : 'normal smelting speed'}${bonusBarChance(state) ? `, ${pct(bonusBarChance(state))} bonus-bar chance` : ''}`;
+    case 'bags': return `${bagSlotsFor(state)} bag slots`;
+    case 'seal': return `${pct(cutRate(state))} cut${depositMult(state) < 1 ? `, deposits ${pct(1 - depositMult(state))} cheaper` : ''}`;
+    case 'listings': return `${listingSlotsFor(state)} listing slots`;
+    case 'table': return `${boardSizeFor(state)} heroes on the board`;
+    case 'charter': return `${expeditionSlotsFor(state)} heroes out at once`;
+    case 'counter': return `${commissionSlots(state)} commission slots${commissionPayMult(state) > 1 ? `, pay +${pct(commissionPayMult(state) - 1)}` : ''}`;
+    default: return '';
+  }
 }
 
 // Your standing, progress to the next one, what it unlocks, and the full ladder.
@@ -118,7 +165,7 @@ function goalPanel(ctx) {
 function commissionPanel(ctx) {
   const { list } = ctx.state.commissions;
   return el('section', { class: 'panel' },
-    el('h2', {}, `Commission counter (${list.length} / ${commissionTuning.slots})`),
+    el('h2', {}, `Commission counter (${list.length} / ${commissionSlots(ctx.state)})`),
     el('p', { class: 'small dim' }, `Heroes post requests here, about one every ${commissionTuning.postEveryHours} hours. They pay well, and they're how you earn standing with the guild. Only items you crafted count.`),
     tutorialStep(ctx.state) ? tutorialCard(ctx) : null,
     list.length ? el('div', { class: 'commission-list' }, list.map((c) => commissionCard(ctx, c)))

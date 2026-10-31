@@ -4,7 +4,7 @@
 
 import { newGame, debugFastForward, catchUp, collectMailbox, SAVE_VERSION } from '../js/engine/game.js';
 import { listItem, undercutPrice, lowestOtherPrice, quoteBuy, buyItems, sellToVendor } from '../js/engine/trading.js';
-import { queueCraft, cancelOrder, smeltAtCity } from '../js/engine/crafting.js';
+import { queueCraft, cancelOrder, smeltAtCity, queueSlots } from '../js/engine/crafting.js';
 import { hireHero, zonesFor, expectedHaul, hireFee, regularsInTown } from '../js/engine/heroes.js';
 import { tuning } from '../data/tuning.js';
 import { postCommission, deliverCommission, declineCommission, canDeliver, claimTutorialStep } from '../js/engine/commissions.js';
@@ -20,6 +20,11 @@ import { recipeColor, nextTraining, trainRank, debugSetSkill, learnRecipe, train
 import { recipes, recipeById } from '../data/recipes.js';
 import { ranks } from '../data/professions.js';
 import { getStanding, standingLadder, hasStanding } from '../js/engine/guild.js';
+import { buyUpgrade, nextUpgrade, upgradeLevel, listingSlotsFor, expeditionSlotsFor, boardSizeFor, cutRate } from '../js/engine/upgrades.js';
+import { upgradeById } from '../data/upgrades.js';
+import { bagSlots } from '../js/engine/bags.js';
+import { depositFor } from '../js/engine/market.js';
+import { commissionSlots } from '../js/engine/commissions.js';
 import { encodeExport, decodeExport, migrate, writeSave, readSave } from '../js/engine/save.js';
 
 const H = 60 * 60 * 1000;
@@ -597,6 +602,47 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   check('each standing past Neutral lists its unlocks, training included', ladder.slice(1).every((x) => x.unlocks.length > 0) && ladder.find((x) => x.id === 'honored').unlocks.some((u) => /Artisan/.test(u.text)));
   s.reputation = 99999;
   check('Exalted is the top', getStanding(s).current.id === 'exalted' && getStanding(s).next === null && getStanding(s).share === 1 && hasStanding(s, 'exalted'));
+}
+
+// Shop upgrades: cost, standing gates, and each effect.
+{
+  const s = learnAll(game());
+  s.tutorial.done = true;
+  s.copper = 10_000_000;
+  const before = s.copper;
+  buyUpgrade(s, 'bags');
+  check('an upgrade costs gold and adds a level', upgradeLevel(s, 'bags') === 1 && before - s.copper === upgradeById.bags.cost && bagSlots(s) === tuning.bagSlots + 12);
+  check('the next level costs more', nextUpgrade(s, 'bags').cost === Math.round(upgradeById.bags.cost * upgradeById.bags.growth));
+  buyUpgrade(s, 'charter');
+  let threw = false; try { buyUpgrade(s, 'charter'); } catch { threw = true; }
+  check('higher levels need guild standing', threw && /standing/.test(nextUpgrade(s, 'charter').reason));
+  s.reputation = 99999;
+  for (const u of ['queue', 'tools', 'bellows', 'seal', 'listings', 'table', 'charter', 'counter']) while (nextUpgrade(s, u)) buyUpgrade(s, u);
+  check('maxed upgrades reach their ranges', queueSlots(s, 'anvil') === 8 && listingSlotsFor(s) === 50 && expeditionSlotsFor(s) === 6 && boardSizeFor(s) === 6 && commissionSlots(s) === 5 && Math.abs(cutRate(s) - 0.025) < 1e-9);
+  let maxErr = null; try { buyUpgrade(s, 'queue'); } catch (e) { maxErr = e.message; }
+  check('a maxed upgrade cannot be bought again', /top level/.test(maxErr ?? ''));
+  s.bags['copper-ore'] = 1;
+  const r = recipes.find((x) => x.station === 'forge' && x.mats.length === 1 && x.mats[0].item === 'copper-ore');
+  queueCraft(s, r.id, 1, t0);
+  const order = s.stations.forge.queue[0];
+  const timer = s.timers.find((x) => x.id === order.timerId);
+  check('bellows shorten smelting', timer.at - t0 === Math.round(r.seconds * 1000 * 0.5), `${timer.at - t0} ms`);
+  const item = itemById['copper-bar'];
+  s.bags['copper-bar'] = (s.bags['copper-bar'] ?? 0) + 5;
+  const copper = s.copper;
+  const l = listItem(s, { itemId: 'copper-bar', qty: 5, price: 1000, hours: 24 }, t0);
+  check('the seal lowers deposits and the cut', l.deposit === depositFor(item, 5, 24, 0.5) && copper - s.copper === l.deposit && l.cut === cutRate(s));
+  l.qty--;
+  check('a sale pays the lower cut', saleProceeds(l, 1000) === 1000 - Math.floor(1000 * 0.025) + Math.floor(l.deposit / 5));
+}
+
+// Version 9 saves get shop upgrades at level 0.
+{
+  const s = game();
+  delete s.upgrades;
+  s.version = 9;
+  const m = migrate(structuredClone(s));
+  check('version 9 save gets upgrades at level 0', m.version === SAVE_VERSION && Object.values(m.upgrades).every((v) => v === 0) && m.upgrades.seal === 0);
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');

@@ -25,6 +25,8 @@ import {
 import { listItem, cancelListing, undercutPrice, buyItems, buyFromVendor, quoteBuy, sellToVendor } from '../js/engine/trading.js';
 import { bagSlots, slotsUsed, roomFor } from '../js/engine/bags.js';
 import { queueCraft, maxCraftable, smeltAtCity } from '../js/engine/crafting.js';
+import { upgrades } from '../data/upgrades.js';
+import { nextUpgrade, buyUpgrade } from '../js/engine/upgrades.js';
 import { hireHero, hireFee, zonesFor, expeditionSlots, regularsInTown } from '../js/engine/heroes.js';
 import { canDeliver, deliverCommission, claimTutorialStep } from '../js/engine/commissions.js';
 import { tutorialStep, stepMet } from '../js/engine/tutorial.js';
@@ -292,6 +294,17 @@ function botCheckIn(bot, state, now, stats) {
   for (const o of trainerRecipes(state, PROF)) {
     if (o.ready && o.cost <= state.copper * 0.5) { learnRecipe(state, o.recipe.id); stats.recipeSpend += o.cost; }
   }
+  // Shop upgrades: buy the cheapest one ready, while it costs under 30% of
+  // what's left after saving for the next training rank.
+  for (;;) {
+    const spare = state.copper - (nextTraining(state, PROF)?.cost ?? 0);
+    const best = upgrades.map((u) => ({ u, n: nextUpgrade(state, u.id) })).filter((x) => x.n?.ready && x.n.cost <= spare * 0.3)
+      .sort((a, b) => a.n.cost - b.n.cost)[0];
+    if (!best) break;
+    buyUpgrade(state, best.u.id);
+    stats.upgradeSpend += best.n.cost;
+    stats.upgradeLevels++;
+  }
 
   const lvl = levelingRecipe(state, now, PROF);
   const wantTier = lvl ? lvl.r.tier : 1;
@@ -431,7 +444,7 @@ function botCheckIn(bot, state, now, stats) {
 function botRun(bot, seed) {
   const state = newGame({ name: bot.name, factionId: 'red', professionId: bot.prof, seed, now: START });
   const stats = { sold: {}, listed: {}, firstSale: null, heroFees: 0, deposits: 0, relists: 0, flips: 0, flipStock: {},
-    levelCrafts: 0, vendored: 0, recipeSpend: 0, scrollsRead: 0, junkSold: 0, rep: {}, commissions: 0, commissionGold: 0, gold: {}, skill: {}, reached: {}, flooded: {} };
+    levelCrafts: 0, vendored: 0, recipeSpend: 0, upgradeSpend: 0, upgradeLevels: 0, scrollsRead: 0, junkSold: 0, rep: {}, commissions: 0, commissionGold: 0, gold: {}, skill: {}, reached: {}, flooded: {} };
   const checkpoints = [1, 3, 7, 14, 30, 60];
   for (let t = START; t <= START + 60 * DAY; t += bot.every * HOUR) {
     botCheckIn(bot, state, t, stats);
@@ -469,7 +482,7 @@ function botReport() {
     console.log(`${pad(bot.name, 10)}${gold}${lpad(`${Math.round(first)} min`, 10)}${lpad(gsc(avg((r) => r.heroFees)), 11)}${lpad(gsc(avg((r) => r.deposits)), 10)}`);
     console.log(`${pad('', 10)}skill ${[1, 3, 7, 14, 30, 60].map((d) => `d${d} ${Math.round(avg((r) => r.skill[d] ?? 0))}`).join(', ')}` +
       `; reputation d7 ${Math.round(avg((r) => r.rep[7] ?? 0))}, d30 ${Math.round(avg((r) => r.rep[30] ?? 0))}; ${Math.round(avg((r) => r.commissions))} commissions (${gsc(avg((r) => r.commissionGold))})` +
-      `; ${Math.round(avg((r) => r.levelCrafts))} leveling crafts, ${Math.round(avg((r) => r.vendored))} vendored, ${gsc(avg((r) => r.recipeSpend))} on recipes`);
+      `; ${Math.round(avg((r) => r.levelCrafts))} leveling crafts, ${Math.round(avg((r) => r.vendored))} vendored, ${gsc(avg((r) => r.recipeSpend))} on recipes, ${gsc(avg((r) => r.upgradeSpend))} on ${avg((r) => r.upgradeLevels).toFixed(0)} upgrade levels`);
     for (const r of runs) {
       for (const [id, n] of Object.entries(r.listed)) allListed[id] = (allListed[id] || 0) + n;
       for (const [id, n] of Object.entries(r.sold)) allSold[id] = (allSold[id] || 0) + n;
