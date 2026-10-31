@@ -10,7 +10,7 @@ import { marketValue, cutOn } from '../engine/market.js';
 import { lowestOtherPrice } from '../engine/trading.js';
 import { queueCraft, cancelOrder, queueSlots, smeltAtCity, smelterFee, maxCraftable } from '../engine/crafting.js';
 import { openItemSheet } from './item-sheet.js';
-import { recipeColor } from '../engine/skills.js';
+import { recipeColor, knowsRecipe, trainerRecipes } from '../engine/skills.js';
 import { skillBar, colorText } from './skill-bar.js';
 
 const filters = { canCraft: false, skillUps: false, profitable: false };
@@ -25,7 +25,7 @@ export function renderWorkshop(ctx) {
 function stationPanel(ctx, stationId, title, blurb) {
   const { state } = ctx;
   const queue = state.stations[stationId].queue;
-  let list = recipes.filter((r) => r.station === stationId);
+  let list = recipes.filter((r) => r.station === stationId && knowsRecipe(state, r));
   if (filters.canCraft) list = list.filter((r) => maxCraftable(state, r.id) > 0 && recipeColor(state, r) !== 'red');
   if (filters.skillUps) list = list.filter((r) => ['orange', 'yellow', 'green'].includes(recipeColor(state, r)));
   if (filters.profitable) list = list.filter((r) => profitEach(ctx, r) > 0);
@@ -43,7 +43,18 @@ function stationPanel(ctx, stationId, title, blurb) {
       chip(ctx, 'profitable', 'Profitable')),
     el('div', { class: 'market-list' }, list.length ? list.map((r) => recipeRow(ctx, r))
       : el('p', { class: 'small dim' }, 'No recipes match these filters.')),
+    stationId === 'anvil' ? trainerHint(ctx) : null,
   );
+}
+
+// "2 new recipes at the trainer" when there's something you could learn now.
+function trainerHint(ctx) {
+  const offers = trainerRecipes(ctx.state, 'blacksmithing');
+  const ready = offers.filter((o) => o.recipe.skill[0] <= ctx.state.skills.blacksmithing.skill).length;
+  if (!offers.length) return null;
+  return el('p', { class: `small trainer-hint${ready ? ' ready' : ''}` },
+    ready ? `${ready} new recipe${ready === 1 ? '' : 's'} for your skill at the Trade Guild trainer (Shop tab).`
+      : `Next recipe at the trainer: skill ${offers[0].recipe.skill[0]}.`);
 }
 
 function chip(ctx, key, label) {

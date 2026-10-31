@@ -663,3 +663,13 @@ input[type="number"] {
 .market-row.skill-red .market-tag { color: var(--skill-red); }
 .trainer-row { padding: 8px 0; border-top: 1px solid var(--border); }
 .trainer-row:first-of-type { border-top: 0; }
+.trainer-hint { margin: 10px 0 0; color: var(--text-dim); }
+.trainer-hint.ready { color: var(--highlight); }
+.trainer-recipes { margin: 4px 0 8px; }
+.trainer-recipes .my-listing[class*="skill-"] { padding-left: 10px; border-left: 3px solid transparent; }
+.trainer-recipes .my-listing.skill-orange { border-left-color: var(--skill-orange); }
+.trainer-recipes .my-listing.skill-yellow { border-left-color: var(--skill-yellow); }
+.trainer-recipes .my-listing.skill-green { border-left-color: var(--skill-green); }
+.trainer-recipes .my-listing.skill-gray { border-left-color: var(--skill-gray); }
+.trainer-recipes .my-listing.skill-red { border-left-color: var(--skill-red); }
+.trainer-recipes .skill-red .item-name { color: var(--text-dim); }

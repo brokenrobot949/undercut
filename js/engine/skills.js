@@ -1,4 +1,4 @@
-// Profession skill, ranks and training, and recipe colors.
+// Profession skill, ranks and training, recipe colors, and the recipes you know.
 //
 // Skill runs from 1 to 300. Each rank caps it (75, 150, 225, 300); at the cap,
 // crafting gives no skill until the next rank is trained at the Trade Guild.
@@ -7,6 +7,7 @@
 
 import { tuning } from '../../data/tuning.js';
 import { professions, professionById, professionForStation, ranks } from '../../data/professions.js';
+import { recipes, recipeById } from '../../data/recipes.js';
 import { rngChance } from './rng.js';
 
 export const MAX_SKILL = ranks[ranks.length - 1].cap;
@@ -111,4 +112,50 @@ export function debugSetSkill(state, professionId, skill) {
   const s = state.skills[professionId];
   s.skill = skill;
   s.rank = ranks.findIndex((r) => r.cap >= skill);
+}
+
+// ---- Recipes you know ------------------------------------------------------------
+// state.knownRecipes is { recipeId: true }. Smelting (no skill) is always known.
+// The rest start known ('start') or are bought from the guild trainer once
+// your skill reaches the recipe's first number.
+
+export function createKnownRecipes() {
+  return Object.fromEntries(recipes.filter((r) => r.learn === 'start').map((r) => [r.id, true]));
+}
+
+export function knowsRecipe(state, recipe) {
+  return !recipe.skill || state.knownRecipes[recipe.id] === true;
+}
+
+export function checkKnown(state, recipe) {
+  if (!knowsRecipe(state, recipe)) throw new Error('You haven\'t learned that recipe. The Trade Guild trainer sells it.');
+}
+
+// Trainer recipes for a profession you don't know yet, cheapest skill first:
+// [{ recipe, cost, ready, reason }].
+export function trainerRecipes(state, professionId) {
+  return recipes
+    .filter((r) => typeof r.learn === 'number' && recipeProfession(r) === professionId && !knowsRecipe(state, r))
+    .sort((a, b) => a.skill[0] - b.skill[0])
+    .map((recipe) => {
+      let reason = null;
+      if (skillOf(state, professionId) < recipe.skill[0]) reason = `Needs skill ${recipe.skill[0]}.`;
+      else if (state.copper < recipe.learn) reason = 'Not enough gold.';
+      return { recipe, cost: recipe.learn, ready: !reason, reason };
+    });
+}
+
+export function learnRecipe(state, recipeId) {
+  const recipe = recipeById[recipeId];
+  if (!recipe || typeof recipe.learn !== 'number') throw new Error('The trainer doesn\'t sell that recipe.');
+  if (knowsRecipe(state, recipe)) throw new Error('You already know that recipe.');
+  const offer = trainerRecipes(state, recipeProfession(recipe)).find((o) => o.recipe.id === recipeId);
+  if (!offer.ready) throw new Error(offer.reason);
+  state.copper -= offer.cost;
+  state.knownRecipes[recipeId] = true;
+  return recipe;
+}
+
+export function debugLearnAll(state) {
+  for (const r of recipes) if (r.skill) state.knownRecipes[r.id] = true;
 }

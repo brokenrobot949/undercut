@@ -100,7 +100,7 @@ The starting profession is permanent. The other two never replace it.
 | Rank | Skill range | Training cost | Guild standing needed |
 | --- | --- | --- | --- |
 | Apprentice | 1–75 | Free | Neutral |
-| Journeyman | 75–150 | 5 g | Neutral |
+| Journeyman | 75–150 | 1 g | Neutral |
 | Expert | 150–225 | 50 g | Friendly |
 | Artisan | 225–300 | 250 g | Honored |
 
@@ -125,7 +125,8 @@ A typical recipe is orange for 15 points after you learn it, then yellow for 10,
 
 **Recipes.** About 25 per profession at launch, 5 per material tier, 75 in total. Sources:
 
-- **Guild trainer:** core recipes, bought with gold as your skill reaches them.
+- **Starting recipes:** every profession starts knowing its two skill-1 recipes (for Blacksmithing, rough grit and the copper cleaver). Smelting needs no recipe.
+- **Guild trainer:** core recipes, bought with gold once your skill reaches the recipe's orange number. Starting prices: 50 c to 5 s for tier 1, 3 s to 25 s for tier 2. The Workshop only lists recipes you know, and points to the trainer when a new one is for sale.
 - **Guild quartermaster:** better recipes, gated by guild standing.
 - **Rare drops:** heroes sometimes bring back a recipe scroll. It can be learned or sold on the auction house.
 

@@ -4,6 +4,7 @@
 import { el, coins, openSheet, stepper, fill, coinInput, toast, coinText } from './components.js';
 import { itemById } from '../../data/items.js';
 import { recipes } from '../../data/recipes.js';
+import { knowsRecipe } from '../engine/skills.js';
 import { tuning } from '../../data/tuning.js';
 import { bagCount } from '../engine/bags.js';
 import {
@@ -150,7 +151,7 @@ export function openItemSheet(ctx, itemId) {
     const makes = recipes.filter((r) => r.makes.item === itemId);
     const uses = recipes.filter((r) => r.mats.some((m) => m.item === itemId));
     if (!makes.length && !uses.length) return null;
-    const name = (r) => (r.station === 'forge' ? `${itemById[r.makes.item].name} (forge)` : itemById[r.makes.item].name);
+    const name = (r) => `${itemById[r.makes.item].name}${r.station === 'forge' ? ' (forge)' : ''}${knowsRecipe(ctx.state, r) ? '' : ' (not learned)'}`;
     return el('section', {},
       makes.length ? el('p', { class: 'small' }, el('strong', {}, 'Made by: '), makes.map(name).join(', ')) : null,
       uses.length ? el('p', { class: 'small' }, el('strong', {}, 'Used in: '), uses.map(name).join(', ')) : null);

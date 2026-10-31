@@ -11,7 +11,7 @@ import { recipeById } from '../../data/recipes.js';
 import { itemById } from '../../data/items.js';
 import { schedule, cancelTimer } from './clock.js';
 import { checkMats, takeFromBags, addOrMail } from './bags.js';
-import { checkSkill, rollSkillUp } from './skills.js';
+import { checkSkill, checkKnown, rollSkillUp } from './skills.js';
 
 export const STATIONS = ['anvil', 'forge'];
 
@@ -32,6 +32,7 @@ export function queueCraft(state, recipeId, qty, now) {
   if (station.queue.length >= queueSlots(state, recipe.station)) {
     throw new Error(`The ${recipe.station} queue is full (${queueSlots(state, recipe.station)} orders).`);
   }
+  checkKnown(state, recipe);
   checkSkill(state, recipe);
   checkMats(state, recipe.mats, qty);
 

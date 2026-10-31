@@ -17,7 +17,7 @@ export const professions = [
 
 export const ranks = [
   { id: 'apprentice', name: 'Apprentice', cap: 75, cost: 0, standing: 'neutral' },
-  { id: 'journeyman', name: 'Journeyman', cap: 150, cost: 50000, standing: 'neutral' },
+  { id: 'journeyman', name: 'Journeyman', cap: 150, cost: 10000, standing: 'neutral' },
   { id: 'expert', name: 'Expert', cap: 225, cost: 500000, standing: 'friendly' },
   { id: 'artisan', name: 'Artisan', cap: 300, cost: 2500000, standing: 'honored' },
 ];

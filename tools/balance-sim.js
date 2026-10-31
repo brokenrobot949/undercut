@@ -23,7 +23,7 @@ import { listItem, cancelListing, undercutPrice, buyItems, buyFromVendor, quoteB
 import { bagSlots, slotsUsed, roomFor } from '../js/engine/bags.js';
 import { queueCraft, maxCraftable } from '../js/engine/crafting.js';
 import { hireHero, hireFee, zonesFor, expeditionSlots } from '../js/engine/heroes.js';
-import { nextTraining, trainRank, recipeColor, capOf } from '../js/engine/skills.js';
+import { nextTraining, trainRank, recipeColor, capOf, knowsRecipe, trainerRecipes, learnRecipe } from '../js/engine/skills.js';
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -197,6 +197,7 @@ function botProfit(state, recipe, now) {
 function levelingRecipe(state, now) {
   let best = null;
   for (const r of recipes) {
+    if (!knowsRecipe(state, r)) continue;
     const chance = tuning.skillUpChance[recipeColor(state, r)];
     if (!chance) continue;
     const mats = r.mats.reduce((n, m) => n + botValue(state, m.item, now) * m.qty, 0);
@@ -233,6 +234,10 @@ function botCheckIn(bot, state, now, stats) {
 
   // Train the next rank as soon as the bot can.
   if (nextTraining(state, PROF)?.ready) trainRank(state, PROF);
+  // Learn every recipe the trainer offers at this skill, while it costs under a quarter of the purse.
+  for (const o of trainerRecipes(state, PROF)) {
+    if (o.ready && o.cost <= state.copper * 0.25) { learnRecipe(state, o.recipe.id); stats.recipeSpend += o.cost; }
+  }
 
   const lvl = levelingRecipe(state, now);
   const wantTier = lvl ? lvl.r.tier : 2;
@@ -265,7 +270,7 @@ function botCheckIn(bot, state, now, stats) {
 
   // Grit for the recipes that need it.
   for (const id of ['rough-grit', 'coarse-grit']) {
-    if (recipeColor(state, recipeById[id]) === 'red') continue;
+    if (!knowsRecipe(state, recipeById[id]) || recipeColor(state, recipeById[id]) === 'red') continue;
     if ((state.bags[id] || 0) < 4 && maxCraftable(state, id) >= 4 && queueFree('anvil')) tryAct(() => queueCraft(state, id, 4, now));
   }
 
@@ -286,7 +291,7 @@ function botCheckIn(bot, state, now, stats) {
 
   // Anvil: the most profitable recipes the bags allow, up to a day's demand of
   // each item, counting what's already in bags, listed or queued.
-  const ranked = recipes.filter((r) => r.station === 'anvil' && recipeColor(state, r) !== 'red' && SELL_CATEGORIES.has(itemById[r.makes.item].category))
+  const ranked = recipes.filter((r) => r.station === 'anvil' && knowsRecipe(state, r) && recipeColor(state, r) !== 'red' && SELL_CATEGORIES.has(itemById[r.makes.item].category))
     .map((r) => ({ r, p: botProfit(state, r, now) })).filter((x) => x.p > 0).sort((a, b) => b.p - a.p);
   const onHand = (itemId) => (state.bags[itemId] || 0) +
     playerListings(state).filter((x) => x.itemId === itemId).reduce((n, x) => n + x.listing.qty, 0) +
@@ -351,7 +356,7 @@ function botCheckIn(bot, state, now, stats) {
 function botRun(bot, seed) {
   const state = newGame({ name: bot.name, factionId: 'red', seed, now: START });
   const stats = { sold: {}, listed: {}, firstSale: null, heroFees: 0, deposits: 0, relists: 0, flips: 0, flipStock: {},
-    levelCrafts: 0, vendored: 0, gold: {}, skill: {}, reached: {}, flooded: {} };
+    levelCrafts: 0, vendored: 0, recipeSpend: 0, gold: {}, skill: {}, reached: {}, flooded: {} };
   const checkpoints = [1, 3, 7, 14, 30, 60];
   for (let t = START; t <= START + 60 * DAY; t += bot.every * HOUR) {
     botCheckIn(bot, state, t, stats);
@@ -382,7 +387,7 @@ function botReport() {
     const first = avg((r) => r.firstSale ?? 60 * DAY) / (60 * 1000);
     console.log(`${pad(bot.name, 10)}${gold}${lpad(`${Math.round(first)} min`, 10)}${lpad(gsc(avg((r) => r.heroFees)), 11)}${lpad(gsc(avg((r) => r.deposits)), 10)}`);
     console.log(`${pad('', 10)}skill ${[1, 3, 7, 14, 30, 60].map((d) => `d${d} ${Math.round(avg((r) => r.skill[d] ?? 0))}`).join(', ')}` +
-      `; ${Math.round(avg((r) => r.levelCrafts))} leveling crafts, ${Math.round(avg((r) => r.vendored))} vendored`);
+      `; ${Math.round(avg((r) => r.levelCrafts))} leveling crafts, ${Math.round(avg((r) => r.vendored))} vendored, ${gsc(avg((r) => r.recipeSpend))} on recipes`);
     for (const r of runs) {
       for (const [id, n] of Object.entries(r.listed)) allListed[id] = (allListed[id] || 0) + n;
       for (const [id, n] of Object.entries(r.sold)) allSold[id] = (allSold[id] || 0) + n;

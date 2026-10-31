@@ -4,7 +4,8 @@
 
 import { SAVE_VERSION, checkSave } from './game.js';
 import { createStations } from './crafting.js';
-import { createSkills } from './skills.js';
+import { createSkills, createKnownRecipes, recipeProfession } from './skills.js';
+import { recipes } from '../../data/recipes.js';
 
 // Every key starts with "undercut:" because other games share this web address.
 export const SAVE_KEY = 'undercut:save';
@@ -34,6 +35,16 @@ const migrations = {
   // skill 1, Apprentice, whatever they crafted before.
   3: (save) => {
     save.skills = createSkills();
+    return save;
+  },
+  // Version 5 (Phase 2): recipes are learned. Older saves keep the starting
+  // recipes plus every recipe their current skill can already craft.
+  4: (save) => {
+    save.knownRecipes = createKnownRecipes();
+    for (const r of recipes) {
+      const prof = r.skill && save.skills[recipeProfession(r)];
+      if (prof && prof.skill >= r.skill[0]) save.knownRecipes[r.id] = true;
+    }
     return save;
   },
 };

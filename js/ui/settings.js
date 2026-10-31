@@ -5,7 +5,7 @@ import { el, openSheet, toast, formatDuration, fill } from './components.js';
 import { encodeExport } from '../engine/save.js';
 import { gameNow } from '../engine/clock.js';
 import { debugAddCopper, debugAddMaterials, debugStartTestTimer } from '../engine/game.js';
-import { debugSetSkill, skillOf } from '../engine/skills.js';
+import { debugSetSkill, debugLearnAll, skillOf } from '../engine/skills.js';
 
 export function openSettings(ctx) {
   const sheet = openSheet('Settings');
@@ -118,7 +118,8 @@ export function openSettings(ctx) {
         btn('−25', () => ctx.act((s) => debugSetSkill(s, 'blacksmithing', skillOf(s, 'blacksmithing') - 25))),
         btn('+25', () => ctx.act((s) => debugSetSkill(s, 'blacksmithing', skillOf(s, 'blacksmithing') + 25))),
         btn('75', () => ctx.act((s) => debugSetSkill(s, 'blacksmithing', 75))),
-        btn('150', () => ctx.act((s) => debugSetSkill(s, 'blacksmithing', 150)))),
+        btn('150', () => ctx.act((s) => debugSetSkill(s, 'blacksmithing', 150))),
+        btn('Learn all recipes', () => ctx.act((s) => debugLearnAll(s)))),
       el('p', { class: 'small dim', style: 'margin-top:12px' }, 'Internals'),
       el('dl', { class: 'kv' },
         kv('Game time', new Date(now).toLocaleString()),

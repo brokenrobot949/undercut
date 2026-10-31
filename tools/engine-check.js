@@ -10,8 +10,9 @@ import { roomFor, addOrMail } from '../js/engine/bags.js';
 import { saleProceeds } from '../js/engine/market.js';
 import { advance, schedule, TICK_MS } from '../js/engine/clock.js';
 import { createRng, rngNext } from '../js/engine/rng.js';
-import { recipeColor, nextTraining, trainRank, debugSetSkill } from '../js/engine/skills.js';
-import { recipeById } from '../data/recipes.js';
+import { recipeColor, nextTraining, trainRank, debugSetSkill, learnRecipe, trainerRecipes } from '../js/engine/skills.js';
+import { recipes, recipeById } from '../data/recipes.js';
+import { ranks } from '../data/professions.js';
 import { encodeExport, decodeExport, migrate, writeSave, readSave } from '../js/engine/save.js';
 
 const H = 60 * 60 * 1000;
@@ -25,6 +26,8 @@ function check(name, ok, detail = '') {
 }
 
 const game = (seed = 1, now = t0) => newGame({ name: 'Test', factionId: 'red', seed, now });
+// Marks every recipe learned, for checks that aren't about learning.
+const learnAll = (s) => { for (const r of recipes) s.knownRecipes[r.id] = true; return s; };
 const rollEachTick = { tick: (s) => rngNext(s.rng), freshMarket() {}, timers: {} };
 
 // Ticks land on every 10-minute mark.
@@ -193,6 +196,7 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   const s = game(6);
   s.bags = { 'rough-stone': 20 };
   s.skills.blacksmithing.skill = 10;
+  learnAll(s);
   queueCraft(s, 'rough-honing-stone', 10, t0); // 5 s each
   queueCraft(s, 'rough-grit', 5, t0); // 5 s each, 2 stone each
   check('queueing takes materials', !s.bags['rough-stone']);
@@ -239,7 +243,7 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
 
 // Skill: recipe colors, skill-ups on finished crafts, rank caps and training.
 {
-  const s = game(11);
+  const s = learnAll(game(11));
   const cleaver = recipeById['copper-cleaver']; // skill [1, 16, 26, 36]
   const colors = [1, 16, 26, 36].map((n) => { s.skills.blacksmithing.skill = n; return recipeColor(s, cleaver); });
   check('recipe colors follow its skill levels', colors.join() === 'orange,yellow,green,gray', colors.join());
@@ -260,17 +264,17 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   check('smelting gives no skill', s.skills.blacksmithing.skill === 11);
 }
 {
-  const s = game(12);
+  const s = learnAll(game(12));
   debugSetSkill(s, 'blacksmithing', 75);
   s.bags = { 'coarse-stone': 12 };
   queueCraft(s, 'coarse-balance-weight', 3, t0); // orange, but Apprentice caps skill at 75
   const sum = catchUp(s, t0 + 60 * 1000);
   check('skill stops at the rank cap', s.skills.blacksmithing.skill === 75 && sum.skillCapped.blacksmithing === true);
-  s.copper = 1000;
+  s.copper = ranks[1].cost - 1;
   check('training needs the gold', nextTraining(s, 'blacksmithing').reason === 'Not enough gold.');
-  s.copper = 60000;
+  s.copper = ranks[1].cost + 500;
   trainRank(s, 'blacksmithing');
-  check('training Journeyman costs 5 g and lifts the cap', s.copper === 10000 && s.skills.blacksmithing.rank === 1);
+  check('training Journeyman costs its price and lifts the cap', s.copper === 500 && s.skills.blacksmithing.rank === 1);
   queueCraft(s, 'coarse-balance-weight', 3, t0 + 60 * 1000);
   catchUp(s, t0 + 2 * 60 * 1000);
   check('skill rises again after training', s.skills.blacksmithing.skill === 78, `skill ${s.skills.blacksmithing.skill}`);
@@ -290,6 +294,37 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   check('full bags overflow to the mailbox', s.bags['copper-cleaver'] === 48 && s.mailbox.items['copper-cleaver'] === 2);
 }
 
+// Recipes: start with a few, buy the rest from the trainer once skill allows.
+{
+  const s = game(13);
+  check('a new shop knows the starting recipes', s.knownRecipes['rough-grit'] && s.knownRecipes['copper-cleaver'] && !s.knownRecipes['rough-honing-stone']);
+  s.bags = { 'rough-stone': 10 };
+  s.skills.blacksmithing.skill = 10;
+  let threw = false;
+  try { queueCraft(s, 'rough-honing-stone', 1, t0); } catch { threw = true; }
+  check('an unlearned recipe is refused', threw);
+  s.bags = { 'copper-ore': 2 };
+  check('smelting needs no learning', queueCraft(s, 'smelt-copper', 1, t0) !== undefined);
+  s.skills.blacksmithing.skill = 5;
+  check('the trainer waits for your skill', /skill 10/.test(trainerRecipes(s, 'blacksmithing').find((o) => o.recipe.id === 'rough-honing-stone').reason));
+  s.skills.blacksmithing.skill = 10;
+  const before = s.copper;
+  learnRecipe(s, 'rough-honing-stone');
+  check('learning costs the trainer price', before - s.copper === recipeById['rough-honing-stone'].learn && s.knownRecipes['rough-honing-stone']);
+  threw = false;
+  try { learnRecipe(s, 'rough-honing-stone'); } catch { threw = true; }
+  check('a recipe can only be learned once', threw);
+}
+{
+  const v4 = game(14);
+  v4.version = 4;
+  delete v4.knownRecipes;
+  v4.skills.blacksmithing.skill = 32;
+  const s = migrate(JSON.parse(JSON.stringify(v4)));
+  check('version 4 save keeps recipes its skill could already make',
+    s.knownRecipes['copper-ringmail-vest'] && s.knownRecipes['rough-balance-weight'] && !s.knownRecipes['copper-plate-cuffs']);
+}
+
 // Old saves upgrade.
 {
   const v1 = { version: 1, createdAt: t0, player: { name: 'Old', factionId: 'blue' }, copper: 5000, reputation: 0,
@@ -297,7 +332,7 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
     timers: [], nextTimerId: 1, settings: { debug: false, mute: false } };
   const s = migrate(structuredClone(v1));
   catchUp(s, t0 + H);
-  check('version 1 save upgrades and runs', s.version === 4 && s.skills.blacksmithing.skill === 1 && s.market && s.tavern.board.length === 3 && s.stations.anvil);
+  check('version 1 save upgrades and runs', s.version === 5 && s.knownRecipes['copper-cleaver'] && s.skills.blacksmithing.skill === 1 && s.market && s.tavern.board.length === 3 && s.stations.anvil);
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');

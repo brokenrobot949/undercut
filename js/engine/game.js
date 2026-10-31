@@ -10,10 +10,10 @@ import { createClock, advance, gameNow, schedule, newSummary } from './clock.js'
 import { createMarket, marketTick, freshMarket, saleProceeds } from './market.js';
 import { createStations, finishUnit } from './crafting.js';
 import { createTavern, refreshBoardTimer, expeditionReturns } from './heroes.js';
-import { createSkills } from './skills.js';
+import { createSkills, createKnownRecipes } from './skills.js';
 export { collectMailbox } from './bags.js';
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 export function newGame({ name, factionId, seed, now }) {
   const state = {
@@ -24,6 +24,8 @@ export function newGame({ name, factionId, seed, now }) {
     reputation: 0,
     // Profession skill and trained rank: { blacksmithing: { skill, rank } }.
     skills: createSkills(),
+    // Recipes learned: { recipeId: true }. Smelting is always known.
+    knownRecipes: createKnownRecipes(),
     bags: { ...tuning.startingBags }, // itemId -> quantity
     // Gold and items waiting to be collected (sales, expired listings).
     mailbox: { copper: 0, items: {} },
@@ -45,7 +47,7 @@ export function newGame({ name, factionId, seed, now }) {
 export function checkSave(state) {
   const ok = state.player && getFaction(state) && state.clock && Number.isFinite(state.clock.lastSeenAt) &&
     state.rng && Number.isFinite(state.rng.state) && Array.isArray(state.timers) && Number.isFinite(state.copper) &&
-    state.skills && typeof state.skills === 'object';
+    state.skills && typeof state.skills === 'object' && state.knownRecipes && typeof state.knownRecipes === 'object';
   if (!ok) throw new Error('This save is damaged or incomplete.');
   return state;
 }
