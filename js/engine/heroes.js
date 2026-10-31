@@ -8,6 +8,8 @@ import { races, raceById } from '../../data/races.js';
 import { heroNames, badHaulLines } from '../../data/names.js';
 import { schedule } from './clock.js';
 import { rngNext, rngInt, rngPick, rngChance, rngRange } from './rng.js';
+import { recipes } from '../../data/recipes.js';
+import { knowsRecipe, recipeColor } from './skills.js';
 
 const HOUR = 60 * 60 * 1000;
 const TV = tuning.tavern;
@@ -18,17 +20,32 @@ export function createTavern(state, now) {
   schedule(state, 'tavern-refresh', state.tavern.nextRefreshAt);
 }
 
+// The first hero on the board always suits the tier you're crafting in, so a
+// new shop isn't left without a miner it can use. The rest roll any level.
 function rollBoard(state) {
   state.tavern.board = [];
-  for (let i = 0; i < TV.boardSize; i++) state.tavern.board.push(rollHero(state));
+  const band = zones.find((z) => z.tier === workingTier(state))?.levels;
+  for (let i = 0; i < TV.boardSize; i++) state.tavern.board.push(rollHero(state, i === 0 ? band : null));
 }
 
-function rollHero(state) {
+// Highest tier among known recipes that still give skill; tier 1 for a new shop.
+function workingTier(state) {
+  if (!state.skills) return 1;
+  let tier = 1;
+  for (const r of recipes) {
+    const color = recipeColor(state, r);
+    if (color && color !== 'red' && color !== 'gray' && knowsRecipe(state, r)) tier = Math.max(tier, r.tier);
+  }
+  return tier;
+}
+
+function rollHero(state, band = null) {
   const factionRaces = races.filter((r) => r.faction === state.player.factionId);
   const race = rngPick(state.rng, factionRaces);
   const [minLevel, maxLevel] = TV.heroLevels;
   // More low-level heroes than high ones.
-  const level = minLevel + Math.floor((maxLevel - minLevel + 1) * rngNext(state.rng) ** 1.4);
+  const level = band ? rngInt(state.rng, Math.max(minLevel, band[0]), band[1])
+    : minLevel + Math.floor((maxLevel - minLevel + 1) * rngNext(state.rng) ** 1.4);
   return {
     id: state.tavern.nextHeroId++,
     name: rngPick(state.rng, heroNames[race.id]),

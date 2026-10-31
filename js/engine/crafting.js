@@ -11,7 +11,7 @@ import { recipeById } from '../../data/recipes.js';
 import { itemById } from '../../data/items.js';
 import { schedule, cancelTimer } from './clock.js';
 import { checkMats, takeFromBags, addOrMail } from './bags.js';
-import { checkSkill, checkKnown, rollSkillUp } from './skills.js';
+import { checkSkill, checkKnown, checkForgeRank, rollSkillUp } from './skills.js';
 
 export const STATIONS = ['anvil', 'forge'];
 
@@ -34,6 +34,7 @@ export function queueCraft(state, recipeId, qty, now) {
   }
   checkKnown(state, recipe);
   checkSkill(state, recipe);
+  checkForgeRank(state, recipe);
   checkMats(state, recipe.mats, qty);
 
   for (const m of recipe.mats) takeFromBags(state, m.item, m.qty * qty);

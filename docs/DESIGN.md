@@ -89,7 +89,7 @@ The player starts with Blacksmithing, Leatherworking or Alchemy and unlocks the 
 
 | Profession | Makes | Main materials | Gathering pair |
 | --- | --- | --- | --- |
-| Blacksmithing | Weapons, plate and mail armor, sharpening stones and weightstones | Bars, stone, essences | Mining |
+| Blacksmithing | Weapons, plate and mail armor, grit, honing stones and balance weights | Bars, stone, essences | Mining |
 | Leatherworking | Leather armor, armor kits, cloaks, quivers and ammo pouches | Leather, hides, thread, salt | Skinning |
 | Alchemy | Healing and mana potions, elixirs, resistance potions, transmutes | Herbs, vials | Herbalism |
 
@@ -121,7 +121,8 @@ A typical recipe is orange for 15 points after you learn it, then yellow for 10,
 - The skill-up roll happens as each craft finishes, using the recipe's color at that moment. A long queue of one recipe slows down as it turns yellow and green.
 - At a rank's cap, crafts give no skill until the next rank is trained.
 - Smelting gives no skill.
-- Each tier of recipes covers roughly 55 to 70 skill points, overlapping the next tier. Blacksmithing tier 1 starts at skill 1 (rough grit and the copper cleaver) and goes gray by 75. Tier 2 starts at 55 and goes gray by 140.
+- Each tier of recipes covers roughly 55 to 70 skill points, overlapping the next tier. Blacksmithing tier 1 starts at skill 1 (rough grit and the copper cleaver) and goes gray by 75. Tier 2 starts at 55 and goes gray by 140. Tier 3 runs 125 to 210, tier 4 190 to 275, and tier 5 starts at 250 and is still orange or yellow at 300.
+- Each Blacksmithing tier has six recipes: a grit, a honing stone, a balance weight (named after that tier's stone), a weapon, a mail piece and a plate piece.
 
 **Recipes.** About 25 per profession at launch, 5 per material tier, 75 in total. Sources:
 
@@ -146,9 +147,9 @@ Materials come in five tiers that follow hero level bands, with original names o
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | 1–15 | Copper ore → copper bar | Rough stone | Light leather | Dawnpetal, Silverfern | Simple vial |
 | 2 | 15–25 | Tin ore → tin bar; 1 copper bar + 1 tin bar → 2 bronze bars | Coarse stone | Medium leather | Thornbriar, Bruisewort | Simple vial |
-| 3 | 25–35 | Iron ore → iron bar; iron + coal → steel bar | Heavy stone | Heavy leather | Ironleaf, Wild sage | Leaded vial |
-| 4 | 35–45 | Moonsilver ore → moonsilver bar | Solid stone | Thick leather | Sunbloom, Ghostcap | Leaded vial |
-| 5 | 45–60 | Starmetal ore → starmetal bar | Dense stone | Hardened leather | Starlily, Gravemoss | Crystal vial |
+| 3 | 25–35 | Iron ore → iron bar; iron bar + coal → steel bar | Ironstone | Heavy leather | Ironleaf, Wild sage | Leaded vial |
+| 4 | 35–45 | Moonsilver ore → moonsilver bar | Flintstone | Thick leather | Sunbloom, Ghostcap | Leaded vial |
+| 5 | 45–60 | Starmetal ore → starmetal bar | Basalt | Hardened leather | Starlily, Gravemoss | Crystal vial |
 
 Each tier also has a hide (cured into leather goods with salt), a cloth, an elemental essence and one or two gems. Endgame recipes need rare materials from raid expeditions: Ember core, Voidglass shard and Wyrm scale.
 
@@ -165,7 +166,7 @@ Cloth sells on the auction house until Tailoring arrives in a later update.
 
 **Smelting: timed or instant with a cost**
 
-- **Your forge** comes with the Blacksmithing wing. Smelting there is free and timed, in its own queue, so it never blocks crafting. Tiers unlock by Blacksmithing rank: copper, tin and bronze at Apprentice, iron and steel at Journeyman, moonsilver at Expert, starmetal at Artisan.
+- **Your forge** comes with the Blacksmithing wing. Smelting there is free and timed, in its own queue, so it never blocks crafting. Tiers unlock by Blacksmithing rank: copper, tin and bronze at Apprentice, iron and steel at Journeyman, moonsilver at Expert, starmetal at Artisan. The City Smelter has no rank lock.
 - **The City Smelter** is open to everyone. It smelts instantly for a fee of 25% of the bar's base value.
 - Smelting gives no skill. It only converts ore to bars.
 - Ore and bars both trade on the auction house. NPC sellers price bars above ore plus the smelter fee, so smelting your own is a small profit source.
@@ -194,7 +195,7 @@ Hiring is one pick from a board, with no roster to manage. The tavern board show
 
 **No failed trips.** A trip never comes back empty. A bad haul comes with a short flavor line, like "Brakka was chased off by a bear and came home with half a load." This keeps the idle loop low-stress.
 
-**Zones.** Ten zones, two per tier: one leans toward ore, the other toward herbs and hides. Heroes only go to zones within their level band. Named so far: Rustvein Hollow (tier 1 ore) and Tinmouth Ridge (tier 2 ore). At Revered standing, raid expeditions open: level-60 heroes only, 8 hours, a high fee, and the only source of endgame materials.
+**Zones.** Ten zones, two per tier: one leans toward ore, the other toward herbs and hides. Heroes only go to zones within their level band. Ore zones: Rustvein Hollow (tier 1), Tinmouth Ridge (tier 2), Emberfall Quarry (tier 3), Moonscar Basin (tier 4) and Skyfall Crater (tier 5). The herb and hide zones are still to be named. At Revered standing, raid expeditions open: level-60 heroes only, 8 hours, a high fee, and the only source of endgame materials.
 
 **Races, classes and perks**
 
@@ -283,7 +284,7 @@ The shop counter takes requests from named heroes: a specific item, a quantity a
 | --- | --- | --- | --- |
 | Standard | Hilda, Dwarf Paladin, level 22, wants a bronze breastplate | 12–24 h | 1.5× market + reputation |
 | Rush | 3 minor healing potions, needed tonight | 2–4 h | 2.5× market + reputation |
-| Guild contract | The city garrison needs 30 heavy sharpening stones | 2–3 days | Gold + large reputation; deliver in parts |
+| Guild contract | The city garrison needs 30 ironstone honing stones | 2–3 days | Gold + large reputation; deliver in parts |
 | Regular's request | One of your regulars wants gear for their level | 24 h | 1.5× market + loyalty + a level boost |
 
 **Rules**
@@ -346,7 +347,7 @@ Events shift demand or supply for a few hours to a few days, so the market keeps
 
 | Event | Effect | Length | How often |
 | --- | --- | --- | --- |
-| Raid night | Demand ×3 for resistance potions, elixirs and sharpening stones | 12 h | Twice a week |
+| Raid night | Demand ×3 for resistance potions, elixirs, honing stones and balance weights | 12 h | Twice a week |
 | Fresh recruits | Demand ×2 for tier 1–2 gear | 2 days | Weekly |
 | Tournament | Demand ×2 for weapons | 1 day | Weekly |
 | Ore shortage | One ore's NPC restock drops to 30%, so its price climbs | 1 day | Weekly |
@@ -516,7 +517,7 @@ All open design calls are settled.
 | Game title | Undercut. The only other use found is a 2004 tabletop auction game, low risk for a free browser game |
 | Faction, capital and guild names | Ember Pact and Kragmar, Azure Crown and Aldmere |
 | Race names | Hornkin and Risen |
-| Material and herb names | As written in Materials and smelting |
+| Material and herb names | As written in Materials and smelting. Stones for tiers 3–5 use real rock names (ironstone, flintstone, basalt) to keep clear of the original game's stone ladder |
 | Sound | In scope: a small set of effects in Phase 4 |
 | Pacing | About 6 to 8 weeks to the full endgame |
 | Save slots | One save with export, plus "New game" |

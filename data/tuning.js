@@ -50,8 +50,8 @@ export const tuning = {
     badHaulChance: 0.12,
     // Each haul varies by up to this much either way.
     haulSpread: 0.2,
-    // Hero levels on the board, [lowest, highest]. Phase 1: tiers 1-2.
-    heroLevels: [3, 25],
+    // Hero levels on the board, [lowest, highest].
+    heroLevels: [3, 60],
   },
 
   // ---- Auction house ----

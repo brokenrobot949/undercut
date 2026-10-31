@@ -10,7 +10,7 @@ import { marketValue, cutOn } from '../engine/market.js';
 import { lowestOtherPrice } from '../engine/trading.js';
 import { queueCraft, cancelOrder, queueSlots, smeltAtCity, smelterFee, maxCraftable } from '../engine/crafting.js';
 import { openItemSheet } from './item-sheet.js';
-import { recipeColor, knowsRecipe, trainerRecipes } from '../engine/skills.js';
+import { recipeColor, knowsRecipe, trainerRecipes, forgeRankNeeded } from '../engine/skills.js';
 import { skillBar, colorText } from './skill-bar.js';
 
 const filters = { canCraft: false, skillUps: false, profitable: false };
@@ -108,7 +108,8 @@ function recipeRow(ctx, recipe) {
     el('span', { class: `market-price ${profit >= 0 ? 'profit' : 'loss'}` }, profit >= 0 ? '+' : '−', coins(Math.abs(profit))),
     el('span', { class: 'small dim market-sub' },
       recipe.mats.map((m) => `${m.qty} ${itemById[m.item].name.toLowerCase()} (${state.bags[m.item] || 0})`).join(', ')),
-    el('span', { class: 'small market-tag' }, color === 'red' ? `needs ${recipe.skill[0]}` : can ? `can make ${can}` : ''),
+    el('span', { class: 'small market-tag' }, color === 'red' ? `needs ${recipe.skill[0]}`
+      : forgeRankNeeded(state, recipe) ? `forge: ${forgeRankNeeded(state, recipe)}` : can ? `can make ${can}` : ''),
   );
 }
 
@@ -126,6 +127,7 @@ function openCraftSheet(ctx, recipe) {
     const { state } = ctx;
     const color = recipeColor(state, recipe);
     const can = color === 'red' ? 0 : maxCraftable(state, recipe.id);
+    const rankNeed = forgeRankNeeded(state, recipe);
     qtyChoice = Math.max(1, Math.min(qtyChoice, Math.max(1, can)));
     const feeText = el('span', {});
     const qty = stepper({ value: qtyChoice, max: Math.max(1, can), onChange: (v) => { qtyChoice = v; updateFee(); } });
@@ -151,7 +153,8 @@ function openCraftSheet(ctx, recipe) {
         el('strong', { class: profit >= 0 ? 'profit' : 'loss' }, profit >= 0 ? 'Profit ' : 'Loss ', coins(Math.abs(profit))), ' each.'),
       can ? el('div', { class: 'field' }, el('label', {}, `How many (materials for ${can})`), qty.node)
         : el('p', { class: 'small dim' }, color === 'red' ? 'Your skill is too low to make this yet.' : 'You need more materials. Tap one above to buy it.'),
-      can ? el('button', { class: 'btn btn-primary wide', type: 'button',
+      can && rankNeed ? el('p', { class: 'small dim' }, `Your forge needs ${rankNeed} Blacksmithing to smelt this. The City Smelter can do it now.`) : null,
+      can && !rankNeed ? el('button', { class: 'btn btn-primary wide', type: 'button',
         onclick: () => act((s, now) => queueCraft(s, recipe.id, qty.value, now)) },
         recipe.station === 'forge' ? 'Smelt at your forge (free)' : 'Add to queue') : null,
       can && recipe.station === 'forge' ? el('button', { class: 'btn wide', type: 'button',

@@ -23,7 +23,7 @@ import { listItem, cancelListing, undercutPrice, buyItems, buyFromVendor, quoteB
 import { bagSlots, slotsUsed, roomFor } from '../js/engine/bags.js';
 import { queueCraft, maxCraftable } from '../js/engine/crafting.js';
 import { hireHero, hireFee, zonesFor, expeditionSlots } from '../js/engine/heroes.js';
-import { nextTraining, trainRank, recipeColor, capOf, knowsRecipe, trainerRecipes, learnRecipe } from '../js/engine/skills.js';
+import { nextTraining, trainRank, recipeColor, capOf, knowsRecipe, trainerRecipes, learnRecipe, forgeRankNeeded } from '../js/engine/skills.js';
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -173,6 +173,8 @@ const BOTS = [
 ];
 const SELL_CATEGORIES = new Set(['consumable', 'gear']);
 const PROF = 'blacksmithing';
+// Anvil recipes that make a material other recipes use (grit).
+const GRITS = recipes.filter((r) => r.station === 'anvil' && itemById[r.makes.item].category === 'material').map((r) => r.id);
 // Skill milestones the sim records, with the pacing target from DESIGN.md (days).
 const MILESTONES = [
   { id: 'skill75', label: 'skill 75', target: null },
@@ -240,14 +242,17 @@ function botCheckIn(bot, state, now, stats) {
   }
 
   const lvl = levelingRecipe(state, now);
-  const wantTier = lvl ? lvl.r.tier : 2;
+  const wantTier = lvl ? lvl.r.tier : 1;
 
   // Heroes: fill every expedition slot while the bags have room. The first goes
-  // to the tier the bot is leveling in, the rest to the best zone.
+  // to the tier the bot is leveling in, the rest to the best zone it can use:
+  // no more than one tier up, and only ore its own forge can smelt.
+  const usable = (z) => z.tier <= wantTier + 1 && !recipes.some((r) => r.station === 'forge' &&
+    r.mats.some((m) => m.item === z.loot.mining[0].item) && forgeRankNeeded(state, r));
   while (freeSlots() >= 8 && state.tavern.expeditions.length < expeditionSlots(state)) {
     const first = state.tavern.expeditions.length === 0;
     const rank = (z) => (first && z.tier !== wantTier ? 1 : 0);
-    const options = state.tavern.board.flatMap((h) => zonesFor(h).map((z) => ({ h, z })))
+    const options = state.tavern.board.flatMap((h) => zonesFor(h).filter(usable).map((z) => ({ h, z })))
       .sort((a, b) => rank(a.z) - rank(b.z) || b.z.tier - a.z.tier);
     if (!options.length) break;
     const { h, z } = options[0];
@@ -256,20 +261,22 @@ function botCheckIn(bot, state, now, stats) {
     stats.heroFees += fee;
   }
 
-  // Forge: smelt all ore; alloy bronze only up to what the bot can use.
-  for (const id of ['smelt-copper', 'smelt-tin']) {
-    const n = maxCraftable(state, id);
-    if (n > 0 && queueFree('forge')) tryAct(() => queueCraft(state, id, n, now));
+  // Forge: smelt all ore the forge's rank allows; make alloys only up to 40
+  // bars, buying coal for steel.
+  for (const r of recipes.filter((x) => x.station === 'forge' && !forgeRankNeeded(state, x))) {
+    const alloy = r.mats.length > 1;
+    if (alloy && (state.bags[r.makes.item] || 0) >= 40) continue;
+    if (r.mats.some((m) => m.item === 'coal') && (state.bags.coal || 0) < 10 && (state.bags['iron-bar'] || 0) >= 10) tryAct(() => buyFromVendor(state, 'coal', 10));
+    let n = maxCraftable(state, r.id);
+    if (alloy) n = Math.min(n, Math.ceil((40 - (state.bags[r.makes.item] || 0)) / r.makes.qty));
+    if (n > 0 && queueFree('forge')) tryAct(() => queueCraft(state, r.id, n, now));
   }
-  const bronzeWanted = Math.floor((40 - (state.bags['bronze-bar'] || 0)) / 2);
-  const alloy = Math.min(maxCraftable(state, 'alloy-bronze'), bronzeWanted);
-  if (alloy > 0 && queueFree('forge')) tryAct(() => queueCraft(state, 'alloy-bronze', alloy, now));
 
-  // Flux for bronze gear.
-  if ((state.bags['bronze-bar'] || 0) >= 6 && (state.bags['smithing-flux'] || 0) < 4) tryAct(() => buyFromVendor(state, 'smithing-flux', 6));
+  // Flux for gear.
+  if ((state.bags['smithing-flux'] || 0) < 6) tryAct(() => buyFromVendor(state, 'smithing-flux', 10));
 
   // Grit for the recipes that need it.
-  for (const id of ['rough-grit', 'coarse-grit']) {
+  for (const id of GRITS) {
     if (!knowsRecipe(state, recipeById[id]) || recipeColor(state, recipeById[id]) === 'red') continue;
     if ((state.bags[id] || 0) < 4 && maxCraftable(state, id) >= 4 && queueFree('anvil')) tryAct(() => queueCraft(state, id, 4, now));
   }

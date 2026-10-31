@@ -56,6 +56,20 @@ export function checkSkill(state, recipe) {
   }
 }
 
+// Forge recipes for higher ores need a Blacksmithing rank (recipe.rank) at your
+// own forge. Returns the rank name still needed, or null. The City Smelter skips this.
+export function forgeRankNeeded(state, recipe) {
+  if (!recipe.rank) return null;
+  const need = ranks.findIndex((r) => r.id === recipe.rank);
+  const have = state.skills[professionForStation[recipe.station]]?.rank ?? 0;
+  return have >= need ? null : ranks[need].name;
+}
+
+export function checkForgeRank(state, recipe) {
+  const need = forgeRankNeeded(state, recipe);
+  if (need) throw new Error(`Your forge needs ${need} Blacksmithing for this. The City Smelter can do it now, for a fee.`);
+}
+
 // Called as each craft finishes: maybe +1 skill, by the recipe's color then.
 export function rollSkillUp(state, recipe, summary) {
   const professionId = recipeProfession(recipe);

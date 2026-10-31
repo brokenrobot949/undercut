@@ -325,6 +325,30 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
     s.knownRecipes['copper-ringmail-vest'] && s.knownRecipes['rough-balance-weight'] && !s.knownRecipes['copper-plate-cuffs']);
 }
 
+// Forge: higher ores need a rank at your own forge; the City Smelter doesn't care.
+{
+  const s = game(15);
+  s.bags = { 'iron-ore': 4 };
+  let threw = false;
+  try { queueCraft(s, 'smelt-iron', 2, t0); } catch { threw = true; }
+  check('an Apprentice forge refuses iron', threw);
+  smeltAtCity(s, 'smelt-iron', 1);
+  check('the City Smelter smelts iron at any rank', s.bags['iron-bar'] === 1);
+  debugSetSkill(s, 'blacksmithing', 80); // Journeyman
+  check('a Journeyman forge smelts iron', queueCraft(s, 'smelt-iron', 2, t0) !== undefined);
+}
+
+// Tavern: the first hero on the board suits the tier you're crafting in.
+{
+  const fresh = game(16);
+  check('a new shop gets a tier 1 hero first', fresh.tavern.board[0].level <= 15, `level ${fresh.tavern.board[0].level}`);
+  const s = learnAll(game(17));
+  debugSetSkill(s, 'blacksmithing', 160);
+  catchUp(s, t0 + 4 * H + 60000); // board refresh
+  const lv = s.tavern.board[0].level;
+  check('at skill 160 the first hero suits tier 3', lv >= 25 && lv <= 35, `level ${lv}`);
+}
+
 // Old saves upgrade.
 {
   const v1 = { version: 1, createdAt: t0, player: { name: 'Old', factionId: 'blue' }, copper: 5000, reputation: 0,
