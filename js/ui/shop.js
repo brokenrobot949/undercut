@@ -1,7 +1,12 @@
 // Shop tab (home): "While you were away", commissions, town crier, and the
 // Trade Guild with its skill trainer.
 
-import { el, coins, comingSoon, formatDuration } from './components.js';
+import { el, coins, comingSoon, formatDuration, countdown, toast, coinText } from './components.js';
+import { commissionTypes, commissionTuning } from '../../data/commissions.js';
+import { raceById, classById } from '../../data/races.js';
+import { canDeliver, deliverCommission, declineCommission, recipeHint } from '../engine/commissions.js';
+import { madeCount } from '../engine/bags.js';
+import { openItemSheet } from './item-sheet.js';
 import { getFaction, getStanding } from '../engine/game.js';
 import { itemById } from '../../data/items.js';
 import { professions, professionById } from '../../data/professions.js';
@@ -17,7 +22,7 @@ export function renderShop(ctx) {
 
   return el('div', { class: 'main-inner' },
     ctx.away || mailboxFull ? awayPanel(ctx) : null,
-    comingSoon('Commission counter', 'Heroes will post requests here. Arrives in Phase 2.'),
+    commissionPanel(ctx),
     comingSoon('Town crier', 'Market events will be announced here. Arrives in Phase 3.'),
     el('section', { class: 'panel' },
       el('h2', {}, faction.guild),
@@ -55,6 +60,52 @@ function trainerRow(ctx, professionId) {
       onclick: () => ctx.act((s) => trainRank(s, professionId)) },
       `Train ${t.rank.name} (skill to ${t.rank.cap}) · `, t.cost ? coins(t.cost) : 'free') : el('p', { class: 'small dim' }, 'Highest rank trained.'),
     t && !t.ready ? el('p', { class: 'small dim' }, t.reason) : null);
+}
+
+// The commission counter: requests from heroes, paid in gold and reputation.
+// Only items you made yourself count.
+function commissionPanel(ctx) {
+  const { list } = ctx.state.commissions;
+  return el('section', { class: 'panel' },
+    el('h2', {}, `Commission counter (${list.length} / ${commissionTuning.slots})`),
+    el('p', { class: 'small dim' }, `Heroes post requests here, about one every ${commissionTuning.postEveryHours} hours. They pay well, and they're how you earn standing with the guild. Only items you crafted count.`),
+    list.length ? el('div', { class: 'commission-list' }, list.map((c) => commissionCard(ctx, c)))
+      : el('p', { class: 'small dim' }, 'No requests right now. A new one will be posted soon.'));
+}
+
+function requesterText(c) {
+  const r = c.requester;
+  if (!r.race) return r.name;
+  return `${r.name}, ${raceById[r.race].name} ${classById[r.classId].name}, level ${r.level}${r.regularId ? ' (your regular)' : ''}`;
+}
+
+function commissionCard(ctx, c) {
+  const { state } = ctx;
+  const type = commissionTypes.find((t) => t.id === c.type);
+  const item = itemById[c.itemId];
+  const left = c.qty - c.delivered;
+  const made = madeCount(state, c.itemId);
+  const n = canDeliver(state, c);
+  const partial = c.type === 'contract';
+  const ready = partial ? n > 0 : n >= left;
+  const hint = recipeHint(state, c);
+  return el('div', { class: `commission-card type-${c.type}` },
+    el('div', { class: 'commission-head' },
+      el('span', { class: 'commission-type' }, type.name),
+      el('span', { class: 'small dim' }, 'Ends in ', countdown(c.expiresAt))),
+    el('p', { class: 'small' }, requesterText(c), ' wants'),
+    el('p', {}, el('strong', {}, `${c.qty} × `),
+      el('button', { class: `link q-${item.quality}`, type: 'button', onclick: () => openItemSheet(ctx, item.id) }, item.name)),
+    el('p', { class: 'small' }, 'Pays ', coins(c.pay), ` and ${c.rep} reputation`,
+      partial ? ` (paid by the part, ${c.delivered} of ${c.qty} delivered)` : '',
+      c.type === 'regular' ? ', plus loyalty and 3 levels for your regular' : '', '.'),
+    el('p', { class: 'small dim' }, `You've made ${made} in your bags.`, hint ? ` ${hint}` : ''),
+    el('div', { class: 'btn-row' },
+      el('button', { class: `btn${ready ? ' btn-primary' : ''}`, type: 'button', disabled: !ready, onclick: () => {
+        const r = ctx.act((s, now) => deliverCommission(s, c.id, now));
+        if (r && r.copper !== undefined) toast(`Handed in. +${coinText(r.copper)}, +${r.rep} reputation.`);
+      } }, partial && n < left ? `Deliver ${n}` : 'Hand in'),
+      el('button', { class: 'btn', type: 'button', onclick: () => ctx.act((s) => declineCommission(s, c.id)) }, 'Decline')));
 }
 
 function awayPanel(ctx) {

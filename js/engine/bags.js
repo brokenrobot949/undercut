@@ -56,6 +56,23 @@ export function takeFromBags(state, itemId, qty) {
   if (qty > have) throw new Error(`You only have ${have} ${itemById[itemId].name.toLowerCase()}.`);
   if (have === qty) delete state.bags[itemId];
   else state.bags[itemId] = have - qty;
+  // Bought units leave first, so what's left keeps your maker's mark.
+  if (state.made?.[itemId] > bagCount(state, itemId)) {
+    if (bagCount(state, itemId)) state.made[itemId] = bagCount(state, itemId);
+    else delete state.made[itemId];
+  }
+}
+
+// ---- Maker's mark ----------------------------------------------------------
+// state.made counts the units in your bags that you crafted yourself.
+// Commissions only accept these.
+
+export function markMade(state, itemId, qty) {
+  state.made[itemId] = (state.made[itemId] || 0) + qty;
+}
+
+export function madeCount(state, itemId) {
+  return Math.min(state.made?.[itemId] || 0, bagCount(state, itemId));
 }
 
 // Throws unless every material is in the bags, `times` over.

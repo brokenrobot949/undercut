@@ -23,6 +23,8 @@ import { listItem, cancelListing, undercutPrice, buyItems, buyFromVendor, quoteB
 import { bagSlots, slotsUsed, roomFor } from '../js/engine/bags.js';
 import { queueCraft, maxCraftable } from '../js/engine/crafting.js';
 import { hireHero, hireFee, zonesFor, expeditionSlots, regularsInTown } from '../js/engine/heroes.js';
+import { canDeliver, deliverCommission } from '../js/engine/commissions.js';
+import { madeCount } from '../js/engine/bags.js';
 import { nextTraining, trainRank, recipeColor, capOf, knowsRecipe, trainerRecipes, learnRecipe, forgeRankNeeded, learnFromScroll, recipeProfession } from '../js/engine/skills.js';
 
 const HOUR = 60 * 60 * 1000;
@@ -183,6 +185,8 @@ const MILESTONES = [
   { id: 'skill75', label: 'skill 75', target: null },
   { id: 'journeyman', label: 'Journeyman', target: 1 },
   { id: 'skill150', label: 'skill 150', target: 7 },
+  { id: 'friendly', label: 'Friendly', target: 7 },
+  { id: 'expert', label: 'Expert', target: 7 },
   { id: 'skill300', label: 'skill 300', target: 21 },
 ];
 
@@ -236,6 +240,24 @@ function botCheckIn(bot, state, now, stats) {
   const tryAct = (fn) => { try { return fn(); } catch { return null; } };
   const freeSlots = () => bagSlots(state) - slotsUsed(state);
   const queueFree = (station) => state.stations[station].queue.length < tuning.queueSlots;
+
+  // Commissions: hand in whatever's ready, then queue crafts for the rest.
+  for (const c of [...state.commissions.list]) {
+    const n = canDeliver(state, c);
+    if (n > 0 && (c.type === 'contract' || n >= c.qty - c.delivered)) {
+      const r = tryAct(() => deliverCommission(state, c.id, now));
+      if (r) { stats.commissionGold += r.copper; if (r.done) stats.commissions++; }
+    }
+  }
+  for (const c of state.commissions.list) {
+    const recipe = recipeById[c.recipeId];
+    const queued = state.stations[recipe.station].queue.filter((o) => o.recipeId === recipe.id).reduce((n, o) => n + o.qty - o.done, 0);
+    const need = c.qty - c.delivered - madeCount(state, c.itemId) - queued;
+    if (need <= 0 || !knowsRecipe(state, recipe) || recipeColor(state, recipe) === 'red' || !queueFree(recipe.station)) continue;
+    if (maxCraftable(state, recipe.id) >= need || tryAct(() => buyMissing(state, recipe, need, state.copper * 0.4, now))) {
+      tryAct(() => queueCraft(state, recipe.id, need, now));
+    }
+  }
 
   // Train the next rank as soon as the bot can.
   if (nextTraining(state, PROF)?.ready) trainRank(state, PROF);
@@ -380,16 +402,17 @@ function botCheckIn(bot, state, now, stats) {
 function botRun(bot, seed) {
   const state = newGame({ name: bot.name, factionId: 'red', seed, now: START });
   const stats = { sold: {}, listed: {}, firstSale: null, heroFees: 0, deposits: 0, relists: 0, flips: 0, flipStock: {},
-    levelCrafts: 0, vendored: 0, recipeSpend: 0, scrollsRead: 0, junkSold: 0, gold: {}, skill: {}, reached: {}, flooded: {} };
+    levelCrafts: 0, vendored: 0, recipeSpend: 0, scrollsRead: 0, junkSold: 0, rep: {}, commissions: 0, commissionGold: 0, gold: {}, skill: {}, reached: {}, flooded: {} };
   const checkpoints = [1, 3, 7, 14, 30, 60];
   for (let t = START; t <= START + 60 * DAY; t += bot.every * HOUR) {
     botCheckIn(bot, state, t, stats);
     for (const item of tradeableItems) if (demandTag(state, item) === 'flooded') stats.flooded[item.id] = (stats.flooded[item.id] || 0) + 1;
     const s = state.skills[PROF];
-    const reached = { skill75: s.skill >= 75, journeyman: s.rank >= 1, skill150: s.skill >= 150, skill300: s.skill >= 300 };
+    const reached = { skill75: s.skill >= 75, journeyman: s.rank >= 1, skill150: s.skill >= 150, skill300: s.skill >= 300,
+      friendly: state.reputation >= 3000, expert: s.rank >= 2 };
     for (const [id, ok] of Object.entries(reached)) if (ok && stats.reached[id] === undefined) stats.reached[id] = (t - START) / DAY;
     const day = (t - START) / DAY;
-    if (checkpoints.includes(day)) { stats.gold[day] = state.copper; stats.skill[day] = s.skill; }
+    if (checkpoints.includes(day)) { stats.gold[day] = state.copper; stats.skill[day] = s.skill; stats.rep[day] = state.reputation; }
   }
   stats.checkIns = Math.floor((60 * 24) / bot.every) + 1;
   const regs = state.tavern.regulars;
@@ -415,6 +438,7 @@ function botReport() {
     const first = avg((r) => r.firstSale ?? 60 * DAY) / (60 * 1000);
     console.log(`${pad(bot.name, 10)}${gold}${lpad(`${Math.round(first)} min`, 10)}${lpad(gsc(avg((r) => r.heroFees)), 11)}${lpad(gsc(avg((r) => r.deposits)), 10)}`);
     console.log(`${pad('', 10)}skill ${[1, 3, 7, 14, 30, 60].map((d) => `d${d} ${Math.round(avg((r) => r.skill[d] ?? 0))}`).join(', ')}` +
+      `; reputation d7 ${Math.round(avg((r) => r.rep[7] ?? 0))}, d30 ${Math.round(avg((r) => r.rep[30] ?? 0))}; ${Math.round(avg((r) => r.commissions))} commissions (${gsc(avg((r) => r.commissionGold))})` +
       `; ${Math.round(avg((r) => r.levelCrafts))} leveling crafts, ${Math.round(avg((r) => r.vendored))} vendored, ${gsc(avg((r) => r.recipeSpend))} on recipes`);
     for (const r of runs) {
       for (const [id, n] of Object.entries(r.listed)) allListed[id] = (allListed[id] || 0) + n;

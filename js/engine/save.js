@@ -59,6 +59,13 @@ const migrations = {
     save.player.professions = ['blacksmithing'];
     return save;
   },
+  // Version 8 (Phase 2): commissions and the maker's mark. Items already in
+  // bags don't carry a mark; the counter opens on the next catch-up.
+  7: (save) => {
+    save.made = {};
+    save.commissions = null;
+    return save;
+  },
 };
 
 export function migrate(save) {

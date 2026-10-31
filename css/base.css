@@ -676,3 +676,12 @@ input[type="number"] {
 .trainer-recipes .skill-red .item-name { color: var(--text-dim); }
 .profession-switch { margin-bottom: 12px; }
 .profession-card h2 { font-size: 1.1rem; }
+
+/* ---- Commissions --------------------------------------------------------- */
+.commission-list { display: grid; gap: 10px; }
+.commission-card { padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel-raised); }
+.commission-card p { margin: 4px 0; }
+.commission-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.commission-type { font-family: var(--font-heading); font-weight: 700; color: var(--highlight); }
+.commission-card.type-rush .commission-type { color: var(--skill-orange); }
+.commission-card .btn-row { margin-top: 8px; }

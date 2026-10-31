@@ -7,6 +7,8 @@ import { listItem, undercutPrice, lowestOtherPrice, quoteBuy, buyItems, sellToVe
 import { queueCraft, cancelOrder, smeltAtCity } from '../js/engine/crafting.js';
 import { hireHero, zonesFor, expectedHaul, hireFee, regularsInTown } from '../js/engine/heroes.js';
 import { tuning } from '../data/tuning.js';
+import { postCommission, deliverCommission, declineCommission, canDeliver } from '../js/engine/commissions.js';
+import { madeCount } from '../js/engine/bags.js';
 import { zoneById } from '../data/zones.js';
 import { itemById } from '../data/items.js';
 import { roomFor, addOrMail } from '../js/engine/bags.js';
@@ -460,6 +462,73 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   queueCraft(s, 'transmute-iron-to-moonsilver', 2, t0);
   catchUp(s, t0 + 2 * 60 * 1000);
   check('a transmute makes two bars from two', s.bags['moonsilver-bar'] === 4 && !s.bags['iron-bar']);
+}
+
+// Commissions: the counter, the maker's mark, pay and reputation.
+{
+  const s = game(25);
+  check('a new shop has a commission on the counter', s.commissions.list.length === 1);
+  catchUp(s, t0 + 6.5 * H);
+  check('new commissions post every 2 hours up to 3', s.commissions.list.length === 3, `${s.commissions.list.length}`);
+  for (const c of [...s.commissions.list]) declineCommission(s, c.id);
+  check('declining clears the counter', s.commissions.list.length === 0);
+
+  // A standard request for something you can make now.
+  const c = postCommission(s, t0 + 6.5 * H, 'standard');
+  const need = c.qty;
+  s.bags = { [c.itemId]: need };
+  check('bought items carry no maker\'s mark', madeCount(s, c.itemId) === 0 && canDeliver(s, c) === 0);
+  let threw = false;
+  try { deliverCommission(s, c.id, t0 + 6.5 * H); } catch { threw = true; }
+  check('a commission refuses items you didn\'t make', threw);
+  s.made = { [c.itemId]: need };
+  const copper = s.copper, rep = s.reputation;
+  deliverCommission(s, c.id, t0 + 6.5 * H);
+  check('handing in pays gold and reputation', s.copper - copper === c.pay && s.reputation - rep === c.rep && !s.bags[c.itemId]);
+  check('a filled commission leaves the counter', !s.commissions.list.includes(c));
+}
+{
+  const s = learnAll(game(26));
+  debugSetSkill(s, 'blacksmithing', 20);
+  const c = postCommission(s, t0, 'contract');
+  check('a guild contract asks for 20 or more', c && c.qty >= 20, c ? `${c.qty}` : 'none');
+  s.bags = { [c.itemId]: 10 };
+  s.made = { [c.itemId]: 10 };
+  const r1 = deliverCommission(s, c.id, t0);
+  check('a contract takes part of the order', c.delivered === 10 && !r1.done && s.commissions.list.includes(c));
+  s.bags = { [c.itemId]: c.qty }; s.made = { [c.itemId]: c.qty };
+  const r2 = deliverCommission(s, c.id, t0);
+  check('contract parts add up to the full pay', r1.copper + r2.copper === c.pay && r1.rep + r2.rep === c.rep && r2.done);
+}
+{
+  const s = game(27);
+  const c = postCommission(s, t0, 'rush');
+  catchUp(s, t0 + 5 * H);
+  check('an unfilled commission expires', !s.commissions.list.some((x) => x.id === c.id));
+}
+{
+  const s = game(28);
+  s.copper = 1e7;
+  const hero = s.tavern.board[0];
+  hireHero(s, hero.id, zonesFor(hero)[0].id, 0.25, t0);
+  catchUp(s, t0 + H);
+  const reg = s.tavern.regulars[0];
+  const level = reg.level;
+  const c = postCommission(s, t0 + H, 'regular');
+  if (!c) check('a regular\'s request posts', false, 'no gear to ask for');
+  else {
+    s.bags = { [c.itemId]: 1 }; s.made = { [c.itemId]: 1 };
+    deliverCommission(s, c.id, t0 + H);
+    check('a regular\'s request boosts their level and loyalty', reg.level === Math.min(60, level + 3) && reg.loyalty === 1, `level ${reg.level}`);
+  }
+}
+{
+  const s = game(29);
+  s.bags = { 'rough-stone': 10 };
+  queueCraft(s, 'rough-grit', 2, t0);
+  catchUp(s, t0 + 60000);
+  s.bags['rough-grit'] += 3; // bought
+  check('crafted units carry the maker\'s mark', madeCount(s, 'rough-grit') === 2);
 }
 
 // Old saves upgrade.

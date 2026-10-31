@@ -326,6 +326,10 @@ The shop counter takes requests from named heroes: a specific item, a quantity a
 - Requests come from recipes you know or are close to learning. One you can't make yet says where to get the recipe ("Quartermaster, Honored"), which gives the player a goal.
 - Only items you crafted count, by maker's mark, so buying from the auction house to hand in doesn't work.
 - Declining is free.
+- How often each kind posts: standard 55%, rush 20%, guild contract 10%, regular's request 15% (only once you have regulars).
+- Quantities: gear is always one. Consumables: 3–8 for a standard request, 2–4 for a rush, 20–40 for a guild contract. Guild contracts take consumables only and pay 1.25× market. Gold and reputation are paid for each part handed in.
+- A request picks a recipe of one of your professions, from 60 skill points below yours to 10 above. A regular's request picks gear for the regular's armor type (or a weapon or cloak). A filled regular's request adds a loyalty level and 3 hero levels.
+- **Maker's mark:** the game counts which units in your bags you crafted. When you list, sell or use some of an item, bought units go first, so your crafted ones stay ready for commissions. Items returned from expired listings come back without the mark.
 
 **Tutorial.** The first five commissions teach the game: craft an item, buy a material on the auction house, hire a hero, smelt ore, and list an item for sale.
 

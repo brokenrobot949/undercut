@@ -11,9 +11,10 @@ import { createMarket, syncMarketItems, marketTick, freshMarket, saleProceeds } 
 import { createStations, syncStations, finishUnit } from './crafting.js';
 import { createTavern, refreshBoardTimer, expeditionReturns } from './heroes.js';
 import { createSkills, createKnownRecipes, syncSkills } from './skills.js';
+import { createCommissions, commissionPostTimer, commissionExpireTimer } from './commissions.js';
 export { collectMailbox } from './bags.js';
 
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 export function newGame({ name, factionId, professionId = 'blacksmithing', seed, now }) {
   const state = {
@@ -38,9 +39,13 @@ export function newGame({ name, factionId, professionId = 'blacksmithing', seed,
     market: null,
     stations: createStations(),
     tavern: null,
+    // Units in your bags you crafted yourself (the maker's mark): { itemId: qty }.
+    made: {},
+    commissions: null,
   };
   createMarket(state, now);
   createTavern(state, now);
+  createCommissions(state, now);
   return state;
 }
 
@@ -94,6 +99,8 @@ const handlers = {
     craft: (state, timer, summary) => finishUnit(state, timer, summary),
     expedition: (state, timer, summary) => expeditionReturns(state, timer, summary),
     'tavern-refresh': (state, timer) => refreshBoardTimer(state, timer),
+    'commission-post': (state, timer, summary) => commissionPostTimer(state, timer, summary),
+    'commission-expire': (state, timer, summary) => commissionExpireTimer(state, timer, summary),
     'debug-test'(state, timer, summary) {
       summary.lines.push(`Debug test timer (${timer.data.label}) finished.`);
     },
@@ -119,6 +126,7 @@ export function catchUp(state, realNow, summary = gameSummary(state)) {
   syncStations(state);
   syncSkills(state);
   if (!state.tavern) createTavern(state, state.clock.lastSeenAt);
+  if (!state.commissions) createCommissions(state, state.clock.lastSeenAt);
   return advance(state, gameNow(state, realNow), handlers, summary);
 }
 

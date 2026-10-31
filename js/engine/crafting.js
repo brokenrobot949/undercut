@@ -11,7 +11,7 @@ import { recipeById } from '../../data/recipes.js';
 import { itemById } from '../../data/items.js';
 import { professions } from '../../data/professions.js';
 import { schedule, cancelTimer } from './clock.js';
-import { checkMats, takeFromBags, addOrMail } from './bags.js';
+import { checkMats, takeFromBags, addOrMail, markMade } from './bags.js';
 import { checkSkill, checkKnown, checkForgeRank, checkProfession, rollSkillUp } from './skills.js';
 
 export const STATIONS = professions.flatMap((p) => p.stations);
@@ -78,6 +78,7 @@ export function finishUnit(state, timer, summary) {
   if (!order) return;
   const recipe = recipeById[order.recipeId];
   addOrMail(state, recipe.makes.item, recipe.makes.qty);
+  markMade(state, recipe.makes.item, recipe.makes.qty);
   rollSkillUp(state, recipe, summary);
   summary.crafted[recipe.makes.item] = (summary.crafted[recipe.makes.item] || 0) + recipe.makes.qty;
   order.done++;
