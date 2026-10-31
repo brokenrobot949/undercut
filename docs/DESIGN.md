@@ -557,7 +557,7 @@ As built (Phase 4, Oct 31, 2026):
 
 **Motion** stays small and quick: coins tick up on collect, a "Sold!" toast, progress bars fill. As built (Phase 4): the header gold counts up over about half a second whenever it rises. Each sale while you're watching pops a "Sold!" card with the item's icon and what it paid. Messages stack above the tab bar (three at most) and fade after about 3 seconds. Progress bars keep their place when the screen redraws. Phones set to reduce motion get no animation.
 
-**Sound** is a small set of effects added in Phase 4: coins on collect, "sold," hero return and craft complete. They come from a free CC0 sound pack, such as Kenney's. Sound starts only after the player's first tap, with a mute toggle in settings. There is no music.
+**Sound** is a small set of effects added in Phase 4: coins on collect, "sold," hero return and craft complete. They come from a free CC0 sound pack, such as Kenney's. Sound starts only after the player's first tap, with a mute toggle in settings. There is no music. As built (Phase 4): four short .mp3 effects from Kenney's CC0 Interface Sounds and RPG Audio packs. A coin clink plays on Collect all, a chime when something sells while you watch, a door when a hero gets back, and a metal click when a crafting order finishes. Each check plays only one sound: a sale beats a hero return, which beats a finished craft. The Sound on/off switch in Settings is saved with the game. Credits are in `assets/sounds/CREDITS.md` and on the Credits screen.
 
 ## Technical architecture
 

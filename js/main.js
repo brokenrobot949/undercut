@@ -8,6 +8,7 @@ import { readSave, writeSave, backupAndClear, decodeExport, listBackups, readBac
 import { mountApp } from './ui/app.js';
 import { renderNewGame } from './ui/new-game.js';
 import { el, toast, soldToast, setTheme } from './ui/components.js';
+import { initSound, playSound } from './ui/sound.js';
 
 const VERSION = 'v0.1.0';
 // Absences shorter than this don't open the "While you were away" summary.
@@ -49,7 +50,9 @@ const ctx = {
   },
   // "Collect all": gold and returned items go to your purse and bags.
   collectAll() {
+    const before = ctx.state.copper;
     const allFit = collectMailbox(ctx.state);
+    if (ctx.state.copper > before) playSound('coins');
     ctx.away = null;
     save();
     app.render();
@@ -143,6 +146,10 @@ function catchUpNow(asCheckIn) {
     for (const [id, s] of Object.entries(summary.sold)) soldToast(id, s.qty, s.copper);
     for (const o of summary.ordersDone) toast(`Made ${o.qty} × ${itemById[o.item].name}.`);
     for (const r of summary.returns) toast(`${r.name} is back from ${r.zone}. Collect on the Shop tab.`);
+    // One sound per check, the most exciting first.
+    if (Object.keys(summary.sold).length) playSound('sold');
+    else if (summary.returns.length) playSound('hero-return');
+    else if (summary.ordersDone.length) playSound('craft-complete');
   }
   return summary;
 }
@@ -170,6 +177,7 @@ function stopLoop() {
 
 function startGame(state) {
   ctx.state = state;
+  initSound(ctx);
   catchUpNow(true);
   save();
   app = mountApp(root, ctx);
