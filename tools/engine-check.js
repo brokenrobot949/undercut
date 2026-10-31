@@ -35,6 +35,7 @@ import { eventWarnHours } from '../js/engine/upgrades.js';
 import { upcomingEvents } from '../js/engine/events.js';
 import { quartermasterRecipes, buyQuartermasterRecipe } from '../js/engine/quartermaster.js';
 import { recipeHint } from '../js/engine/commissions.js';
+import { raidZonesFor, payRefresh } from '../js/engine/heroes.js';
 import { encodeExport, decodeExport, migrate, writeSave, readSave } from '../js/engine/save.js';
 
 const H = 60 * 60 * 1000;
@@ -767,6 +768,28 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   let err = null; try { buyQuartermasterRecipe(s, tonic.id); } catch (e) { err = e.message; }
   check('a profession you don’t have can’t buy', /profession/.test(err ?? ''));
   check('a commission for a quartermaster item says where to buy it', /quartermaster/.test(recipeHint(s, { recipeId: qm.find((r) => r.station === 'anvil' && r.standing === 'honored').id }) ?? ''));
+}
+
+// Raid expeditions: Revered, level 60, 8 hours, the only source of endgame materials.
+{
+  const s = game(8);
+  s.copper = 10_000_000;
+  const raider = { id: 9999, name: 'Test', race: 'orc', classId: 'warrior', level: 60, skills: { mining: 300 } };
+  check('no raids before Revered', raidZonesFor(s, raider).length === 0);
+  s.reputation = tuning.standings.find((x) => x.id === 'revered').rep;
+  check('three raids at Revered, for level 60 only', raidZonesFor(s, raider).length === 3 && raidZonesFor(s, { ...raider, level: 59 }).length === 0);
+  payRefresh(s);
+  const board = s.tavern.board;
+  check('at Revered the board always has a level-60 raider', board.at(-1).level === 60);
+  const hero = board.at(-1);
+  const caldera = zoneById['cindermaw-caldera'];
+  let err = null; try { hireHero(s, hero.id, caldera.id, 4, t0); } catch (e) { err = e.message; }
+  check('a raid only goes for its set length', /trip length/.test(err ?? ''));
+  hireHero(s, hero.id, caldera.id, 8, t0);
+  catchUp(s, t0 + 9 * H);
+  const got = s.mailbox.items['ember-core'] ?? 0;
+  check('a raid brings back its endgame material and tier 5 loot', got >= 1 && Object.keys(s.mailbox.items).some((id) => itemById[id].tier === 5 && id !== 'ember-core'), `${got} ember cores`);
+  check('NPC sellers never list endgame materials', ['ember-core', 'voidglass-shard', 'wyrm-scale'].every((id) => s.market.items[id] && !s.market.items[id].listings.some((l) => l.seller === 'npc')));
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');

@@ -77,4 +77,32 @@ export const zones = [
   },
 ];
 
-export const zoneById = Object.fromEntries(zones.map((z) => [z.id, z]));
+// Raid expeditions: open at Revered standing, to level-60 heroes of any
+// gathering profession, for one trip length only. The only source of endgame
+// materials. Fields as above, plus:
+//   raid        true
+//   standing    guild standing needed
+//   hours       the one trip length offered
+//   loot.raid   what any hero brings back per hour (plus the usual tier 5 bonus loot)
+export const raidZones = [
+  {
+    id: 'cindermaw-caldera', name: 'Cindermaw Caldera', tier: 5, levels: [60, 60], minSkill: 0, feePerHour: 510,
+    raid: true, standing: 'revered', hours: 8,
+    blurb: 'A burning crater where fire spirits guard their cores.',
+    loot: { raid: [{ item: 'ember-core', perHour: 0.3 }] },
+  },
+  {
+    id: 'hollow-spire', name: 'The Hollow Spire', tier: 5, levels: [60, 60], minSkill: 0, feePerHour: 510,
+    raid: true, standing: 'revered', hours: 8,
+    blurb: 'A black glass tower that hums at night. Its walls shed sharp shards.',
+    loot: { raid: [{ item: 'voidglass-shard', perHour: 0.3 }] },
+  },
+  {
+    id: 'drakesleep-peaks', name: 'Drakesleep Peaks', tier: 5, levels: [60, 60], minSkill: 0, feePerHour: 510,
+    raid: true, standing: 'revered', hours: 8,
+    blurb: 'High peaks where old wyrms sleep, shedding scales the size of shields.',
+    loot: { raid: [{ item: 'wyrm-scale', perHour: 0.3 }] },
+  },
+];
+
+export const zoneById = Object.fromEntries([...zones, ...raidZones].map((z) => [z.id, z]));

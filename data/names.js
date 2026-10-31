@@ -15,6 +15,11 @@ export const heroNames = {
 // Flavor lines for a bad haul. {name} and {zone} are filled in.
 // A line is picked by the gathering profession the hero used on the trip.
 export const badHaulLines = {
+  raid: [
+    '{name} ran into a rival band in {zone} and came home with half the spoils.',
+    '{name} had to drag a wounded friend out of {zone}. Half the spoils.',
+    'A cave-in in {zone} buried half of what {name} had won.',
+  ],
   mining: [
     '{name} was chased off by a bear and came home with half a load.',
     '{name} took a wrong turn in {zone} and lost half a day to the fog.',

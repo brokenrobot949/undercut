@@ -225,6 +225,13 @@ Hiring is one pick from a board, with no roster to manage. The tavern board show
 
 **Zones.** Ten zones, two per tier: one leans toward ore, the other toward herbs and hides. Heroes only go to zones within their level band. Ore zones: Rustvein Hollow (tier 1), Tinmouth Ridge (tier 2), Emberfall Quarry (tier 3), Moonscar Basin (tier 4) and Skyfall Crater (tier 5). Herb and hide zones: Fernwhistle Glade (1), Bramblewick Fen (2), Wildsage Downs (3), Ghostlight Marsh (4) and Barrowmoor (5). The first hero on the board always gathers for your profession at the tier you're crafting in. At Revered standing, raid expeditions open: level-60 heroes only, 8 hours, a high fee, and the only source of endgame materials. There are three raid destinations: Cindermaw Caldera (Ember core), The Hollow Spire (Voidglass shard) and Drakesleep Peaks (Wyrm scale).
 
+As built (Oct 31, 2026; in `data/zones.js` under raidZones):
+
+- Any level-60 hero can raid, whatever their gathering professions. From Revered, the last hero on the board is always level 60, and level-60 regulars can raid too.
+- A raid brings back about 2.4 of its material (base value 25 s each), and loyalty raises that. It also brings the usual tier 5 bonus loot.
+- The fee is about 30 s, roughly half the haul's value.
+- NPC sellers never stock endgame materials, but NPC buyers still want them.
+
 **Races, classes and perks**
 
 | Race | Faction | Classes | Gathering perk |

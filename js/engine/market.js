@@ -51,7 +51,7 @@ function addItemMarket(state, item, now) {
   // Start with a normal amount of NPC stock, as if the market had been running.
   const stockHours = M.npcMaxStockHours * 0.75;
   const posted = { units: 0 };
-  while (posted.units < demandPerHour(state, item) * stockHours) {
+  while (item.npcStock !== false && posted.units < demandPerHour(state, item) * stockHours) {
     postNpcLot(state, item, m, now - rngRange(state.rng, 0, stockHours) * HOUR, posted);
   }
 }
@@ -317,6 +317,7 @@ function expireListings(item, m, at, hooks) {
 }
 
 function restockNpc(state, item, m, demand, at) {
+  if (item.npcStock === false) return;
   let npcUnits = 0;
   for (const l of m.listings) if (l.seller === 'npc') npcUnits += l.qty;
   if (npcUnits >= demand * M.npcMaxStockHours) return;

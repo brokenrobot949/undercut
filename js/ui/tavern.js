@@ -7,7 +7,7 @@ import { itemById } from '../../data/items.js';
 import { zoneById } from '../../data/zones.js';
 import { raceById, classById } from '../../data/races.js';
 import {
-  zonesFor, hireFee, tripLength, expectedHaul, expeditionSlots, payRefresh, hireHero, heroProfessions, perkApplies, regularsInTown,
+  zonesFor, raidZonesFor, hireFee, tripLength, expectedHaul, expeditionSlots, payRefresh, hireHero, heroProfessions, perkApplies, regularsInTown,
 } from '../engine/heroes.js';
 
 const PROFESSION_NAMES = { mining: 'Mining', herbalism: 'Herbalism', skinning: 'Skinning' };
@@ -64,12 +64,17 @@ function skillsText(hero) {
   return heroProfessions(hero).map((p) => `${PROFESSION_NAMES[p]} ${hero.skills[p]}`).join(' · ');
 }
 
+// Where a hero can go: gathering zones, then raids (level 60, Revered).
+const placesFor = (state, hero) => [...zonesFor(hero), ...raidZonesFor(state, hero)];
+const hoursFor = (zone) => (zone.raid ? [zone.hours] : tuning.tavern.tripHours);
+
 function heroCard(ctx, hero) {
   const race = raceById[hero.race];
-  const options = zonesFor(hero);
-  const cheapest = options.length ? Math.min(...options.map((z) => hireFee(hero, z, tuning.tavern.tripHours[0]))) : null;
+  const options = placesFor(ctx.state, hero);
+  const raids = raidZonesFor(ctx.state, hero).length;
+  const cheapest = options.length ? Math.min(...options.map((z) => hireFee(hero, z, hoursFor(z)[0]))) : null;
   return el('button', { class: 'hero-card', type: 'button', onclick: () => openHireSheet(ctx, hero), disabled: !options.length },
-    el('span', { class: 'hero-name' }, hero.name),
+    el('span', { class: 'hero-name' }, hero.name, raids ? el('span', { class: 'soon-tag raid-tag' }, 'raid-ready') : null),
     el('span', { class: 'small' }, `Level ${hero.level} ${race.name} ${classById[hero.classId].name}`),
     el('span', { class: 'small' }, skillsText(hero)),
     hero.loyalty !== undefined ? el('span', { class: 'small loyalty', 'aria-label': `Loyalty ${hero.loyalty} of ${tuning.tavern.regulars.maxLoyalty}` }, loyaltyText(hero)) : null,
@@ -79,9 +84,9 @@ function heroCard(ctx, hero) {
 
 function openHireSheet(ctx, hero) {
   const sheet = openSheet(`Hire ${hero.name}`);
-  const options = zonesFor(hero);
+  const options = placesFor(ctx.state, hero);
   let zone = options[0];
-  let hours = 1;
+  let hours = hoursFor(zone).includes(1) ? 1 : hoursFor(zone)[0];
   draw();
 
   function draw() {
@@ -93,18 +98,21 @@ function openHireSheet(ctx, hero) {
       el('div', { class: 'field' },
         el('label', {}, 'Where'),
         el('div', { class: 'btn-row seg' }, options.map((z) => el('button', {
-          class: `btn${z === zone ? ' btn-primary' : ''}`, type: 'button', onclick: () => { zone = z; draw(); },
-        }, z.name))),
+          class: `btn${z === zone ? ' btn-primary' : ''}`, type: 'button',
+          onclick: () => { zone = z; if (!hoursFor(z).includes(hours)) hours = hoursFor(z).includes(1) ? 1 : hoursFor(z)[0]; draw(); },
+        }, z.raid ? `Raid: ${z.name}` : z.name))),
         el('span', { class: 'small dim' }, zone.blurb)),
       el('div', { class: 'field' },
         el('label', {}, 'How long'),
-        el('div', { class: 'btn-row seg' }, tuning.tavern.tripHours.map((h) => el('button', {
+        el('div', { class: 'btn-row seg' }, hoursFor(zone).map((h) => el('button', {
           class: `btn${h === hours ? ' btn-primary' : ''}`, type: 'button', onclick: () => { hours = h; draw(); },
         }, h < 1 ? `${h * 60} min` : `${h} h`)))),
       el('p', { class: 'small' }, 'Expected haul: ',
         haul.map((h) => `${h.qty} ${itemById[h.item].name.toLowerCase()}`).join(', '),
         `. Back in ${formatDuration(tripLength(hero, hours))}.`),
-      el('p', { class: 'small dim' }, 'Every trip also brings home bonus loot: cloth, junk, essences, gems, and now and then a recipe scroll. Hauls vary a little, and now and then a hero comes home with half a load.'),
+      el('p', { class: 'small dim' }, zone.raid
+        ? 'Raids are the only source of endgame materials. Raiders also bring home tier 5 bonus loot. Now and then a raid comes home with half the spoils.'
+        : 'Every trip also brings home bonus loot: cloth, junk, essences, gems, and now and then a recipe scroll. Hauls vary a little, and now and then a hero comes home with half a load.'),
       ctx.state.tavern.expeditions.length >= expeditionSlots(ctx.state)
         ? el('p', { class: 'small' }, `All ${expeditionSlots(ctx.state)} expedition slots are in use. Hire again when a hero comes home.`)
         : el('button', { class: 'btn btn-primary wide', type: 'button', onclick: () => {

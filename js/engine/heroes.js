@@ -10,7 +10,8 @@
 // their own row, next to the board.
 
 import { tuning } from '../../data/tuning.js';
-import { zones, zoneById } from '../../data/zones.js';
+import { zones, zoneById, raidZones } from '../../data/zones.js';
+import { hasStanding } from './guild.js';
 import { races, raceById } from '../../data/races.js';
 import { heroNames, badHaulLines } from '../../data/names.js';
 import { items } from '../../data/items.js';
@@ -41,7 +42,13 @@ function rollBoard(state) {
   state.tavern.board = [];
   const band = zones.find((z) => z.tier === workingTier(state))?.levels;
   const pair = professionById[startingProfession(state)].gathering;
-  for (let i = 0; i < boardSizeFor(state); i++) state.tavern.board.push(rollHero(state, i === 0 ? { band, pair } : {}));
+  const size = boardSizeFor(state);
+  // From Revered, the last hero is always level 60, ready to raid.
+  const raider = hasStanding(state, TV.raiderStanding);
+  for (let i = 0; i < size; i++) {
+    const opts = i === 0 ? { band, pair } : raider && i === size - 1 ? { band: [60, 60] } : {};
+    state.tavern.board.push(rollHero(state, opts));
+  }
 }
 
 // Highest tier among known recipes of your starting profession that still give
@@ -112,7 +119,13 @@ export function heroProfessions(hero) {
 
 // The professions a hero gathers with in a zone.
 export function gatheredProfessions(hero, zone) {
+  if (zone.raid) return ['raid'];
   return heroProfessions(hero).filter((p) => zone.loot[p] && hero.skills[p] >= zone.minSkill);
+}
+
+// Raid expeditions this hero can go on: level 60, and your standing.
+export function raidZonesFor(state, hero) {
+  return raidZones.filter((z) => hero.level >= z.levels[0] && hasStanding(state, z.standing));
 }
 
 export function zonesFor(hero) {
@@ -146,6 +159,7 @@ export function tripLength(hero, hours) {
 // racial perk, and the split when a hero gathers with two professions.
 function yieldMult(hero, zone, prof) {
   const p = perk(hero);
+  if (zone.raid) return 1 + (hero.loyalty ?? 0) * TV.regulars.yieldPerLoyalty;
   const skillBonus = 1 + Math.min(0.5, (hero.skills[prof] - zone.minSkill) / 200);
   const share = gatheredProfessions(hero, zone).length > 1 ? TV.dualGatherShare : 1;
   const loyal = 1 + (hero.loyalty ?? 0) * TV.regulars.yieldPerLoyalty;
@@ -172,8 +186,8 @@ export function hireHero(state, heroId, zoneId, hours, now) {
   const hero = regular ?? state.tavern.board.find((h) => h.id === heroId);
   if (!hero) throw new Error('That hero has left the tavern.');
   const zone = zoneById[zoneId];
-  if (!zone || !zonesFor(hero).includes(zone)) throw new Error(`${hero.name} can't gather there.`);
-  if (!TV.tripHours.includes(hours)) throw new Error('Pick a trip length.');
+  if (!zone || ![...zonesFor(hero), ...raidZonesFor(state, hero)].includes(zone)) throw new Error(`${hero.name} can't go there.`);
+  if (zone.raid ? hours !== zone.hours : !TV.tripHours.includes(hours)) throw new Error('Pick a trip length.');
   if (state.tavern.expeditions.length >= expeditionSlots(state)) {
     throw new Error(`All ${expeditionSlots(state)} expedition slots are in use.`);
   }

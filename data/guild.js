@@ -22,7 +22,7 @@ export const standingUnlocks = [
     { text: 'Blue-quality quartermaster recipes' },
   ] },
   { standing: 'revered', unlocks: [
-    { text: 'Raid expeditions and endgame materials', soon: true },
+    { text: 'Raid expeditions and endgame materials' },
     { text: 'Top blue quartermaster recipes' },
   ] },
   { standing: 'exalted', unlocks: [

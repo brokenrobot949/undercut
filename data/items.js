@@ -16,6 +16,7 @@
 //   loot        'cloth', 'essence', 'gem', 'junk' or 'scroll': marks items heroes bring back as
 //               bonus loot from a zone of that item's tier.
 //   teaches     scroll items only: the id of the recipe it teaches.
+//   npcStock    false: NPC sellers never list it (endgame materials from raids).
 //
 // Selling to a vendor pays 25% of base (set in data/tuning.js).
 
@@ -83,6 +84,12 @@ export const items = [
   { id: 'topaz', name: 'Topaz', tier: 3, category: 'material', quality: 'uncommon', base: 180, demand: 1, loot: 'gem' },
   { id: 'tourmaline', name: 'Tourmaline', tier: 4, category: 'material', quality: 'uncommon', base: 260, demand: 1, loot: 'gem' },
   { id: 'diamond', name: 'Diamond', tier: 5, category: 'material', quality: 'uncommon', base: 400, demand: 1, loot: 'gem' },
+
+  // ---- Endgame materials: only raid expeditions bring these back, so NPC
+  // sellers never stock them (npcStock: false). Buyers still want them. ----
+  { id: 'ember-core', name: 'Ember core', tier: 5, category: 'material', quality: 'rare', base: 2500, demand: 0.3, npcStock: false },
+  { id: 'voidglass-shard', name: 'Voidglass shard', tier: 5, category: 'material', quality: 'rare', base: 2500, demand: 0.3, npcStock: false },
+  { id: 'wyrm-scale', name: 'Wyrm scale', tier: 5, category: 'material', quality: 'rare', base: 2500, demand: 0.3, npcStock: false },
 
   // ---- Junk (gray vendor trash from hero trips; vendor only) ----
   { id: 'bent-horseshoe', name: 'Bent horseshoe', tier: 1, category: 'junk', quality: 'poor', base: 20, loot: 'junk' },

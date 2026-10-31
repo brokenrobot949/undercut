@@ -70,7 +70,9 @@ function quietMarket() {
   console.log('\n1. QUIET MARKET (7 days, no player, 5 seeds averaged)');
   console.log(`${pad('item', 24)}${lpad('fair/base', 10)}${lpad('low/hi', 14)}${lpad('sold/day', 10)}${lpad('demand/day', 12)}${lpad('stock(d)', 10)}  tags`);
   const problems = [];
-  for (const item of tradeableItems) {
+  // Endgame materials have no NPC sellers (only raids bring them), so a
+  // market with no players never sells any; leave them out here.
+  for (const item of tradeableItems.filter((i) => i.npcStock !== false)) {
     let fairSum = 0, n = 0, lo = Infinity, hi = 0, sold = 0, demand = 0, stock = 0;
     const tags = {};
     for (const seed of SEEDS) {

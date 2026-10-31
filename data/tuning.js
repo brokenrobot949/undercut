@@ -57,6 +57,9 @@ export const tuning = {
     haulSpread: 0.2,
     // Hero levels on the board, [lowest, highest].
     heroLevels: [3, 60],
+    // From this standing on, the last hero on the board is always level 60,
+    // ready for a raid expedition.
+    raiderStanding: 'revered',
     // Chance a hero knows two gathering professions instead of one.
     dualProfessionChance: 0.3,
     // Regulars: heroes you've hired before. Each re-hire adds a loyalty level.

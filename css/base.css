@@ -738,3 +738,4 @@ input[type="number"] {
 .chart-base { stroke: var(--text-dim); stroke-width: 1; stroke-dasharray: 4 4; }
 .chart-head, .chart-foot { display: flex; justify-content: space-between; gap: 8px; margin: 2px 0; }
 .estimate { color: var(--highlight); }
+.raid-tag { color: var(--q-rare); border-color: var(--q-rare); }
