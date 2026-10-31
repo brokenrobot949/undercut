@@ -9,6 +9,7 @@ import { tutorialStep, stepMet } from '../engine/tutorial.js';
 import { tutorialSteps, tutorialMentor } from '../../data/tutorial.js';
 import { madeCount } from '../engine/bags.js';
 import { openItemSheet } from './item-sheet.js';
+import { yourShopPanel, donationsPanel } from './shop-extras.js';
 import { getFaction, getStanding } from '../engine/game.js';
 import { standingLadder } from '../engine/guild.js';
 import { guildTips } from '../../data/guild.js';
@@ -49,6 +50,8 @@ export function renderShop(ctx) {
       quartermasterOffers(ctx),
     ),
     upgradesPanel(ctx),
+    donationsPanel(ctx),
+    yourShopPanel(ctx),
   );
 }
 

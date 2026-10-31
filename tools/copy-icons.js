@@ -1,4 +1,4 @@
-// Copies the icons named in data/icons.js from the unzipped game-icons.net
+// Copies the icons named in data/icons.js and data/shop-extras.js from the unzipped game-icons.net
 // download into assets/icons/, recolors them to currentColor, deletes icons
 // no longer used, and rewrites assets/icons/CREDITS.md and data/icon-credits.js.
 //
@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { itemIcons, uiIcons } from '../data/icons.js';
+import { decor, donations, trophies } from '../data/shop-extras.js';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const src = process.argv[2];
@@ -33,7 +34,7 @@ const ARTISTS = {
   'willdabeast': 'Willdabeast', 'zajkonur': 'Zajkonur', 'zeromancer': 'Zeromancer',
 };
 
-const refs = new Set([...Object.values(itemIcons), ...Object.values(uiIcons)].map((x) => x.icon));
+const refs = new Set([...Object.values(itemIcons), ...Object.values(uiIcons), ...decor, ...donations, ...trophies].map((x) => x.icon));
 const byName = new Map(); // file name -> artist
 for (const ref of refs) {
   const [artist, name] = ref.split('/');

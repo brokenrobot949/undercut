@@ -14,12 +14,13 @@ import { createStations, syncStations, finishUnit } from './crafting.js';
 import { createTavern, refreshBoardTimer, expeditionReturns } from './heroes.js';
 import { createSkills, createKnownRecipes, syncSkills } from './skills.js';
 import { createUpgrades, syncUpgrades } from './upgrades.js';
+import { createExtras } from './shop-extras.js';
 import { createEvents, planTimer, eventStartTimer, eventEndTimer } from './events.js';
 import { createCommissions, commissionPostTimer, commissionExpireTimer } from './commissions.js';
 export { collectMailbox } from './bags.js';
 export { getStanding } from './guild.js';
 
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 
 export function newGame({ name, factionId, professionId = 'blacksmithing', seed, now }) {
   const state = {
@@ -54,6 +55,8 @@ export function newGame({ name, factionId, professionId = 'blacksmithing', seed,
     upgrades: createUpgrades(),
     // Market events: the calendar and what's running now (see events.js).
     events: null,
+    // Decor, sign styles, trophies and guild donations (see shop-extras.js).
+    extras: createExtras(),
   };
   createMarket(state, now);
   createTavern(state, now);
@@ -150,6 +153,7 @@ export function catchUp(state, realNow, summary = gameSummary(state)) {
   syncStations(state);
   syncSkills(state);
   syncUpgrades(state);
+  state.extras ||= createExtras();
   if (!state.tavern) createTavern(state, state.clock.lastSeenAt);
   if (!state.commissions) createCommissions(state, state.clock.lastSeenAt);
   if (!state.events) createEvents(state, state.clock.lastSeenAt);

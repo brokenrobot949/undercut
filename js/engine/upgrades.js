@@ -4,6 +4,7 @@
 import { tuning } from '../../data/tuning.js';
 import { upgrades, upgradeById } from '../../data/upgrades.js';
 import { hasStanding } from './guild.js';
+import { donationMult } from './shop-extras.js';
 
 export function createUpgrades() {
   return Object.fromEntries(upgrades.map((u) => [u.id, 0]));
@@ -64,9 +65,11 @@ export const boardSizeFor = (state) => tuning.tavern.boardSize + per(state, 'tab
 export const expeditionSlotsFor = (state) => tuning.tavern.expeditionSlots + per(state, 'charter');
 export const commissionSlotsFor = (state, baseSlots) => baseSlots + per(state, 'counter');
 
-// Commission pay multiplier from the counter (1.05 = +5%).
-export function commissionPayMult(state) {
-  return 1 + upgradeLevel(state, 'counter') * upgradeById.counter.payPer;
+// Commission pay multiplier from the counter (1.05 = +5%), and the guild feast
+// donation when `now` is given and it's running.
+export function commissionPayMult(state, now = null) {
+  const counter = 1 + upgradeLevel(state, 'counter') * upgradeById.counter.payPer;
+  return now === null ? counter : counter * donationMult(state, 'commission', now);
 }
 
 // Share of a sale the auction house keeps.
@@ -74,9 +77,11 @@ export function cutRate(state) {
   return Math.max(0, tuning.market.cut - per(state, 'seal'));
 }
 
-// Multiplier on listing deposits.
-export function depositMult(state) {
-  return Math.max(0, 1 - upgradeLevel(state, 'seal') * upgradeById.seal.depositPer);
+// Multiplier on listing deposits: the seal, and the night watch donation when
+// `now` is given and it's running.
+export function depositMult(state, now = null) {
+  const seal = Math.max(0, 1 - upgradeLevel(state, 'seal') * upgradeById.seal.depositPer);
+  return now === null ? seal : seal * donationMult(state, 'deposit', now);
 }
 
 // Multiplier on craft time at a workstation: bellows at the forge, tools elsewhere.

@@ -23,6 +23,7 @@ import { recipes } from '../../data/recipes.js';
 import { knowsRecipe, recipeColor, recipeProfession, startingProfession } from './skills.js';
 import { noteTutorial } from './tutorial.js';
 import { boardSizeFor, expeditionSlotsFor } from './upgrades.js';
+import { donationMult } from './shop-extras.js';
 
 const HOUR = 60 * 60 * 1000;
 const TV = tuning.tavern;
@@ -204,7 +205,10 @@ export function hireHero(state, heroId, zoneId, hours, now) {
   const returnsAt = now + tripLength(r, hours);
   const timer = schedule(state, 'expedition', returnsAt, { heroId });
   // The trip keeps its own copy of the hero; levels earned go back to the regular on return.
-  state.tavern.expeditions.push({ hero: { ...r }, zoneId, hours, fee, startedAt: now, returnsAt, timerId: timer.id });
+  // A caravan donation running at hire time adds to this trip's gathered haul.
+  const haulBonus = donationMult(state, 'haul', now);
+  state.tavern.expeditions.push({ hero: { ...r }, zoneId, hours, fee, startedAt: now, returnsAt, timerId: timer.id,
+    ...(haulBonus !== 1 ? { haulBonus } : {}) });
   return fee;
 }
 
@@ -263,7 +267,7 @@ export function expeditionReturns(state, timer, summary) {
   for (const prof of profs) {
     const mult = yieldMult(hero, zone, prof);
     for (const l of zone.loot[prof]) {
-      const exact = l.perHour * trip.hours * mult * rngRange(state.rng, 1 - TV.haulSpread, 1 + TV.haulSpread) * (bad ? 0.5 : 1);
+      const exact = l.perHour * trip.hours * mult * (trip.haulBonus ?? 1) * rngRange(state.rng, 1 - TV.haulSpread, 1 + TV.haulSpread) * (bad ? 0.5 : 1);
       const qty = Math.floor(exact) + (rngNext(state.rng) < exact % 1 ? 1 : 0);
       if (qty > 0) give(l.item, qty);
     }

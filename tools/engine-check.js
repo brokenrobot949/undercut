@@ -37,6 +37,8 @@ import { quartermasterRecipes, buyQuartermasterRecipe } from '../js/engine/quart
 import { recipeHint } from '../js/engine/commissions.js';
 import { raidZonesFor, payRefresh } from '../js/engine/heroes.js';
 import { encodeExport, decodeExport, migrate, writeSave, readSave } from '../js/engine/save.js';
+import { buyDecor, buyTrophy, buySignStyle, setSignStyle, signStyleOf, donate, donationMult, donationEndsAt } from '../js/engine/shop-extras.js';
+import { depositMult, commissionPayMult } from '../js/engine/upgrades.js';
 
 const H = 60 * 60 * 1000;
 const DAY = 24 * H;
@@ -811,6 +813,41 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   queueCraft(s, sword.id, 1, t0);
   catchUp(s, t0 + 10 * 60 * 1000);
   check('a masterwork can be bought and crafted', madeCount(s, sword.makes.item) === 1);
+}
+
+// Gold sinks: decor, sign styles, trophies and guild donations.
+{
+  const s = game(9);
+  s.copper = 10_000_000;
+  const before = s.copper;
+  buyDecor(s, 'lanterns');
+  buyTrophy(s, 'market-crown');
+  check('decor and trophies cost their price, once', s.extras.decor.lanterns && s.extras.trophies['market-crown'] && before - s.copper === 150000 + 5000000);
+  let err = null; try { buyTrophy(s, 'market-crown'); } catch (e) { err = e.message; }
+  check('a trophy can only be bought once', /already/.test(err ?? ''));
+  buySignStyle(s, 'gilded-frame');
+  check('a new sign style goes up, and you can switch back to plain', signStyleOf(s) === 'gilded' && (setSignStyle(s, null), signStyleOf(s) === null));
+  err = null; try { donate(s, 'caravan', t0); } catch (e) { err = e.message; }
+  check('donations need Honored standing', /Honored/.test(err ?? ''));
+  s.reputation = tuning.standings.find((x) => x.id === 'honored').rep;
+  const deposit = depositMult(s, t0);
+  donate(s, 'night-watch', t0);
+  check('the night watch halves deposits for a day', depositMult(s, t0 + H) === deposit * 0.5 && depositMult(s, t0 + 25 * H) === deposit);
+  donate(s, 'night-watch', t0); donate(s, 'night-watch', t0);
+  err = null; try { donate(s, 'night-watch', t0); } catch (e) { err = e.message; }
+  check('donating again stacks up to 3 days ahead', donationEndsAt(s, 'night-watch', t0) === t0 + 72 * H && /Already/.test(err ?? ''));
+  donate(s, 'guild-feast', t0);
+  check('a guild feast raises commission pay 10%', Math.abs(commissionPayMult(s, t0) / commissionPayMult(s) - 1.1) < 1e-9);
+  donate(s, 'caravan', t0);
+  const hero = s.tavern.board[0];
+  hireHero(s, hero.id, zonesFor(hero)[0].id, 8, t0);
+  check('a trip hired during a caravan carries the haul bonus', s.tavern.expeditions[0].haulBonus === 1.15 && donationMult(s, 'haul', t0 + 25 * H) === 1);
+
+  const old = game(10);
+  old.version = 11;
+  delete old.extras;
+  const m = migrate(structuredClone(old));
+  check('version 11 save gets empty shop extras', m.version === SAVE_VERSION && m.extras && !Object.keys(m.extras.trophies).length && m.extras.sign === null);
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');

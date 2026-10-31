@@ -50,7 +50,7 @@ export function listItem(state, { itemId, qty, price, hours }, now) {
   if (playerListings(state).length >= listingSlotsFor(state)) {
     throw new Error(`All ${listingSlotsFor(state)} listing slots are in use.`);
   }
-  const deposit = depositFor(item, qty, hours, depositMult(state));
+  const deposit = depositFor(item, qty, hours, depositMult(state, now));
   if (deposit > state.copper) throw new Error(`The deposit is ${coinText(deposit)} and you can't cover it.`);
 
   takeFromBags(state, itemId, qty);

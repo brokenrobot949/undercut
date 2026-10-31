@@ -439,6 +439,19 @@ As built (Oct 31, 2026; costs and standing gates are in `data/upgrades.js`):
 - A listing keeps the auction house cut it was posted with.
 - In the sim, bots buy upgrades only with gold left over after saving for their next training rank. They end day 60 with 30–230 g instead of 130–400 g.
 
+## Late-game gold sinks
+
+Added in Phase 4 (Oct 31, 2026) because gold piled up once every upgrade was bought. All prices and bonuses are in `data/shop-extras.js`.
+
+| Kind | What it does | Items and prices |
+| --- | --- | --- |
+| Decor | Looks only; shown in the "Your shop" panel on the Shop tab | Brass counter bell 10 g, Hanging lanterns 15 g, Rug from the far markets 20 g, Display rack of blades 25 g, Stained-glass window 60 g |
+| Sign styles | Looks only; change the lettering of your shop's name in the header, on top of the standing banner. Switch between owned styles, or back to the plain sign, any time | Carved oak sign 10 g, Ember lettering 25 g, Gilded frame 50 g |
+| Guild donations | From Honored. A bonus for 24 hours; giving again adds another day, up to 3 days ahead | Sponsor a caravan 3 g (hero trips hired while it runs bring 15% more gathered materials), Fund the night watch 2 g (listing deposits halved), Host a guild feast 4 g (commissions posted while it runs pay 10% more) |
+| Trophies | Looks only; shown in the trophy case | Gilded anvil 50 g, Merchant prince's scales 100 g, Crystal hourglass 150 g, Dragon-bone abacus 250 g, Crown of the market 500 g |
+
+Everything together costs about 1,100 g, plus about 9 g a day to keep all three donations running. In the sim, bots start on these only after every upgrade is bought. In the Phase 4 sim run, the steady bots spent 180–390 g on them by day 70 and bought 6 to 9 of the 13 items, so the trophies stay a long-term goal. Their gold on day 60 fell from 52–297 g to 33–150 g, and the gate days didn't move. Save version 12 adds the `extras` record (owned decor, signs and trophies, the sign in use, and when each donation ends).
+
 ## Market events
 
 Events shift demand or supply for a few hours to a few days, so the market keeps moving and reading it pays off. A town crier line on the Shop tab announces each event as it starts, and Ledger level 3 warns 6 hours early.
@@ -658,7 +671,8 @@ All open design calls are settled.
 | Faction, capital and guild names | Ember Pact and Kragmar, Azure Crown and Aldmere |
 | Race names | Hornkin and Risen |
 | Material and herb names | As written in Materials and smelting. Stones for tiers 3–5 use real rock names (ironstone, flintstone, basalt), and leathers, two herbs and two vials were renamed (Oct 30, 2026), to keep clear of the original game's names |
+| Phase 4 names | Gold-sink decor, sign styles, donations and trophies as listed under Late-game gold sinks (approved Oct 31, 2026) |
 | Phase 3 names | Quartermaster recipes, masterwork recipes and raid destinations as listed above (approved Oct 31, 2026). Wyrmrest, Windrunner, Shadowhide, "Flask of…" and "… Depths" or "Molten …" raid names were rejected as too close to the original game |
-| Sound | In scope: a small set of effects in Phase 4 |
+| Sound | A small set of effects, added in Phase 4 |
 | Pacing | About 6 to 8 weeks to the full endgame |
 | Save slots | One save with export, plus "New game" |

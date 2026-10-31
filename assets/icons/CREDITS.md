@@ -6,6 +6,7 @@ This file is written by `node tools/copy-icons.js`.
 
 | Icon file | Artist |
 | --- | --- |
+| abacus.svg | Delapouite |
 | animal-hide.svg | Delapouite |
 | anvil.svg | Lorc |
 | armor-cuisses.svg | Delapouite |
@@ -28,6 +29,7 @@ This file is written by `node tools/copy-icons.js`.
 | burning-embers.svg | Lorc |
 | cape.svg | Delapouite |
 | cape-armor.svg | Delapouite |
+| caravan.svg | Delapouite |
 | cauldron.svg | DarkZaitzev |
 | chest-armor.svg | Delapouite |
 | cloak.svg | Lucas |
@@ -37,6 +39,7 @@ This file is written by `node tools/copy-icons.js`.
 | corked-tube.svg | Lorc |
 | crafting.svg | Delapouite |
 | crested-helmet.svg | Lorc |
+| crown.svg | Lorc |
 | crystal-cluster.svg | Lorc |
 | crystal-growth.svg | Lorc |
 | crystal-shine.svg | Lorc |
@@ -67,6 +70,7 @@ This file is written by `node tools/copy-icons.js`.
 | herbs-bundle.svg | Delapouite |
 | hood.svg | Lorc |
 | horseshoe.svg | Delapouite |
+| hourglass.svg | Lorc |
 | knight-banner.svg | Delapouite |
 | knot.svg | Delapouite |
 | layered-armor.svg | Lorc |
@@ -85,6 +89,7 @@ This file is written by `node tools/copy-icons.js`.
 | mining.svg | Lorc |
 | mushroom.svg | Lorc |
 | ninja-armor.svg | Delapouite |
+| old-lantern.svg | Delapouite |
 | ore.svg | Faithtoken |
 | pauldrons.svg | Skoll |
 | pestle-mortar.svg | Skoll |
@@ -93,12 +98,16 @@ This file is written by `node tools/copy-icons.js`.
 | powder.svg | Lorc |
 | powder-bag.svg | Delapouite |
 | quiver.svg | Delapouite |
+| red-carpet.svg | Delapouite |
+| ringing-bell.svg | Lorc |
+| roast-chicken.svg | Lorc |
 | rock.svg | Lorc |
 | rolled-cloth.svg | Delapouite |
 | rolling-dices.svg | Delapouite |
 | rune-stone.svg | Lorc |
 | salt-shaker.svg | Lorc |
 | scale-mail.svg | Lorc |
+| scales.svg | Lorc |
 | scroll-quill.svg | Delapouite |
 | sewing-needle.svg | Lorc |
 | sewing-string.svg | Delapouite |
@@ -123,6 +132,7 @@ This file is written by `node tools/copy-icons.js`.
 | stone-wheel.svg | Delapouite |
 | sunflower.svg | Delapouite |
 | sunrise.svg | Lorc |
+| sword-array.svg | Lorc |
 | sword-smithing.svg | Lorc |
 | thor-hammer.svg | Delapouite |
 | tied-scroll.svg | Lorc |
@@ -136,7 +146,9 @@ This file is written by `node tools/copy-icons.js`.
 | walking-boot.svg | Lorc |
 | war-pick.svg | Delapouite |
 | warhammer.svg | Delapouite |
+| watchtower.svg | Delapouite |
 | whirlwind.svg | Lorc |
+| window.svg | Delapouite |
 | wing-cloak.svg | Lorc |
 | winter-gloves.svg | Delapouite |
 | wool.svg | Delapouite |

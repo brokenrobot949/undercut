@@ -7,6 +7,7 @@ import { createStations } from './crafting.js';
 import { createSkills, createKnownRecipes, recipeProfession } from './skills.js';
 import { recipes } from '../../data/recipes.js';
 import { createUpgrades } from './upgrades.js';
+import { createExtras } from './shop-extras.js';
 
 // Every key starts with "undercut:" because other games share this web address.
 export const SAVE_KEY = 'undercut:save';
@@ -83,6 +84,11 @@ const migrations = {
   // catch-up, with the first events at least a day away.
   10: (save) => {
     save.events = null;
+    return save;
+  },
+  // Version 12 (Phase 4): decor, sign styles, trophies and guild donations, none owned.
+  11: (save) => {
+    save.extras = createExtras();
     return save;
   },
 };

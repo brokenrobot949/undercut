@@ -1,8 +1,8 @@
 // Icon artists shown on the Credits screen. Written by `node tools/copy-icons.js`; don't edit by hand.
 
 export const iconArtists = [
-  { name: "Lorc", icons: 65 },
-  { name: "Delapouite", icons: 59 },
+  { name: "Lorc", icons: 71 },
+  { name: "Delapouite", icons: 65 },
   { name: "Skoll", icons: 3 },
   { name: "Lucas", icons: 2 },
   { name: "Carl Olsen", icons: 1 },

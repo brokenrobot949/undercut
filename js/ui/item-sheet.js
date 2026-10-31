@@ -92,7 +92,7 @@ export function openItemSheet(ctx, itemId) {
         : choice.price < low ? ['You will be the cheapest (lowest other: ', coins(low), ').']
           : choice.price === low ? ['Same as the lowest. Older listings sell first at the same price.']
             : ['Above the lowest (', coins(low), '). Sells only once cheaper ones are gone.']);
-      const deposit = depositFor(item, choice.listQty, choice.hours, depositMult(ctx.state));
+      const deposit = depositFor(item, choice.listQty, choice.hours, depositMult(ctx.state, ctx.now()));
       const net = choice.price - cutOn(choice.price, cutRate(ctx.state));
       fill(summary, 'Deposit ', coins(deposit), ' (back if it sells). You get ', coins(net * choice.listQty),
         ` for all ${choice.listQty} after the ${+(cutRate(ctx.state) * 100).toFixed(1)}% cut.`);

@@ -3,6 +3,7 @@
 import { el, setTheme, updateLive, uiIcon, tickingCoins } from './components.js';
 import { getFaction, getStanding } from '../engine/game.js';
 import { shopSigns } from '../../data/guild.js';
+import { signStyleOf } from '../engine/shop-extras.js';
 import { openSettings } from './settings.js';
 import { renderShop, TUTORIAL_TABS } from './shop.js';
 import { tutorialStep, stepMet } from '../engine/tutorial.js';
@@ -44,7 +45,7 @@ export function mountApp(root, ctx) {
   function renderHeader() {
     const { state } = ctx;
     updateLive(ctx.now());
-    const key = `${state.copper}|${state.reputation}|${state.player.name}|${state.player.factionId}`;
+    const key = `${state.copper}|${state.reputation}|${state.player.name}|${state.player.factionId}|${state.extras?.sign}`;
     if (key === headerKey) return;
     headerKey = key;
     const faction = getFaction(state);
@@ -54,7 +55,7 @@ export function mountApp(root, ctx) {
 
     header.replaceChildren(
       el('div', { class: 'header-title' },
-        el('div', { class: `shop-name sign-${shopSigns[current.id].sign}` }, `${state.player.name}'s Shop`),
+        el('div', { class: `shop-name sign-${shopSigns[current.id].sign}${signStyleOf(state) ? ` sign-style-${signStyleOf(state)}` : ''}` }, `${state.player.name}'s Shop`),
         el('div', { class: 'standing' },
           el('span', {}, current.name, shopSigns[current.id].title ? el('span', { class: 'shop-title' }, ` · ${shopSigns[current.id].title}`) : null),
           el('div', { class: 'bar', role: 'progressbar', 'aria-label': 'Guild standing',

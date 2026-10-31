@@ -106,7 +106,7 @@ export function postCommission(state, now, forced = null) {
     recipeId: recipe.id,
     qty,
     delivered: 0,
-    pay: Math.round(type.payMult * commissionPayMult(state) * value * qty),
+    pay: Math.round(type.payMult * commissionPayMult(state, now) * value * qty),
     rep: commissionRep(type, item, value * qty),
     postedAt: now,
     expiresAt,

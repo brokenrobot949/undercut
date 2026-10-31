@@ -28,6 +28,8 @@ import { queueCraft, maxCraftable, smeltAtCity, queueSlots } from '../js/engine/
 import { upgrades } from '../data/upgrades.js';
 import { quartermasterRecipes, buyQuartermasterRecipe } from '../js/engine/quartermaster.js';
 import { nextUpgrade, buyUpgrade } from '../js/engine/upgrades.js';
+import { buyDecor, buyTrophy, buySignStyle, donate, donationOffer, donationEndsAt } from '../js/engine/shop-extras.js';
+import { decor, signStyles, donations, trophies } from '../data/shop-extras.js';
 import { hireHero, hireFee, zonesFor, raidZonesFor, gatheredProfessions, expeditionSlots, regularsInTown } from '../js/engine/heroes.js';
 import { nextWing, buyWing } from '../js/engine/wings.js';
 import { zoneById } from '../data/zones.js';
@@ -362,6 +364,29 @@ function botCheckIn(bot, state, now, stats) {
     stats.upgradeSpend += best.n.cost;
     stats.upgradeLevels++;
   }
+  // Gold sinks, once every upgrade is bought: keep each donation running while
+  // it costs under 10% of the spare gold, then buy decor, signs and trophies,
+  // cheapest first, while each costs under 30%.
+  if (upgrades.every((u) => !nextUpgrade(state, u.id))) {
+    for (const d of donations) {
+      if (!donationEndsAt(state, d.id, now) && donationOffer(state, d.id, now).ready && d.cost <= (state.copper - reserve()) * 0.1) {
+        donate(state, d.id, now);
+        stats.extrasSpend += d.cost;
+      }
+    }
+    const x = state.extras;
+    const shopping = [
+      ...decor.filter((d) => !x.decor[d.id]).map((d) => ({ cost: d.cost, buy: () => buyDecor(state, d.id) })),
+      ...signStyles.filter((g) => !x.signs[g.id]).map((g) => ({ cost: g.cost, buy: () => buySignStyle(state, g.id) })),
+      ...trophies.filter((t) => !x.trophies[t.id]).map((t) => ({ cost: t.cost, buy: () => buyTrophy(state, t.id) })),
+    ].sort((a, b) => a.cost - b.cost);
+    for (const item of shopping) {
+      if (item.cost > (state.copper - reserve()) * 0.3) break;
+      item.buy();
+      stats.extrasSpend += item.cost;
+      stats.extrasBought++;
+    }
+  }
 
   const lvls = Object.fromEntries(profs.map((p) => [p, levelingRecipe(state, now, p)]));
 
@@ -531,7 +556,7 @@ function botCheckIn(bot, state, now, stats) {
 function botRun(bot, seed) {
   const state = newGame({ name: bot.name, factionId: 'red', professionId: bot.prof, seed, now: START });
   const stats = { sold: {}, listed: {}, firstSale: null, heroFees: 0, deposits: 0, relists: 0, flips: 0, flipStock: {}, wingDays: [], raids: 0,
-    levelCrafts: 0, vendored: 0, recipeSpend: 0, upgradeSpend: 0, upgradeLevels: 0, scrollsRead: 0, junkSold: 0, rep: {}, commissions: 0, commissionGold: 0, gold: {}, skill: {}, reached: {}, flooded: {} };
+    levelCrafts: 0, vendored: 0, recipeSpend: 0, upgradeSpend: 0, upgradeLevels: 0, extrasSpend: 0, extrasBought: 0, scrollsRead: 0, junkSold: 0, rep: {}, commissions: 0, commissionGold: 0, gold: {}, skill: {}, reached: {}, flooded: {} };
   const checkpoints = [1, 3, 7, 14, 30, 60];
   for (let t = START; t <= START + RUN_DAYS * DAY; t += bot.every * HOUR) {
     botCheckIn(bot, state, t, stats);
@@ -577,7 +602,7 @@ function botReport() {
     console.log(`${pad(bot.name, 10)}${gold}${lpad(`${Math.round(first)} min`, 10)}${lpad(gsc(avg((r) => r.heroFees)), 11)}${lpad(gsc(avg((r) => r.deposits)), 10)}`);
     console.log(`${pad('', 10)}skill ${[1, 3, 7, 14, 30, 60].map((d) => `d${d} ${Math.round(avg((r) => r.skill[d] ?? 0))}`).join(', ')}` +
       `; reputation d7 ${Math.round(avg((r) => r.rep[7] ?? 0))}, d30 ${Math.round(avg((r) => r.rep[30] ?? 0))}; ${Math.round(avg((r) => r.commissions))} commissions (${gsc(avg((r) => r.commissionGold))})` +
-      `; ${Math.round(avg((r) => r.levelCrafts))} leveling crafts, ${Math.round(avg((r) => r.vendored))} vendored, ${gsc(avg((r) => r.recipeSpend))} on recipes, ${gsc(avg((r) => r.upgradeSpend))} on ${avg((r) => r.upgradeLevels).toFixed(0)} upgrade levels`);
+      `; ${Math.round(avg((r) => r.levelCrafts))} leveling crafts, ${Math.round(avg((r) => r.vendored))} vendored, ${gsc(avg((r) => r.recipeSpend))} on recipes, ${gsc(avg((r) => r.upgradeSpend))} on ${avg((r) => r.upgradeLevels).toFixed(0)} upgrade levels, ${gsc(avg((r) => r.extrasSpend))} on gold sinks (${avg((r) => r.extrasBought).toFixed(0)} of 13 bought)`);
     for (const r of runs) {
       for (const [id, n] of Object.entries(r.listed)) allListed[id] = (allListed[id] || 0) + n;
       for (const [id, n] of Object.entries(r.sold)) allSold[id] = (allSold[id] || 0) + n;
