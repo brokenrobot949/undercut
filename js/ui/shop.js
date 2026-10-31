@@ -15,10 +15,12 @@ import { guildTips } from '../../data/guild.js';
 import { tuning } from '../../data/tuning.js';
 import { upgrades } from '../../data/upgrades.js';
 import { nextWing, buyWing } from '../engine/wings.js';
-import { activeEvents, crierLine, glutLeft } from '../engine/events.js';
+import { activeEvents, crierLine, glutLeft, upcomingEvents } from '../engine/events.js';
+import { upgradeById } from '../../data/upgrades.js';
+const eventWarnHoursAt3 = upgradeById.ledger.warnHours;
 import { eventById } from '../../data/events.js';
 import { upgradeLevel, nextUpgrade, buyUpgrade, queueSlotsFor, craftTimeMult, bonusBarChance, bagSlotsFor, cutRate, depositMult,
-  listingSlotsFor, boardSizeFor, expeditionSlotsFor, commissionPayMult } from '../engine/upgrades.js';
+  listingSlotsFor, boardSizeFor, expeditionSlotsFor, commissionPayMult, eventWarnHours } from '../engine/upgrades.js';
 import { itemById } from '../../data/items.js';
 import { professions, professionById } from '../../data/professions.js';
 import { nextTraining, trainRank, trainerRecipes, learnRecipe, recipeColor, hasProfession } from '../engine/skills.js';
@@ -107,13 +109,17 @@ function upgradeEffect(state, id) {
     case 'table': return `${boardSizeFor(state)} heroes on the board`;
     case 'charter': return `${expeditionSlotsFor(state)} heroes out at once`;
     case 'counter': return `${commissionSlots(state)} commission slots${commissionPayMult(state) > 1 ? `, pay +${pct(commissionPayMult(state) - 1)}` : ''}`;
+    case 'ledger': return ['no price history', '7-day price charts', 'price charts and sell-time estimates', `charts, estimates and event warnings ${eventWarnHoursAt3} h early`][upgradeLevel(state, 'ledger')];
     default: return '';
   }
 }
 
-// The town crier: market events running now, and when each one ends.
+// The town crier: market events running now, and when each one ends. With
+// the top-level Ledger, also the ones starting soon.
 function crierPanel(ctx) {
   const running = activeEvents(ctx.state);
+  const warn = eventWarnHours(ctx.state);
+  const soon = warn ? upcomingEvents(ctx.state, ctx.now(), warn) : [];
   return el('section', { class: 'panel crier' },
     el('h2', {}, 'Town crier'),
     running.length ? el('ul', { class: 'crier-list' }, running.map((e) => el('li', {},
@@ -122,7 +128,10 @@ function crierPanel(ctx) {
         e.itemId ? [el('button', { class: 'link', type: 'button', onclick: () => openItemSheet(ctx, e.itemId) }, itemById[e.itemId].name), ' · '] : null,
         eventById[e.type].kind !== 'glut' ? ['Ends in ', countdown(e.endsAt)]
           : glutLeft(ctx.state, e) ? [`${glutLeft(ctx.state, e)} left · gone in at most `, countdown(e.endsAt)] : 'All sold.'))))
-      : el('p', { class: 'dim' }, 'No news in the city today. A quiet market.'));
+      : el('p', { class: 'dim' }, 'No news in the city today. A quiet market.'),
+    soon.length ? [el('h3', {}, 'Coming soon (from your Ledger)'), el('ul', { class: 'crier-list' }, soon.map((e) => el('li', {},
+      el('p', {}, eventById[e.type].name),
+      el('p', { class: 'small dim' }, 'Starts in ', countdown(e.startsAt)))))] : null);
 }
 
 // Your standing, progress to the next one, what it unlocks, and the full ladder.

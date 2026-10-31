@@ -8,9 +8,11 @@ import { knowsRecipe, learnFromScroll, hasProfession } from '../engine/skills.js
 import { recipeById } from '../../data/recipes.js';
 import { tuning } from '../../data/tuning.js';
 import { bagCount } from '../engine/bags.js';
-import { depositMult, cutRate } from '../engine/upgrades.js';
+import { depositMult, cutRate, ledgerLevel } from '../engine/upgrades.js';
+import { priceChart } from './price-chart.js';
 import {
   marketValue, demandTag, demandPerHour, supplyDays, scarcity, vendorPrice, depositFor, listedUnits, cutOn,
+  priceHistory, estimateSale,
 } from '../engine/market.js';
 import {
   undercutPrice, matchPrice, lowestOtherPrice, listItem, quoteBuy, buyItems, sellToVendor, buyFromVendor,
@@ -18,6 +20,13 @@ import {
 
 export const TAG_LABELS = { hot: 'Hot', steady: 'Steady', slow: 'Slow', flooded: 'Flooded' };
 const TIER_NAMES = ['', 'Copper', 'Bronze', 'Iron', 'Moonsilver', 'Starmetal'];
+
+// The Ledger's sell-time estimate, in words.
+function saleText({ soldShare, hours }) {
+  if (hours !== null) return `Ledger: likely sells out in about ${hours < 1 ? 'under an hour' : `${Math.round(hours)} h`}.`;
+  if (soldShare >= 0.1) return `Ledger: about ${Math.round(soldShare * 100)}% likely to sell before it expires.`;
+  return 'Ledger: unlikely to sell at this price.';
+}
 
 export function openItemSheet(ctx, itemId) {
   const item = itemById[itemId];
@@ -60,7 +69,9 @@ export function openItemSheet(ctx, itemId) {
       el('dt', {}, 'Lowest listing'), el('dd', {}, low ? coins(low) : 'none'),
       el('dt', {}, 'Market value (24 h)'), el('dd', {}, value ? coins(value) : ['about ', coins(state.market.items[itemId].fair), el('span', { class: 'dim' }, ' (no sales yet)')]),
       el('dt', {}, 'Demand'), el('dd', {}, el('span', { class: `tag tag-${demandTag(state, item)}` }, TAG_LABELS[demandTag(state, item)])),
-      el('dt', {}, 'Vendor pays'), el('dd', {}, coins(vendorPrice(item))));
+      el('dt', {}, 'Vendor pays'), el('dd', {}, coins(vendorPrice(item))),
+      ledgerLevel(state) >= 1 ? el('dd', { class: 'kv-wide' }, priceChart(priceHistory(state, itemId, ctx.now()), item.base))
+        : el('dd', { class: 'kv-wide small dim' }, 'The Ledger shop upgrade adds a 7-day price chart here.'));
   }
 
   function sellSection(have) {
@@ -71,6 +82,7 @@ export function openItemSheet(ctx, itemId) {
     const priceInput = coinInput({ value: choice.price, label: 'Price each', onChange: () => update() });
     const lowNote = el('p', { class: 'small' });
     const summary = el('p', { class: 'small dim' });
+    const estimate = el('p', { class: 'small estimate' });
     const qty = stepper({ value: choice.listQty, max: have, onChange: (v) => { choice.listQty = v; update(); } });
 
     function update() {
@@ -84,6 +96,7 @@ export function openItemSheet(ctx, itemId) {
       const net = choice.price - cutOn(choice.price, cutRate(ctx.state));
       fill(summary, 'Deposit ', coins(deposit), ' (back if it sells). You get ', coins(net * choice.listQty),
         ` for all ${choice.listQty} after the ${+(cutRate(ctx.state) * 100).toFixed(1)}% cut.`);
+      if (ledgerLevel(ctx.state) >= 2) fill(estimate, saleText(estimateSale(ctx.state, itemId, choice.price, choice.listQty, choice.hours, ctx.now())));
     }
     const setPrice = (p) => priceInput.set(p);
     update();
@@ -105,6 +118,7 @@ export function openItemSheet(ctx, itemId) {
           onclick: () => { choice.hours = d.hours; draw(); },
         }, `${d.hours} h`)))),
       summary,
+      estimate,
       el('button', { class: 'btn btn-primary wide', type: 'button', onclick: () => act((s, now) => {
         const listing = listItem(s, { itemId, qty: choice.listQty, price: choice.price, hours: choice.hours }, now);
         toast(`Listed ${listing.qty} × ${item.name}. See it under My listings on the Auction tab.`);

@@ -225,16 +225,67 @@ export function buyFromMarket(state, itemId, qty, maxCost, at, hooks) {
 // hooks.onSale(itemId, listing, price, at) and hooks.onExpire(itemId, listing, at)
 // are called for player listings only.
 export function marketTick(state, at, hooks) {
-  for (const item of tradeableItems) {
-    const m = state.market.items[item.id];
-    driftDemand(state, m);
-    const demand = demandPerHour(state, item);
-    rollHistory(m, at);
-    expireListings(item, m, at, hooks);
-    restockNpc(state, item, m, baseDemandPerHour(state, item) * eventSupplyMult(state, item.id), at);
-    serveBuyers(state, item, m, demand, at, hooks);
-    moveFairPrice(state, item, m, baseDemandPerHour(state, item));
+  for (const item of tradeableItems) tickItem(state, item, state.market.items[item.id], at, hooks);
+}
+
+function tickItem(state, item, m, at, hooks) {
+  driftDemand(state, m);
+  const demand = demandPerHour(state, item);
+  rollHistory(m, at);
+  expireListings(item, m, at, hooks);
+  restockNpc(state, item, m, baseDemandPerHour(state, item) * eventSupplyMult(state, item.id), at);
+  serveBuyers(state, item, m, demand, at, hooks);
+  moveFairPrice(state, item, m, baseDemandPerHour(state, item));
+}
+
+// ---- The Ledger ------------------------------------------------------------
+
+// Average sale price in buckets of `bucketHours` over the last 7 days, oldest
+// first: [{ price, count }], price null for a bucket with no sales.
+export function priceHistory(state, itemId, at, bucketHours = 6) {
+  const m = state.market.items[itemId];
+  rollHistory(m, at);
+  const out = [];
+  for (let b = HISTORY_HOURS / bucketHours - 1; b >= 0; b--) {
+    let count = 0;
+    let sum = 0;
+    for (let i = 0; i < bucketHours; i++) {
+      const slot = (m.histHour - b * bucketHours - i + HISTORY_HOURS * 2) % HISTORY_HOURS;
+      count += m.salesCount[slot];
+      sum += m.salesSum[slot];
+    }
+    out.push({ price: count ? sum / count : null, count });
   }
+  return out;
+}
+
+// How a listing would likely do: plays this one item's market forward on a
+// copy, a few times with different luck, and never touches the real game.
+// Returns { soldShare, hours }: the average share sold before it expires, and
+// the typical hours to sell out (null if it usually doesn't).
+export function estimateSale(state, itemId, price, qty, hours, at, runs = 5) {
+  const item = itemById[itemId];
+  const results = [];
+  for (let r = 0; r < runs; r++) {
+    const src = state.market.items[itemId];
+    const m = { ...src, listings: src.listings.map((l) => ({ ...l })), salesCount: [...src.salesCount], salesSum: [...src.salesSum] };
+    const rng = { seed: state.rng.seed, state: (state.rng.state ^ Math.imul(r + 1, 0x9e3779b1)) >>> 0 };
+    const sim = { ...state, rng, market: { ...state.market, items: { ...state.market.items, [itemId]: m } } };
+    const mine = { id: -1, seller: 'player', price: Math.max(1, Math.round(price)), qty, startQty: qty, postedAt: at, expiresAt: at + hours * HOUR, deposit: 0 };
+    insertListing(m.listings, mine);
+    let sold = 0;
+    let doneAt = null;
+    const hooks = { onSale(id, l, p, t) { if (l === mine && ++sold === qty) doneAt = t; }, onExpire() {} };
+    let t = at - (at % (HOUR / TICKS_PER_HOUR));
+    while (doneAt === null && t < mine.expiresAt) {
+      t += HOUR / TICKS_PER_HOUR;
+      tickItem(sim, item, m, t, hooks);
+    }
+    results.push({ share: sold / qty, hours: doneAt === null ? null : (doneAt - at) / HOUR });
+  }
+  const soldShare = results.reduce((n, x) => n + x.share, 0) / runs;
+  const times = results.filter((x) => x.hours !== null).map((x) => x.hours).sort((a, b) => a - b);
+  return { soldShare, hours: times.length * 2 > runs ? times[Math.floor(times.length / 2)] : null };
 }
 
 // Long absence: player listings have all expired; the market starts over.

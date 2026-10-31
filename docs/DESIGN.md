@@ -413,6 +413,7 @@ As built (Oct 31, 2026; costs and standing gates are in `data/upgrades.js`):
 - First-level costs: bags 50 s, listing board 75 s, queue and bellows 1 g, tools 1.5 g, tavern table 2 g, counter 2.5 g, expedition charter 3 g, auctioneer's seal 5 g. Buying every level of all nine costs about 270 g.
 - Standing gates: the first level of each needs none. Later levels need Friendly, then Honored, and the top levels of the seal and charter need Revered.
 - Profession wings: the second costs 3 g at Friendly, the third 8 g at Honored, and you pick which profession each one opens. A new wing comes with that profession's starting materials. Costs are in `data/professions.js`.
+- Ledger: 2 g, then 3.6 g, then 6.5 g, with level 3 needing Friendly. Level 1 adds a 7-day price chart (6-hour average sale prices against a dashed base-value line) to every item sheet. Level 2 adds a sell-time estimate under the listing form. It replays that item's market forward 5 times on a copy and reports "likely sells out in about N h", a chance to sell, or "unlikely to sell". Level 3 adds a "Coming soon" list to the town crier, 6 hours ahead.
 - Tools speed up every workstation except the forge, and bellows speed up the forge.
 - A listing keeps the auction house cut it was posted with.
 - In the sim, bots buy upgrades only with gold left over after saving for their next training rank. They end day 60 with 30–230 g instead of 130–400 g.

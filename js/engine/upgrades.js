@@ -84,6 +84,10 @@ export function craftTimeMult(state, stationId) {
   return Math.max(0.1, 1 - per(state, stationId === 'forge' ? 'bellows' : 'tools'));
 }
 
+// Ledger level (0 to 3) and how many hours ahead it warns about events (0 below level 3).
+export const ledgerLevel = (state) => upgradeLevel(state, 'ledger');
+export const eventWarnHours = (state) => (ledgerLevel(state) >= 3 ? upgradeById.ledger.warnHours : 0);
+
 // Chance of an extra bar per bar smelted at your forge (top-level bellows only).
 export function bonusBarChance(state) {
   return maxed(state, 'bellows') ? upgradeById.bellows.max.bonusBarChance : 0;

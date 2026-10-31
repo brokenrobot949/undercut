@@ -722,3 +722,14 @@ input[type="number"] {
 .crier-list li:first-child { border-top: 0; padding-top: 0; }
 .crier-list p { margin: 0 0 2px; }
 .panel.crier:has(li) { border-color: var(--highlight); }
+
+/* ---- Ledger -------------------------------------------------------------- */
+
+.kv .kv-wide { grid-column: 1 / -1; word-break: normal; margin-top: 6px; }
+.chart-wrap { width: 100%; }
+.price-chart { display: block; width: 100%; height: 90px; background: var(--panel-raised); border-radius: var(--radius); }
+.chart-line { fill: none; stroke: var(--accent-strong); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart-dot { fill: var(--accent-strong); }
+.chart-base { stroke: var(--text-dim); stroke-width: 1; stroke-dasharray: 4 4; }
+.chart-head, .chart-foot { display: flex; justify-content: space-between; gap: 8px; margin: 2px 0; }
+.estimate { color: var(--highlight); }

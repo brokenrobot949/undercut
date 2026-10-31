@@ -30,6 +30,9 @@ import { wings } from '../data/professions.js';
 import { debugForceEvent, glutLeft } from '../js/engine/events.js';
 import { eventById } from '../data/events.js';
 import { demandPerHour, baseDemandPerHour } from '../js/engine/market.js';
+import { priceHistory, estimateSale } from '../js/engine/market.js';
+import { eventWarnHours } from '../js/engine/upgrades.js';
+import { upcomingEvents } from '../js/engine/events.js';
 import { encodeExport, decodeExport, migrate, writeSave, readSave } from '../js/engine/save.js';
 
 const H = 60 * 60 * 1000;
@@ -712,6 +715,30 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   const m = migrate(structuredClone(old));
   catchUp(m, t0 + H);
   check('version 10 save gets an event calendar', m.version === SAVE_VERSION && m.events.list.length > 0);
+}
+
+// The Ledger: price history, sell-time estimates that change nothing, event warnings.
+{
+  const s = game(7);
+  s.events.list = [];
+  s.timers = s.timers.filter((x) => !x.type.startsWith('event'));
+  catchUp(s, t0 + 2 * DAY);
+  const now = s.clock.lastSeenAt;
+  const hist = priceHistory(s, 'copper-bar', now);
+  check('price history covers 7 days in 6-hour buckets', hist.length === 28 && hist.at(-1).price > 0 && hist.at(-1).count > 0);
+  const before = JSON.stringify(s);
+  const fair = s.market.items['copper-bar'].fair;
+  const cheap = estimateSale(s, 'copper-bar', Math.round(fair * 0.9), 20, 24, now);
+  const dear = estimateSale(s, 'copper-bar', Math.round(fair * 1.3), 20, 24, now);
+  check('a sale estimate leaves the game untouched', JSON.stringify(s) === before);
+  check('a cheaper listing is estimated to sell sooner', cheap.hours !== null && cheap.soldShare === 1 && dear.soldShare < cheap.soldShare, `${cheap.hours?.toFixed(1)} h vs ${Math.round(dear.soldShare * 100)}%`);
+  s.copper = 10_000_000;
+  s.reputation = 99999;
+  check('event warnings need Ledger level 3', eventWarnHours(s) === 0);
+  while (nextUpgrade(s, 'ledger')) buyUpgrade(s, 'ledger');
+  const e = { id: 999, type: 'tournament', startsAt: now + 5 * H, endsAt: now + 29 * H, status: 'planned', itemId: null };
+  s.events.list.push(e);
+  check('the top Ledger warns 6 hours ahead', eventWarnHours(s) === 6 && upcomingEvents(s, now, 6).includes(e) && !upcomingEvents(s, now - 2 * H, 6).includes(e));
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');

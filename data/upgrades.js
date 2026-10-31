@@ -61,6 +61,13 @@ export const upgrades = [
   { id: 'counter', name: 'Counter', blurb: '+1 commission slot, commission pay +5%',
     levels: 2, cost: 25000, growth: 1.8, per: 1, payPer: 0.05,
     standing: [null, 'friendly'] },
+
+  // The Ledger. Level 1: a 7-day price chart on every item. Level 2: an
+  // estimate of how fast a listing will sell. Level 3: the town crier warns
+  // about events this many hours before they start.
+  { id: 'ledger', name: 'Ledger', blurb: 'Price history, sell-time estimates, then early event warnings',
+    levels: 3, cost: 20000, growth: 1.8, warnHours: 6,
+    standing: [null, null, 'friendly'] },
 ];
 
 export const upgradeById = Object.fromEntries(upgrades.map((u) => [u.id, u]));
