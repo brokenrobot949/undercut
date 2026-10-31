@@ -1,7 +1,7 @@
 // The one item sheet: tap any item anywhere to open it. Market info, your
 // stock, List / Buy / Vendor, and the recipes that make or use it.
 
-import { el, coins, openSheet, stepper, fill, coinInput, toast, coinText } from './components.js';
+import { el, coins, openSheet, stepper, fill, coinInput, toast, coinText, itemIcon } from './components.js';
 import { itemById } from '../../data/items.js';
 import { recipes } from '../../data/recipes.js';
 import { knowsRecipe, learnFromScroll, hasProfession } from '../engine/skills.js';
@@ -40,10 +40,10 @@ export function openItemSheet(ctx, itemId) {
     const have = bagCount(state, itemId);
     const tradeable = item.category !== 'trade' && item.category !== 'junk';
     fill(sheet.body, 
-      el('p', { class: 'small' },
+      el('div', { class: 'item-head' }, itemIcon(itemId, 'lg'), el('p', { class: 'small' },
         el('span', { class: `q-${item.quality}` }, item.quality[0].toUpperCase() + item.quality.slice(1)),
         ` · ${TIER_NAMES[item.tier]} tier · ${item.category}${item.armor ? ` (${item.armor})` : ''} · In bags: `,
-        el('strong', {}, have)),
+        el('strong', {}, have))),
       tradeable ? marketInfo() : item.category === 'junk'
         ? el('p', { class: 'small dim' }, 'Junk a hero brought home. Only a vendor will take it.')
         : el('p', { class: 'small dim' }, `Sold by the trade goods vendor for ${item.vendorBuy} copper each.`),

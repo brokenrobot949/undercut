@@ -606,19 +606,52 @@ input[type="number"] {
 
 /* ---- Toast ----------------------------------------------------------- */
 
-.toast {
+.toast-stack {
   position: fixed;
   left: 50%;
   bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 16px);
   transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 32px);
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  z-index: 20;
+  pointer-events: none;
+}
+.toast {
   background: var(--panel-raised);
   border: 1px solid var(--accent-strong);
   color: var(--text);
   padding: 10px 16px;
   border-radius: var(--radius);
   font-weight: 600;
-  z-index: 20;
-  max-width: calc(100% - 32px);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.4);
+  animation: toast-in 0.22s ease-out;
+}
+.toast-out { opacity: 0; transform: translateY(6px); transition: opacity 0.25s, transform 0.25s; }
+.toast-sold {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: var(--highlight);
+  animation: toast-pop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.toast-sold strong { color: var(--highlight); }
+.toast-pay { margin-left: auto; white-space: nowrap; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes toast-pop { from { opacity: 0; transform: scale(0.85) translateY(8px); } }
+
+/* Gold counting up in the header after a collect or sale. */
+.coin-tick { display: inline-flex; transition: transform 0.2s; }
+.coin-up { transform: scale(1.12); color: var(--highlight); }
+
+/* Progress bars fill smoothly. */
+.bar > span { transition: width 0.6s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .toast, .toast-sold { animation: none; }
+  .bar > span, .bar.progress > span, .coin-tick { transition: none; }
 }
 
 /* ---- Tap targets for text links inside lists and tables ----------------- */
@@ -757,3 +790,62 @@ input[type="number"] {
 }
 .shop-title { color: var(--highlight); font-weight: 600; }
 .older-recipes summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--text-dim); }
+
+/* ---- Icons ------------------------------------------------------------- */
+
+/* An icon is a mask filled with its color (the text color unless set). */
+.icon {
+  display: inline-block;
+  width: 1.4em;
+  height: 1.4em;
+  flex: none;
+  background-color: currentColor;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  vertical-align: middle;
+}
+/* An item's icon on a dark tile; the border shows its quality. */
+.icon-tile {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border: 2px solid var(--q-common);
+  border-radius: 8px;
+  background: var(--bg-deep);
+}
+.icon-tile .icon { width: 74%; height: 74%; }
+.icon-sm { width: 28px; height: 28px; border-width: 1.5px; border-radius: 6px; }
+.icon-md { width: 40px; height: 40px; }
+.icon-lg { width: 64px; height: 64px; border-radius: 12px; }
+
+/* List rows with an item icon on the left. */
+.market-row.with-icon {
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "icon name price" "icon sub tag";
+}
+.market-row.with-icon > .icon-tile { grid-area: icon; margin-right: 2px; }
+.my-listing.with-icon { grid-template-columns: auto 1fr auto; }
+.my-listing.with-icon > .icon-tile { grid-row: 1 / span 2; }
+.my-listing.with-icon .market-sub { grid-column: 2; }
+.my-listing.with-icon .small-btn { grid-column: 3; }
+.queue-row.with-icon { grid-template-columns: auto 1fr auto; }
+.queue-row.with-icon > .icon-tile { grid-row: 1 / span 2; }
+.queue-row.with-icon .small-btn { grid-column: 3; }
+.queue-row.with-icon .progress { grid-column: 2 / -1; }
+
+/* Bag tiles: icon top left, count bottom right. */
+.bag-tile .icon-tile { border: 0; background: none; width: 36px; height: 36px; }
+.bag-tile .icon-tile .icon { width: 100%; height: 100%; }
+
+/* The item sheet's header line. */
+.item-head { display: flex; gap: 12px; align-items: center; }
+
+/* Tabs: icon above the label. */
+.tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.tab .icon { width: 22px; height: 22px; }
+.commission-item { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.credits-list { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }

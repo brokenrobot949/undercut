@@ -1,6 +1,6 @@
 // The app shell: header, tab content and the tab bar.
 
-import { el, coins, setTheme, updateLive } from './components.js';
+import { el, setTheme, updateLive, uiIcon, tickingCoins } from './components.js';
 import { getFaction, getStanding } from '../engine/game.js';
 import { shopSigns } from '../../data/guild.js';
 import { openSettings } from './settings.js';
@@ -39,6 +39,7 @@ export function mountApp(root, ctx) {
   root.addEventListener('pointercancel', release, true);
 
   let headerKey = '';
+  let shownCopper = null; // gold last drawn in the header, so a rise can count up
   function renderHeader() {
     const { state } = ctx;
     updateLive(ctx.now());
@@ -58,11 +59,12 @@ export function mountApp(root, ctx) {
           el('div', { class: 'bar', role: 'progressbar', 'aria-label': 'Guild standing',
             'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(Math.round(pct)) },
             el('span', { style: `width:${pct}%` })))),
-      coins(state.copper),
+      tickingCoins(shownCopper ?? state.copper, state.copper),
       el('button', { class: 'menu-btn', type: 'button', 'aria-label': 'Settings',
         onclick: () => openSettings(ctx) },
         el('span'), el('span'), el('span')),
     );
+    shownCopper = state.copper;
   }
 
   function renderTabs() {
@@ -71,6 +73,7 @@ export function mountApp(root, ctx) {
       'aria-selected': String(tab.id === activeTab),
       onclick: () => { activeTab = tab.id; render(); main.scrollTop = 0; },
     },
+      uiIcon(tab.id),
       tab.label,
       // Alert dot: something finished while you were away.
       tab.id === 'shop' && ctx.away && activeTab !== 'shop' ? el('span', { class: 'alert-dot', 'aria-label': 'New' }) : null,

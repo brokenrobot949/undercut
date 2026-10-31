@@ -547,9 +547,15 @@ The interface carries the look: dark panels, a faction accent color, and crisp v
 - **Professions and skills** use the same set: anvil, flask, needle, pickaxe, sickle and skinning knife.
 - Only icons the game uses are copied into the repo, with a credits list by artist and a Credits screen in the game.
 
+As built (Phase 4, Oct 31, 2026):
+
+- `data/icons.js` names each item's icon (`artist/icon-name` from the game-icons.net download) and its tint. Leaving the tint out uses the tier's metal color (copper, bronze, iron, moonsilver, starmetal). Tin and steel have their own colors, and herbs, leathers, potions, gems and junk have named tints.
+- `node tools/copy-icons.js <folder>` copies just the icons in use into `assets/icons/`, recolors them to one tintable color, and rewrites `assets/icons/CREDITS.md` and `data/icon-credits.js`. The game uses 135 icons by 10 artists.
+- Icons appear on bag tiles, auction rows, recipe and queue rows, commission cards, the item sheet and the tab bar. Settings has a Credits screen listing every icon artist.
+
 **Type.** Headings use an open-license display font stored in the repo, such as Cinzel. Body text and numbers use the system font for readability.
 
-**Motion** stays small and quick: coins tick up on collect, a "Sold!" toast, progress bars fill.
+**Motion** stays small and quick: coins tick up on collect, a "Sold!" toast, progress bars fill. As built (Phase 4): the header gold counts up over about half a second whenever it rises. Each sale while you're watching pops a "Sold!" card with the item's icon and what it paid. Messages stack above the tab bar (three at most) and fade after about 3 seconds. Progress bars keep their place when the screen redraws. Phones set to reduce motion get no animation.
 
 **Sound** is a small set of effects added in Phase 4: coins on collect, "sold," hero return and craft complete. They come from a free CC0 sound pack, such as Kenney's. Sound starts only after the player's first tap, with a mute toggle in settings. There is no music.
 

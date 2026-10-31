@@ -2,7 +2,7 @@
 // (category, items in your bags, items your craft uses or makes). Tap any item
 // to buy or sell it.
 
-import { el, coins, countdown, toast } from './components.js';
+import { el, coins, countdown, toast, itemIcon } from './components.js';
 import { tradeableItems, itemById } from '../../data/items.js';
 import { tuning } from '../../data/tuning.js';
 import { lowestListing, listedUnits, demandTag, playerListings } from '../engine/market.js';
@@ -77,7 +77,8 @@ function myListings(ctx) {
   const mine = playerListings(ctx.state);
   return el('section', { class: 'panel' },
     el('h2', {}, `My listings (${mine.length} / ${listingSlotsFor(ctx.state)})`),
-    mine.length ? el('div', { class: 'market-list' }, mine.map(({ itemId, place, listing }) => el('div', { class: 'my-listing' },
+    mine.length ? el('div', { class: 'market-list' }, mine.map(({ itemId, place, listing }) => el('div', { class: 'my-listing with-icon' },
+      itemIcon(itemId, 'sm'),
       el('button', { class: `link item-name q-${itemById[itemId].quality}`, type: 'button', onclick: () => openItemSheet(ctx, itemId) },
         `${listing.qty} × ${itemById[itemId].name}`),
       el('span', { class: 'market-price' }, coins(listing.price), ' each'),
@@ -103,7 +104,8 @@ function marketRow(ctx, item) {
   const lowest = lowestListing(state, item.id);
   const tag = demandTag(state, item);
   const have = state.bags[item.id] || 0;
-  return el('button', { class: 'market-row', type: 'button', onclick: () => openItemSheet(ctx, item.id) },
+  return el('button', { class: 'market-row with-icon', type: 'button', onclick: () => openItemSheet(ctx, item.id) },
+    itemIcon(item.id, 'sm'),
     el('span', { class: `item-name q-${item.quality}` }, item.name),
     el('span', { class: `tag tag-${tag}` }, TAG_LABELS[tag]),
     el('span', { class: 'market-price' }, lowest ? coins(lowest.price) : el('span', { class: 'dim' }, 'none listed')),

@@ -1,7 +1,7 @@
 // Bags tab: storage grid and the trade goods vendor. Tap an item to list it,
 // sell it to a vendor, or see what it's for.
 
-import { el, coins } from './components.js';
+import { el, coins, itemIcon } from './components.js';
 import { items, itemById } from '../../data/items.js';
 import { slotsUsed, bagSlots } from '../engine/bags.js';
 import { openItemSheet } from './item-sheet.js';
@@ -22,6 +22,7 @@ export function renderBags(ctx) {
         ? el('div', { class: 'bag-grid' }, held.map(([id, qty]) => el('button', {
           class: `bag-tile border-${itemById[id].quality}`, type: 'button', onclick: () => openItemSheet(ctx, id),
         },
+          itemIcon(id),
           el('span', { class: 'bag-name' }, itemById[id].name),
           el('span', { class: 'bag-qty' }, qty))))
         : el('p', { class: 'small dim' }, 'Empty. Buy materials on the Auction tab or hire a miner in the Tavern.')),
@@ -29,8 +30,9 @@ export function renderBags(ctx) {
       el('h2', {}, 'Trade goods vendor'),
       el('p', { class: 'small dim' }, 'Fixed prices, always in stock.'),
       el('div', { class: 'market-list' }, items.filter((i) => i.category === 'trade').map((item) => el('button', {
-        class: 'market-row', type: 'button', onclick: () => openItemSheet(ctx, item.id),
+        class: 'market-row with-icon', type: 'button', onclick: () => openItemSheet(ctx, item.id),
       },
+        itemIcon(item.id, 'sm'),
         el('span', { class: 'item-name' }, item.name),
         el('span', { class: 'market-price' }, coins(item.vendorBuy)),
         el('span', { class: 'small dim market-sub' }, `you have ${state.bags[item.id] || 0}`))))),

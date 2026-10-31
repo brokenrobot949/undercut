@@ -1,7 +1,7 @@
 // Shop tab (home): "While you were away", commissions, town crier, and the
 // Trade Guild with its skill trainer.
 
-import { el, coins, comingSoon, formatDuration, countdown, toast, coinText } from './components.js';
+import { el, coins, comingSoon, formatDuration, countdown, toast, coinText, itemIcon, uiIcon } from './components.js';
 import { commissionTypes, commissionTuning } from '../../data/commissions.js';
 import { raceById, classById } from '../../data/races.js';
 import { commissionSlots, canDeliver, deliverCommission, declineCommission, recipeHint, claimTutorialStep } from '../engine/commissions.js';
@@ -180,7 +180,8 @@ function quartermasterOffers(ctx) {
   if (!offers.length) return el('p', { class: 'small dim' }, 'You know every recipe the quartermaster sells for your professions.');
   return el('div', { class: 'market-list trainer-recipes' }, offers.map((o) => {
     const out = itemById[o.recipe.makes.item];
-    return el('div', { class: 'my-listing' },
+    return el('div', { class: 'my-listing with-icon' },
+      itemIcon(out.id, 'sm'),
       el('button', { class: `link item-name q-${out.quality}`, type: 'button', onclick: () => openItemSheet(ctx, out.id) }, out.name),
       el('button', { class: `btn small-btn${o.ready ? ' btn-primary' : ''}`, type: 'button', disabled: !o.ready,
         onclick: () => ctx.act((s) => {
@@ -286,7 +287,7 @@ function commissionCard(ctx, c) {
       el('span', { class: 'commission-type' }, type.name),
       el('span', { class: 'small dim' }, 'Ends in ', countdown(c.expiresAt))),
     el('p', { class: 'small' }, requesterText(c), ' wants'),
-    el('p', {}, el('strong', {}, `${c.qty} × `),
+    el('p', { class: 'commission-item' }, itemIcon(item.id, 'sm'), el('strong', {}, `${c.qty} × `),
       el('button', { class: `link q-${item.quality}`, type: 'button', onclick: () => openItemSheet(ctx, item.id) }, item.name)),
     el('p', { class: 'small' }, 'Pays ', coins(c.pay), ` and ${c.rep} reputation`,
       partial ? ` (paid by the part, ${c.delivered} of ${c.qty} delivered)` : '',

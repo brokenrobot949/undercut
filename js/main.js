@@ -7,7 +7,7 @@ import { gameNow } from './engine/clock.js';
 import { readSave, writeSave, backupAndClear, decodeExport, listBackups, readBackup } from './engine/save.js';
 import { mountApp } from './ui/app.js';
 import { renderNewGame } from './ui/new-game.js';
-import { el, toast, setTheme } from './ui/components.js';
+import { el, toast, soldToast, setTheme } from './ui/components.js';
 
 const VERSION = 'v0.1.0';
 // Absences shorter than this don't open the "While you were away" summary.
@@ -140,8 +140,7 @@ function catchUpNow(asCheckIn) {
     showAway(summary);
   } else {
     summary.lines.forEach((line) => toast(line));
-    const sold = Object.entries(summary.sold);
-    if (sold.length) toast(`Sold! ${sold.map(([id, s]) => `${s.qty} × ${itemById[id].name}`).join(', ')}`);
+    for (const [id, s] of Object.entries(summary.sold)) soldToast(id, s.qty, s.copper);
     for (const o of summary.ordersDone) toast(`Made ${o.qty} × ${itemById[o.item].name}.`);
     for (const r of summary.returns) toast(`${r.name} is back from ${r.zone}. Collect on the Shop tab.`);
   }

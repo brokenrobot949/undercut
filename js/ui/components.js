@@ -1,5 +1,8 @@
 // Shared UI pieces used by every tab.
 
+import { itemIcons, uiIcons, tints, tierTints } from '../../data/icons.js';
+import { itemById } from '../../data/items.js';
+
 // Builds an element: el('div', { class: 'panel', onclick: fn }, child, 'text', ...)
 export function el(tag, props = {}, ...children) {
   const node = document.createElement(tag);
@@ -15,6 +18,28 @@ export function el(tag, props = {}, ...children) {
     node.append(child instanceof Node ? child : document.createTextNode(String(child)));
   }
   return node;
+}
+
+// An icon from assets/icons/, drawn in the text color (or `color`) through a mask.
+// The path is set inline so it resolves against the page, not a stylesheet.
+function iconSpan(ref, color, cls = 'icon') {
+  if (!ref) return null;
+  const url = `url("./assets/icons/${ref.icon.split('/')[1]}.svg")`;
+  return el('span', { class: cls, 'aria-hidden': 'true',
+    style: `-webkit-mask-image:${url};mask-image:${url}${color ? `;color:${color}` : ''}` });
+}
+
+// An item's icon on a dark tile: tinted by its material, bordered by its quality.
+export function itemIcon(itemId, size = 'md') {
+  const item = itemById[itemId];
+  const ref = itemIcons[itemId];
+  const tint = tints[ref?.tint ?? tierTints[item.tier - 1]];
+  return el('span', { class: `icon-tile icon-${size} border-${item.quality}` }, iconSpan(ref, tint));
+}
+
+// A screen icon (tabs, professions, workstations), in the current text color.
+export function uiIcon(key) {
+  return iconSpan(uiIcons[key]);
 }
 
 // Replaces a node's contents. Like el(), skips null/false and flattens arrays
@@ -88,13 +113,57 @@ export function openSheet(title, { onClose } = {}) {
   return { body, close };
 }
 
-let toastTimer = null;
+// Toasts stack above the tab bar, newest at the bottom, and fade after a few
+// seconds. Only the last few stay, so a burst of news doesn't fill the screen.
+const TOAST_MAX = 3;
+function toastStack() {
+  let stack = document.querySelector('.toast-stack');
+  if (!stack) {
+    stack = el('div', { class: 'toast-stack', role: 'status', 'aria-live': 'polite' });
+    (document.querySelector('[data-theme]') || document.body).append(stack);
+  }
+  return stack;
+}
+function showToast(node, ms) {
+  const stack = toastStack();
+  stack.append(node);
+  while (stack.children.length > TOAST_MAX) stack.firstChild.remove();
+  setTimeout(() => {
+    node.classList.add('toast-out');
+    setTimeout(() => node.remove(), 250);
+  }, ms);
+}
 export function toast(message) {
-  document.querySelectorAll('.toast').forEach((t) => t.remove());
-  const node = el('div', { class: 'toast', role: 'status' }, message);
-  (document.querySelector('[data-theme]') || document.body).append(node);
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => node.remove(), 2500);
+  showToast(el('div', { class: 'toast' }, message), 3000);
+}
+
+// "Sold!" with the item's icon and what the sale paid.
+export function soldToast(itemId, qty, copper) {
+  showToast(el('div', { class: 'toast toast-sold' },
+    itemIcon(itemId, 'sm'),
+    el('span', {}, el('strong', {}, 'Sold! '), `${qty} × ${itemById[itemId].name}`),
+    el('span', { class: 'toast-pay' }, '+', coins(copper))), 3500);
+}
+
+const calm = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+// Coins that count up from `from` to `to` copper over about half a second.
+export function tickingCoins(from, to) {
+  const node = el('span', { class: 'coin-tick' }, coins(to));
+  if (to <= from || calm()) return node;
+  node.replaceChildren(coins(from));
+  node.classList.add('coin-up');
+  const start = performance.now();
+  const ms = 650;
+  const step = (t) => {
+    const k = Math.min(1, (t - start) / ms);
+    const eased = 1 - (1 - k) ** 3;
+    node.replaceChildren(coins(from + (to - from) * eased));
+    if (k < 1) requestAnimationFrame(step);
+    else setTimeout(() => node.classList.remove('coin-up'), 300);
+  };
+  requestAnimationFrame(step);
+  return node;
 }
 
 // A number field with − and + buttons. `stepper.value` reads it.
@@ -138,19 +207,22 @@ export function countdown(endsAt) {
 }
 
 // A progress bar from `start` to `end` (game time). Updated every second by the app.
+// It starts at the right width, so a redraw doesn't refill it from empty.
+let liveNow = 0;
 export function progress(start, end) {
-  return el('div', { class: 'bar progress' }, el('span', { 'data-start': String(start), 'data-end': String(end) }));
+  return el('div', { class: 'bar progress' }, el('span', { 'data-start': String(start), 'data-end': String(end),
+    style: `width:${barShare(start, end, liveNow) * 100}%` }));
 }
+const barShare = (start, end, now) => Math.max(0, Math.min(1, (now - start) / (end - start)));
 
 export function updateLive(now) {
+  liveNow = now;
   for (const node of document.querySelectorAll('[data-ends-at]')) {
     const left = Number(node.dataset.endsAt) - now;
     node.textContent = left > 0 ? formatClock(left) : 'done';
   }
   for (const node of document.querySelectorAll('[data-start][data-end]')) {
-    const start = Number(node.dataset.start);
-    const share = (now - start) / (Number(node.dataset.end) - start);
-    node.style.width = `${Math.max(0, Math.min(1, share)) * 100}%`;
+    node.style.width = `${barShare(Number(node.dataset.start), Number(node.dataset.end), now) * 100}%`;
   }
 }
 

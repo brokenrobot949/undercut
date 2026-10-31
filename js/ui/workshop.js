@@ -3,7 +3,7 @@
 // Smelter at the forge. Recipe names are colored by skill-up odds: orange,
 // yellow, green, gray, and red when too hard.
 
-import { el, coins, openSheet, stepper, progress, countdown, fill } from './components.js';
+import { el, coins, openSheet, stepper, progress, countdown, fill, itemIcon } from './components.js';
 import { recipes, recipeById } from '../../data/recipes.js';
 import { itemById } from '../../data/items.js';
 import { tuning } from '../../data/tuning.js';
@@ -97,7 +97,8 @@ function queueRow(ctx, stationId, order, active) {
   const seconds = unitMs(ctx.state, recipe);
   const unitEnd = order.unitStartedAt + seconds;
   const orderEnd = order.unitStartedAt + (order.qty - order.done) * seconds;
-  return el('div', { class: 'queue-row' },
+  return el('div', { class: 'queue-row with-icon' },
+    itemIcon(recipe.makes.item, 'sm'),
     el('span', { class: 'item-name' }, `${itemById[recipe.makes.item].name} × ${order.qty * recipe.makes.qty}`),
     el('span', { class: 'small dim' }, active ? [`${order.done} done · all in `, countdown(orderEnd)] : 'waiting'),
     active ? progress(order.unitStartedAt, unitEnd) : null,
@@ -132,8 +133,9 @@ function recipeRow(ctx, recipe) {
   const can = maxCraftable(state, recipe.id);
   const profit = profitEach(ctx, recipe);
   const color = recipeColor(state, recipe);
-  return el('button', { class: `market-row${color ? ` skill-${color}` : ''}`, type: 'button', onclick: () => openCraftSheet(ctx, recipe),
+  return el('button', { class: `market-row with-icon${color ? ` skill-${color}` : ''}`, type: 'button', onclick: () => openCraftSheet(ctx, recipe),
     'aria-label': color ? `${out.name}, ${colorText(recipe, color)}` : null },
+    itemIcon(out.id, 'sm'),
     el('span', { class: `item-name ${color ? `skill-text-${color}` : `q-${out.quality}`}` }, `${out.name}${recipe.makes.qty > 1 ? ` × ${recipe.makes.qty}` : ''}`),
     el('span', { class: `market-price ${profit >= 0 ? 'profit' : 'loss'}` }, profit >= 0 ? '+' : '−', coins(Math.abs(profit))),
     el('span', { class: 'small dim market-sub' },

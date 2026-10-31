@@ -1,7 +1,7 @@
 // Settings sheet: save export and import, new game, credits, and the hidden
 // debug panel (tap the version line 5 times to turn it on).
 
-import { el, openSheet, toast, formatDuration, fill } from './components.js';
+import { el, openSheet, toast, formatDuration, fill, uiIcon } from './components.js';
 import { encodeExport } from '../engine/save.js';
 import { gameNow } from '../engine/clock.js';
 import { debugAddCopper, debugAddMaterials, debugStartTestTimer } from '../engine/game.js';
@@ -9,6 +9,7 @@ import { debugSetSkill, debugLearnAll, debugUnlockProfessions, skillOf, hasProfe
 import { events, eventById } from '../../data/events.js';
 import { debugForceEvent } from '../engine/events.js';
 import { professions } from '../../data/professions.js';
+import { iconArtists } from '../../data/icon-credits.js';
 
 export function openSettings(ctx) {
   const sheet = openSheet('Settings');
@@ -28,6 +29,8 @@ export function openSettings(ctx) {
         el('h3', {}, 'New game'),
         el('p', { class: 'small dim' }, 'Starts over. Export your save first if you might want it back.'),
         el('button', { class: 'btn btn-danger', type: 'button', onclick: () => { sheet.close(); ctx.newGame(); } }, 'Start a new game')),
+      el('section', { class: 'panel' },
+        el('button', { class: 'btn', type: 'button', onclick: showCredits }, uiIcon('credits'), ' Credits')),
       backupsPanel(),
       state.settings.debug ? debugPanel() : null,
       versionLine(),
@@ -84,6 +87,21 @@ export function openSettings(ctx) {
       } }, 'Load this save'));
   }
 
+  function showCredits() {
+    const box = openSheet('Credits');
+    box.body.append(
+      el('section', { class: 'panel' },
+        el('h3', {}, 'Undercut'),
+        el('p', { class: 'small' }, 'Designed by Rob. Built with Claude.')),
+      el('section', { class: 'panel' },
+        el('h3', {}, 'Icons'),
+        el('p', { class: 'small dim' }, 'From game-icons.net, under the Creative Commons Attribution 3.0 license (CC BY 3.0). Recolored for the game. Thank you to these artists:'),
+        el('ul', { class: 'credits-list' }, iconArtists.map((a) => el('li', {}, a.name, el('span', { class: 'dim' }, ` · ${a.icons} icon${a.icons > 1 ? 's' : ''}`))))),
+      el('section', { class: 'panel' },
+        el('h3', {}, 'Heading font'),
+        el('p', { class: 'small dim' }, 'Cinzel, by the Cinzel Project Authors, under the SIL Open Font License 1.1.')));
+  }
+
   let versionTaps = 0;
   function versionLine() {
     return el('p', { class: 'small dim', style: 'text-align:center;user-select:none', onclick: () => {
@@ -94,7 +112,7 @@ export function openSettings(ctx) {
         toast(ctx.state.settings.debug ? 'Debug mode on.' : 'Debug mode off.');
         draw();
       }
-    } }, `Undercut ${ctx.version} · Icons: game-icons.net (CC BY 3.0)`);
+    } }, `Undercut ${ctx.version}`);
   }
 
   function debugPanel() {
