@@ -50,6 +50,25 @@ export function recipeColor(state, recipe) {
   return 'orange';
 }
 
+// Professions this shop has: the starting one first, then any wings opened.
+export function hasProfession(state, professionId) {
+  return state.player.professions.includes(professionId);
+}
+
+export function startingProfession(state) {
+  return state.player.professions[0];
+}
+
+// Adds skill entries for professions that are new since this save was made.
+export function syncSkills(state) {
+  for (const p of professions) state.skills[p.id] ||= { skill: 1, rank: 0 };
+}
+
+export function checkProfession(state, recipe) {
+  const id = professionForStation[recipe.station];
+  if (!hasProfession(state, id)) throw new Error(`Your shop has no ${professionById[id].name} yet. It opens with a profession wing.`);
+}
+
 // Throws if your skill is too low to craft this recipe.
 export function checkSkill(state, recipe) {
   if (recipeColor(state, recipe) === 'red') {
@@ -112,6 +131,7 @@ export function nextTraining(state, professionId) {
 }
 
 export function trainRank(state, professionId) {
+  if (!hasProfession(state, professionId)) throw new Error('Your shop doesn\'t have that profession yet.');
   const t = nextTraining(state, professionId);
   if (!t) throw new Error('You have already trained the highest rank.');
   if (!t.ready) throw new Error(t.reason);
@@ -164,12 +184,18 @@ export function trainerRecipes(state, professionId) {
 export function learnRecipe(state, recipeId) {
   const recipe = recipeById[recipeId];
   if (!recipe || typeof recipe.learn !== 'number') throw new Error('The trainer doesn\'t sell that recipe.');
+  checkProfession(state, recipe);
   if (knowsRecipe(state, recipe)) throw new Error('You already know that recipe.');
   const offer = trainerRecipes(state, recipeProfession(recipe)).find((o) => o.recipe.id === recipeId);
   if (!offer.ready) throw new Error(offer.reason);
   state.copper -= offer.cost;
   state.knownRecipes[recipeId] = true;
   return recipe;
+}
+
+// Opens every profession, as if all the wings were built.
+export function debugUnlockProfessions(state) {
+  for (const p of professions) if (!hasProfession(state, p.id)) state.player.professions.push(p.id);
 }
 
 export function debugLearnAll(state) {
@@ -182,6 +208,7 @@ export function learnFromScroll(state, itemId) {
   const recipe = recipeById[itemById[itemId]?.teaches];
   if (!recipe) throw new Error('That isn\'t a recipe scroll.');
   if (knowsRecipe(state, recipe)) throw new Error('You already know that recipe. You could sell the scroll instead.');
+  checkProfession(state, recipe);
   const profession = recipeProfession(recipe);
   if (skillOf(state, profession) < recipe.skill[0]) throw new Error(`Needs ${professionById[profession].name} ${recipe.skill[0]} to learn.`);
   takeFromBags(state, itemId, 1);

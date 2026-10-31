@@ -53,6 +53,12 @@ const migrations = {
     if (save.tavern) save.tavern.regulars = [];
     return save;
   },
+  // Version 7 (Phase 2): three professions. Older shops are smithies; the new
+  // workstations and skills are added on the next catch-up.
+  6: (save) => {
+    save.player.professions = ['blacksmithing'];
+    return save;
+  },
 };
 
 export function migrate(save) {

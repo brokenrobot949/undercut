@@ -674,3 +674,5 @@ input[type="number"] {
 .trainer-recipes .my-listing.skill-gray { border-left-color: var(--skill-gray); }
 .trainer-recipes .my-listing.skill-red { border-left-color: var(--skill-red); }
 .trainer-recipes .skill-red .item-name { color: var(--text-dim); }
+.profession-switch { margin-bottom: 12px; }
+.profession-card h2 { font-size: 1.1rem; }

@@ -5,7 +5,7 @@ import { el, coins, comingSoon, formatDuration } from './components.js';
 import { getFaction, getStanding } from '../engine/game.js';
 import { itemById } from '../../data/items.js';
 import { professions, professionById } from '../../data/professions.js';
-import { nextTraining, trainRank, trainerRecipes, learnRecipe, recipeColor } from '../engine/skills.js';
+import { nextTraining, trainRank, trainerRecipes, learnRecipe, recipeColor, hasProfession } from '../engine/skills.js';
 import { colorText } from './skill-bar.js';
 import { skillBar } from './skill-bar.js';
 
@@ -25,7 +25,7 @@ export function renderShop(ctx) {
         next ? el('span', { class: 'dim' }, ` · ${state.reputation.toLocaleString()} / ${next.rep.toLocaleString()} reputation`) : null),
       el('h3', {}, 'Trainer'),
       el('p', { class: 'small dim' }, 'Each rank lets your skill climb higher. Train the next one once you reach the cap. Recipes go on sale as your skill reaches them.'),
-      professions.flatMap((p) => [trainerRow(ctx, p.id), recipeOffers(ctx, p.id)]),
+      professions.filter((p) => hasProfession(ctx.state, p.id)).flatMap((p) => [trainerRow(ctx, p.id), recipeOffers(ctx, p.id)]),
       el('p', { class: 'dim small' }, 'The quartermaster and shop upgrades arrive in Phase 3.')),
   );
 }

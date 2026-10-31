@@ -1,6 +1,7 @@
-// Workshop tab: anvil and forge queues, recipes with profit at current
-// prices, the City Smelter, and the Blacksmithing skill bar. Recipe names are
-// colored by skill-up odds: orange, yellow, green, gray, and red when too hard.
+// Workshop tab: a switcher for your professions, then each workstation's
+// queue and recipes with profit at current prices, the skill bar, and the City
+// Smelter at the forge. Recipe names are colored by skill-up odds: orange,
+// yellow, green, gray, and red when too hard.
 
 import { el, coins, openSheet, stepper, progress, countdown, fill } from './components.js';
 import { recipes, recipeById } from '../../data/recipes.js';
@@ -10,20 +11,46 @@ import { marketValue, cutOn } from '../engine/market.js';
 import { lowestOtherPrice } from '../engine/trading.js';
 import { queueCraft, cancelOrder, queueSlots, smeltAtCity, smelterFee, maxCraftable } from '../engine/crafting.js';
 import { openItemSheet } from './item-sheet.js';
-import { recipeColor, knowsRecipe, trainerRecipes, forgeRankNeeded } from '../engine/skills.js';
+import { recipeColor, knowsRecipe, trainerRecipes, forgeRankNeeded, hasProfession, startingProfession } from '../engine/skills.js';
+import { professions, professionById, professionForStation, stationNames } from '../../data/professions.js';
 import { skillBar, colorText } from './skill-bar.js';
 
 const filters = { canCraft: false, skillUps: false, profitable: false };
+// The profession shown, kept between visits to the tab.
+let shown = null;
+
+const BLURBS = {
+  anvil: 'Each finished craft can raise your skill. Orange recipes always do, yellow usually, green sometimes, gray never.',
+  forge: 'Smelting is free here, but takes time. The City Smelter is instant, for a fee.',
+  workbench: 'Each finished craft can raise your skill. Cure hides here first: most leather goods need them.',
+  'alchemy-table': 'Each finished craft can raise your skill. Transmutes turn your herbs into smithing materials.',
+};
 
 export function renderWorkshop(ctx) {
+  const mine = professions.filter((p) => hasProfession(ctx.state, p.id));
+  if (!shown || !hasProfession(ctx.state, shown)) shown = startingProfession(ctx.state);
   return el('div', { class: 'main-inner' },
-    stationPanel(ctx, 'anvil', 'Anvil', 'Each finished craft can raise your skill. Orange recipes always do, yellow usually, green sometimes, gray never.'),
-    stationPanel(ctx, 'forge', 'Forge', 'Smelting is free here, but takes time. The City Smelter is instant, for a fee.'),
+    mine.length > 1 ? el('div', { class: 'btn-row seg profession-switch', role: 'tablist' }, mine.map((p) => el('button', {
+      class: `btn${p.id === shown ? ' btn-primary' : ''}`, type: 'button', role: 'tab', 'aria-selected': String(p.id === shown),
+      onclick: () => { shown = p.id; ctx.render(); },
+    }, p.name))) : null,
+    professionById[shown].stations.map((s) => stationPanel(ctx, s, stationNames[s], BLURBS[s])),
+    hasProfession(ctx.state, 'blacksmithing') ? null : smelterPanel(ctx),
   );
+}
+
+// Shops without a forge can still use the City Smelter: instant, for a fee.
+function smelterPanel(ctx) {
+  return el('section', { class: 'panel' },
+    el('h2', {}, 'City Smelter'),
+    el('p', { class: 'small dim' }, 'Your shop has no forge, but the City Smelter turns ore into bars instantly, for a fee.'),
+    el('div', { class: 'market-list' }, recipes.filter((r) => r.station === 'forge').map((r) => recipeRow(ctx, r))));
 }
 
 function stationPanel(ctx, stationId, title, blurb) {
   const { state } = ctx;
+  const prof = professionForStation[stationId];
+  const first = professionById[prof].stations[0] === stationId;
   const queue = state.stations[stationId].queue;
   let list = recipes.filter((r) => r.station === stationId && knowsRecipe(state, r));
   if (filters.canCraft) list = list.filter((r) => maxCraftable(state, r.id) > 0 && recipeColor(state, r) !== 'red');
@@ -32,25 +59,25 @@ function stationPanel(ctx, stationId, title, blurb) {
 
   return el('section', { class: 'panel' },
     el('h2', {}, title),
-    stationId === 'anvil' ? skillBar(state, 'blacksmithing', { capHint: true }) : null,
+    first ? skillBar(state, prof, { capHint: true }) : null,
     el('p', { class: 'small dim' }, blurb),
     el('h3', {}, `Queue (${queue.length} / ${queueSlots(state, stationId)})`),
     queue.length ? el('div', { class: 'queue' }, queue.map((order, i) => queueRow(ctx, stationId, order, i === 0)))
       : el('p', { class: 'small dim' }, 'Idle. Pick a recipe below.'),
     el('div', { class: 'btn-row chips' },
       chip(ctx, 'canCraft', 'Can craft now'),
-      stationId === 'anvil' ? chip(ctx, 'skillUps', 'Gives skill-ups') : null,
+      stationId !== 'forge' ? chip(ctx, 'skillUps', 'Gives skill-ups') : null,
       chip(ctx, 'profitable', 'Profitable')),
     el('div', { class: 'market-list' }, list.length ? list.map((r) => recipeRow(ctx, r))
       : el('p', { class: 'small dim' }, 'No recipes match these filters.')),
-    stationId === 'anvil' ? trainerHint(ctx) : null,
+    first ? trainerHint(ctx, prof) : null,
   );
 }
 
 // "2 new recipes at the trainer" when there's something you could learn now.
-function trainerHint(ctx) {
-  const offers = trainerRecipes(ctx.state, 'blacksmithing');
-  const ready = offers.filter((o) => o.recipe.skill[0] <= ctx.state.skills.blacksmithing.skill).length;
+function trainerHint(ctx, prof) {
+  const offers = trainerRecipes(ctx.state, prof);
+  const ready = offers.filter((o) => o.recipe.skill[0] <= ctx.state.skills[prof].skill).length;
   if (!offers.length) return null;
   return el('p', { class: `small trainer-hint${ready ? ' ready' : ''}` },
     ready ? `${ready} new recipe${ready === 1 ? '' : 's'} for your skill at the Trade Guild trainer (Shop tab).`
@@ -109,7 +136,8 @@ function recipeRow(ctx, recipe) {
     el('span', { class: 'small dim market-sub' },
       recipe.mats.map((m) => `${m.qty} ${itemById[m.item].name.toLowerCase()} (${state.bags[m.item] || 0})`).join(', ')),
     el('span', { class: 'small market-tag' }, color === 'red' ? `needs ${recipe.skill[0]}`
-      : forgeRankNeeded(state, recipe) ? `forge: ${forgeRankNeeded(state, recipe)}` : can ? `can make ${can}` : ''),
+      : hasProfession(state, professionForStation[recipe.station]) && forgeRankNeeded(state, recipe) ? `forge: ${forgeRankNeeded(state, recipe)}`
+        : can ? `can make ${can}` : ''),
   );
 }
 
@@ -127,7 +155,8 @@ function openCraftSheet(ctx, recipe) {
     const { state } = ctx;
     const color = recipeColor(state, recipe);
     const can = color === 'red' ? 0 : maxCraftable(state, recipe.id);
-    const rankNeed = forgeRankNeeded(state, recipe);
+    const ownForge = hasProfession(state, professionForStation[recipe.station]);
+    const rankNeed = ownForge ? forgeRankNeeded(state, recipe) : null;
     qtyChoice = Math.max(1, Math.min(qtyChoice, Math.max(1, can)));
     const feeText = el('span', {});
     const qty = stepper({ value: qtyChoice, max: Math.max(1, can), onChange: (v) => { qtyChoice = v; updateFee(); } });
@@ -154,7 +183,7 @@ function openCraftSheet(ctx, recipe) {
       can ? el('div', { class: 'field' }, el('label', {}, `How many (materials for ${can})`), qty.node)
         : el('p', { class: 'small dim' }, color === 'red' ? 'Your skill is too low to make this yet.' : 'You need more materials. Tap one above to buy it.'),
       can && rankNeed ? el('p', { class: 'small dim' }, `Your forge needs ${rankNeed} Blacksmithing to smelt this. The City Smelter can do it now.`) : null,
-      can && !rankNeed ? el('button', { class: 'btn btn-primary wide', type: 'button',
+      can && ownForge && !rankNeed ? el('button', { class: 'btn btn-primary wide', type: 'button',
         onclick: () => act((s, now) => queueCraft(s, recipe.id, qty.value, now)) },
         recipe.station === 'forge' ? 'Smelt at your forge (free)' : 'Add to queue') : null,
       can && recipe.station === 'forge' ? el('button', { class: 'btn wide', type: 'button',

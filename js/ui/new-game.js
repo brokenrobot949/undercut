@@ -1,10 +1,12 @@
-// New game screen: maker's mark name and capital choice.
+// New game screen: maker's mark name, capital, and starting profession.
 
 import { el, setTheme } from './components.js';
 import { factions } from '../../data/factions.js';
+import { professions } from '../../data/professions.js';
 
 export function renderNewGame(root, { onStart }) {
   let chosen = null;
+  let profession = null;
 
   const nameInput = el('input', {
     type: 'text', id: 'maker-name', maxlength: '20', autocomplete: 'off',
@@ -22,6 +24,18 @@ export function renderNewGame(root, { onStart }) {
       ['--bg', '--panel', '--accent', '--accent-strong', '--highlight'].map((v) => el('span', { style: `background:var(${v})` }))),
   ));
 
+  const profCards = professions.map((p) => el('button', {
+    class: 'faction-card profession-card', type: 'button', 'aria-pressed': 'false', onclick: () => chooseProfession(p),
+  },
+    el('h2', {}, p.name),
+    el('div', { class: 'small' }, p.blurb)));
+
+  function chooseProfession(p) {
+    profession = p;
+    profCards.forEach((card, i) => card.setAttribute('aria-pressed', String(professions[i] === p)));
+    update();
+  }
+
   function choose(faction) {
     chosen = faction;
     cards.forEach((card, i) => card.setAttribute('aria-pressed', String(factions[i] === faction)));
@@ -29,12 +43,12 @@ export function renderNewGame(root, { onStart }) {
     update();
   }
   function update() {
-    startBtn.disabled = !(chosen && nameInput.value.trim());
+    startBtn.disabled = !(chosen && profession && nameInput.value.trim());
   }
   nameInput.addEventListener('input', update);
   startBtn.addEventListener('click', () => {
     if (startBtn.disabled) return;
-    onStart({ name: nameInput.value.trim(), factionId: chosen.id });
+    onStart({ name: nameInput.value.trim(), factionId: chosen.id, professionId: profession.id });
   });
 
   setTheme('red');
@@ -49,6 +63,9 @@ export function renderNewGame(root, { onStart }) {
     ),
     el('h2', {}, 'Choose your capital'),
     el('div', { class: 'faction-choices' }, cards),
+    el('h2', {}, 'Choose your craft'),
+    el('p', { class: 'small dim' }, 'Your first profession is yours for good. The other two open later with a new wing for your shop.'),
+    el('div', { class: 'faction-choices' }, profCards),
     startBtn,
   ));
 }

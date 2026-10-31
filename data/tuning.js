@@ -14,8 +14,13 @@ export const tuning = {
 
   // Gold a new shop starts with, in copper (5,000 = 50 silver).
   startingCopper: 5000,
-  // Materials a new shop starts with: enough for a first copper cleaver.
-  startingBags: { 'copper-bar': 4, 'rough-stone': 6 },
+  // Materials a new shop starts with, by starting profession: enough for a
+  // first craft or two.
+  startingBags: {
+    blacksmithing: { 'copper-bar': 4, 'rough-stone': 6 },
+    leatherworking: { 'soft-leather': 6, 'boar-hide': 2, 'curing-salt': 2, 'waxed-thread': 3 },
+    alchemy: { dawnpetal: 6, silverfern: 6, 'simple-vial': 10 },
+  },
 
   // ---- Shop ----
   // Bag slots at the start. Materials stack this many per slot; gear takes a slot each.

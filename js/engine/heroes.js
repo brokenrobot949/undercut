@@ -19,7 +19,7 @@ import { generalLoot } from '../../data/loot.js';
 import { schedule } from './clock.js';
 import { rngNext, rngInt, rngPick, rngChance, rngRange } from './rng.js';
 import { recipes } from '../../data/recipes.js';
-import { knowsRecipe, recipeColor } from './skills.js';
+import { knowsRecipe, recipeColor, recipeProfession, startingProfession } from './skills.js';
 
 const HOUR = 60 * 60 * 1000;
 const TV = tuning.tavern;
@@ -38,16 +38,17 @@ export const GATHERING = ['mining', 'herbalism', 'skinning'];
 function rollBoard(state) {
   state.tavern.board = [];
   const band = zones.find((z) => z.tier === workingTier(state))?.levels;
-  // Until the starting profession choice arrives, every shop is a smithy.
-  const pair = professionById.blacksmithing.gathering;
+  const pair = professionById[startingProfession(state)].gathering;
   for (let i = 0; i < TV.boardSize; i++) state.tavern.board.push(rollHero(state, i === 0 ? { band, pair } : {}));
 }
 
-// Highest tier among known recipes that still give skill; tier 1 for a new shop.
+// Highest tier among known recipes of your starting profession that still give
+// skill; tier 1 for a new shop.
 function workingTier(state) {
-  if (!state.skills) return 1;
+  if (!state.skills || !state.player.professions) return 1;
   let tier = 1;
   for (const r of recipes) {
+    if (recipeProfession(r) !== startingProfession(state)) continue;
     const color = recipeColor(state, r);
     if (color && color !== 'red' && color !== 'gray' && knowsRecipe(state, r)) tier = Math.max(tier, r.tier);
   }

@@ -95,6 +95,24 @@ The player starts with Blacksmithing, Leatherworking or Alchemy and unlocks the 
 
 The starting profession is permanent. The other two never replace it.
 
+- **Workstations:** Blacksmithing has the anvil and the forge, Leatherworking the workbench, Alchemy the alchemy table. Each has its own queue.
+- **Starting materials:** a smithy starts with 4 copper bars and 6 rough stone, a leatherworker with 6 soft leather, 2 boar hides, 2 curing salt and 3 waxed thread, an alchemist with 6 dawnpetal, 6 silverfern and 10 simple vials.
+- **The tavern** always offers one hero who gathers for your starting profession: a miner, skinner or herbalist.
+- **Shops without a forge** still reach the City Smelter from the Workshop.
+- **The Workshop** shows a profession switcher once a shop has more than one profession.
+
+**Recipes by tier** (six per tier, plus one scroll-only recipe)
+
+| Tier | Leatherworking | Alchemy |
+| --- | --- | --- |
+| 1 | Cured boar hide, Soft armor kit, Soft leather boots, Soft leather vest, Linen-lined cloak, Simple quiver; scroll: Boar-tusk belt | Faint mending draught, Faint focus draught, Ox-strength tonic, Owl-wit tonic; scroll: Bottled sunrise |
+| 2 | Cured wolf hide, Supple armor kit, Supple leather gloves, Supple leather leggings, Wolfskin cloak, Wolfhide ammo pouch; scroll: Fen-stalker hood | Mild mending draught, Mild focus draught, Thornhide tonic, Swiftstep tonic; scroll: Fenlight tonic |
+| 3 | Cured bear hide, Tough armor kit, Tough leather jerkin, Tough leather bracers, Silk-lined cloak, Bearhide quiver; scroll: Bear-claw gauntlets | Sturdy mending draught, Sturdy focus draught, Bulwark elixir, Keen-eye elixir, Transmute: iron to moonsilver; scroll: Philter of second wind |
+| 4 | Cured basilisk hide, Boiled armor kit, Boiled leather cap, Boiled leather spaulders, Basilisk-scale cloak, Basilisk ammo pouch; scroll: Basilisk-eye mask | Potent mending draught, Potent focus draught, Emberward draught, Frostward draught, Transmute: moonsilver to starmetal; scroll: Ghostlight draught |
+| 5 | Cured drakeling hide, Ironhide armor kit, Ironhide leather tunic, Ironhide leather boots, Drakeling cloak, Drakeling quiver; scroll: Drakewing mantle | Grand mending draught, Grand focus draught, Starlight elixir, Shadowward draught, Transmute: aether essence; scroll: Draught of the long night |
+
+Cloaks are worn by every class and use bonus-loot cloth. Quivers and ammo pouches sell to hunters. Transmutes turn two bars (or essences) plus an herb into two of the next tier, which links Alchemy to Blacksmithing.
+
 **Skill ranks.** Skill runs from 1 to 300 in four ranks. Each rank is trained at the Trade Guild for gold, once you reach the previous cap and the required guild standing.
 
 | Rank | Skill range | Training cost | Guild standing needed |
@@ -131,7 +149,7 @@ A typical recipe is orange for 15 points after you learn it, then yellow for 10,
 - **Guild quartermaster:** better recipes, gated by guild standing.
 - **Rare drops:** heroes sometimes bring back a recipe scroll. It can be learned (once your skill reaches the recipe) or sold on the auction house. Each profession has one scroll-only recipe per tier. Blacksmithing: Copper spurred knuckles, Bronze crested helm, Steel war pick, Moonsilver lamellar vest, Starmetal maul.
 
-Intermediate recipes count for skill too: grinding stones from stone (Blacksmithing) and cured hides from hides and salt (Leatherworking).
+Intermediate recipes count for skill too: grit from stone (Blacksmithing) and cured hides from hides and salt (Leatherworking).
 
 **Crafting queue.** Each workstation has its own queue, 3 orders at the start. An order is one recipe times a quantity. Materials are reserved when an order is queued, and crafting continues offline.
 
@@ -169,7 +187,7 @@ Junk never trades on the auction house. Until Leatherworking and Alchemy are pla
 | --- | --- | --- |
 | Hired gatherers | Ore and stone (Mining), herbs (Herbalism), leather and hides (Skinning) | Cheapest per unit, but you wait for the trip |
 | General trip loot | Any hero on any trip: cloth, essences, gems, gray vendor trash, rare recipe scrolls | A random bonus on every trip |
-| Trade goods vendor | Vials, thread, salt, flux and coal at fixed prices, unlimited | Always there; a small, steady gold sink |
+| Trade goods vendor | Smithing flux, coal, curing salt, waxed thread, and simple, stoppered and cut-glass vials at fixed prices, unlimited | Always there; a small, steady gold sink |
 | Auction house | Whatever NPC sellers have listed | Instant, at market price, and buying pushes the price up |
 
 Cloth sells on the auction house until Tailoring arrives in a later update.
@@ -491,7 +509,7 @@ undercut/
 - Versioned, with migrations for older saves.
 - Export and import as a copyable text code, for backups and moving between devices. iPhone Safari can clear a site's saved data after about a week without a visit.
 
-**Debug mode** (a hidden toggle): fast-forward 1 h, 8 h or 24 h; add gold and materials; set skill; force an event; show the market's internal numbers.
+**Debug mode** (a hidden toggle): fast-forward 1 h, 8 h or 24 h; add gold and materials; set skill; learn all recipes; open all professions; force an event; show the market's internal numbers.
 
 **Balance simulator.** `node tools/balance-sim.js` plays 60 in-game days with simple bot strategies (cautious, flooder, flipper). It reports gold over time, the day each milestone was reached, and any items whose prices collapsed or never sold. It runs after every tuning change.
 

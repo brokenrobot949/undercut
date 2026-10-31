@@ -179,9 +179,9 @@ function startGame(state) {
 
 function showNewGame() {
   renderNewGame(root, {
-    onStart({ name, factionId }) {
+    onStart({ name, factionId, professionId }) {
       const seed = (Date.now() ^ Math.floor(Math.random() * 0x100000000)) >>> 0;
-      startGame(newGame({ name, factionId, seed, now: Date.now() }));
+      startGame(newGame({ name, factionId, professionId, seed, now: Date.now() }));
     },
   });
 }

@@ -23,7 +23,7 @@ import { listItem, cancelListing, undercutPrice, buyItems, buyFromVendor, quoteB
 import { bagSlots, slotsUsed, roomFor } from '../js/engine/bags.js';
 import { queueCraft, maxCraftable } from '../js/engine/crafting.js';
 import { hireHero, hireFee, zonesFor, expeditionSlots, regularsInTown } from '../js/engine/heroes.js';
-import { nextTraining, trainRank, recipeColor, capOf, knowsRecipe, trainerRecipes, learnRecipe, forgeRankNeeded, learnFromScroll } from '../js/engine/skills.js';
+import { nextTraining, trainRank, recipeColor, capOf, knowsRecipe, trainerRecipes, learnRecipe, forgeRankNeeded, learnFromScroll, recipeProfession } from '../js/engine/skills.js';
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -202,7 +202,7 @@ function botProfit(state, recipe, now) {
 function levelingRecipe(state, now) {
   let best = null;
   for (const r of recipes) {
-    if (!knowsRecipe(state, r)) continue;
+    if (!knowsRecipe(state, r) || recipeProfession(r) !== PROF) continue;
     const chance = tuning.skillUpChance[recipeColor(state, r)];
     if (!chance) continue;
     const mats = r.mats.reduce((n, m) => n + botValue(state, m.item, now) * m.qty, 0);

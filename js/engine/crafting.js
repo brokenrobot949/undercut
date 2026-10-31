@@ -9,14 +9,20 @@
 import { tuning } from '../../data/tuning.js';
 import { recipeById } from '../../data/recipes.js';
 import { itemById } from '../../data/items.js';
+import { professions } from '../../data/professions.js';
 import { schedule, cancelTimer } from './clock.js';
 import { checkMats, takeFromBags, addOrMail } from './bags.js';
-import { checkSkill, checkKnown, checkForgeRank, rollSkillUp } from './skills.js';
+import { checkSkill, checkKnown, checkForgeRank, checkProfession, rollSkillUp } from './skills.js';
 
-export const STATIONS = ['anvil', 'forge'];
+export const STATIONS = professions.flatMap((p) => p.stations);
 
 export function createStations() {
-  return { anvil: { queue: [] }, forge: { queue: [] }, nextOrderId: 1 };
+  return { ...Object.fromEntries(STATIONS.map((s) => [s, { queue: [] }])), nextOrderId: 1 };
+}
+
+// Adds workstations that are new since this save was made.
+export function syncStations(state) {
+  for (const s of STATIONS) state.stations[s] ||= { queue: [] };
 }
 
 export function queueSlots(state, station) {
@@ -32,6 +38,7 @@ export function queueCraft(state, recipeId, qty, now) {
   if (station.queue.length >= queueSlots(state, recipe.station)) {
     throw new Error(`The ${recipe.station} queue is full (${queueSlots(state, recipe.station)} orders).`);
   }
+  checkProfession(state, recipe);
   checkKnown(state, recipe);
   checkSkill(state, recipe);
   checkForgeRank(state, recipe);

@@ -8,25 +8,26 @@ import { addOrMail } from './bags.js';
 import { createRng } from './rng.js';
 import { createClock, advance, gameNow, schedule, newSummary } from './clock.js';
 import { createMarket, syncMarketItems, marketTick, freshMarket, saleProceeds } from './market.js';
-import { createStations, finishUnit } from './crafting.js';
+import { createStations, syncStations, finishUnit } from './crafting.js';
 import { createTavern, refreshBoardTimer, expeditionReturns } from './heroes.js';
-import { createSkills, createKnownRecipes } from './skills.js';
+import { createSkills, createKnownRecipes, syncSkills } from './skills.js';
 export { collectMailbox } from './bags.js';
 
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
-export function newGame({ name, factionId, seed, now }) {
+export function newGame({ name, factionId, professionId = 'blacksmithing', seed, now }) {
   const state = {
     version: SAVE_VERSION,
     createdAt: now,
-    player: { name, factionId },
+    // professions: the starting one first; wings add the others later.
+    player: { name, factionId, professions: [professionId] },
     copper: tuning.startingCopper,
     reputation: 0,
     // Profession skill and trained rank: { blacksmithing: { skill, rank } }.
     skills: createSkills(),
     // Recipes learned: { recipeId: true }. Smelting is always known.
     knownRecipes: createKnownRecipes(),
-    bags: { ...tuning.startingBags }, // itemId -> quantity
+    bags: { ...tuning.startingBags[professionId] }, // itemId -> quantity
     // Gold and items waiting to be collected (sales, expired listings).
     mailbox: { copper: 0, items: {} },
     rng: createRng(seed),
@@ -115,6 +116,8 @@ function gameSummary(state) {
 export function catchUp(state, realNow, summary = gameSummary(state)) {
   if (!state.market) createMarket(state, state.clock.lastSeenAt);
   else syncMarketItems(state, state.clock.lastSeenAt);
+  syncStations(state);
+  syncSkills(state);
   if (!state.tavern) createTavern(state, state.clock.lastSeenAt);
   return advance(state, gameNow(state, realNow), handlers, summary);
 }

@@ -1,4 +1,4 @@
-// Every item in the game. Phase 2: Blacksmithing tiers 1-5, gathering materials, bonus loot.
+// Every item in the game. Phase 2: Blacksmithing, Leatherworking and Alchemy tiers 1-5, gathering materials, bonus loot.
 //
 // Fields:
 //   id          unique, lowercase-with-hyphens. Never change one after release (saves use it).
@@ -7,7 +7,8 @@
 //   category    'material', 'consumable', 'gear' or 'trade' (vendor-only trade goods).
 //               Also 'junk' (gray vendor trash from hero trips; vendor only, never on the
 //               auction house) and 'scroll' (a recipe scroll that can be learned or sold).
-//   armor       gear only: 'plate', 'mail', 'leather', 'cloth' or 'weapon'.
+//   armor       gear only: 'plate', 'mail', 'leather', 'cloth', 'weapon',
+//               'cloak' (worn by every class) or 'quiver' (hunters: quivers and ammo pouches).
 //   quality     'poor', 'common', 'uncommon', 'rare' or 'epic'.
 //   base        anchor price in copper (100 copper = 1 silver).
 //   demand      NPC buyers per hour on the auction house at a normal price.
@@ -101,10 +102,25 @@ export const items = [
   { id: 'scroll-steel-war-pick', name: 'Recipe scroll: Steel war pick', tier: 3, category: 'scroll', quality: 'uncommon', base: 2000, demand: 0.3, loot: 'scroll', teaches: 'steel-war-pick' },
   { id: 'scroll-moonsilver-lamellar-vest', name: 'Recipe scroll: Moonsilver lamellar vest', tier: 4, category: 'scroll', quality: 'uncommon', base: 4000, demand: 0.3, loot: 'scroll', teaches: 'moonsilver-lamellar-vest' },
   { id: 'scroll-starmetal-maul', name: 'Recipe scroll: Starmetal maul', tier: 5, category: 'scroll', quality: 'uncommon', base: 8000, demand: 0.3, loot: 'scroll', teaches: 'starmetal-maul' },
+  { id: 'scroll-boar-tusk-belt', name: 'Recipe scroll: Boar-tusk belt', tier: 1, category: 'scroll', quality: 'uncommon', base: 300, demand: 0.3, loot: 'scroll', teaches: 'boar-tusk-belt' },
+  { id: 'scroll-fen-stalker-hood', name: 'Recipe scroll: Fen-stalker hood', tier: 2, category: 'scroll', quality: 'uncommon', base: 800, demand: 0.3, loot: 'scroll', teaches: 'fen-stalker-hood' },
+  { id: 'scroll-bear-claw-gauntlets', name: 'Recipe scroll: Bear-claw gauntlets', tier: 3, category: 'scroll', quality: 'uncommon', base: 2000, demand: 0.3, loot: 'scroll', teaches: 'bear-claw-gauntlets' },
+  { id: 'scroll-basilisk-eye-mask', name: 'Recipe scroll: Basilisk-eye mask', tier: 4, category: 'scroll', quality: 'uncommon', base: 4000, demand: 0.3, loot: 'scroll', teaches: 'basilisk-eye-mask' },
+  { id: 'scroll-drakewing-mantle', name: 'Recipe scroll: Drakewing mantle', tier: 5, category: 'scroll', quality: 'uncommon', base: 8000, demand: 0.3, loot: 'scroll', teaches: 'drakewing-mantle' },
+  { id: 'scroll-bottled-sunrise', name: 'Recipe scroll: Bottled sunrise', tier: 1, category: 'scroll', quality: 'uncommon', base: 300, demand: 0.3, loot: 'scroll', teaches: 'bottled-sunrise' },
+  { id: 'scroll-fenlight-tonic', name: 'Recipe scroll: Fenlight tonic', tier: 2, category: 'scroll', quality: 'uncommon', base: 800, demand: 0.3, loot: 'scroll', teaches: 'fenlight-tonic' },
+  { id: 'scroll-philter-of-second-wind', name: 'Recipe scroll: Philter of second wind', tier: 3, category: 'scroll', quality: 'uncommon', base: 2000, demand: 0.3, loot: 'scroll', teaches: 'philter-of-second-wind' },
+  { id: 'scroll-ghostlight-draught', name: 'Recipe scroll: Ghostlight draught', tier: 4, category: 'scroll', quality: 'uncommon', base: 4000, demand: 0.3, loot: 'scroll', teaches: 'ghostlight-draught' },
+  { id: 'scroll-draught-of-the-long-night', name: 'Recipe scroll: Draught of the long night', tier: 5, category: 'scroll', quality: 'uncommon', base: 8000, demand: 0.3, loot: 'scroll', teaches: 'draught-of-the-long-night' },
 
   // ---- Trade goods (vendor only, never on the auction house) ----
   { id: 'smithing-flux', name: 'Smithing flux', tier: 2, category: 'trade', quality: 'common', base: 10, vendorBuy: 10 },
   { id: 'coal', name: 'Coal', tier: 3, category: 'trade', quality: 'common', base: 12, vendorBuy: 12 },
+  { id: 'curing-salt', name: 'Curing salt', tier: 1, category: 'trade', quality: 'common', base: 5, vendorBuy: 5 },
+  { id: 'waxed-thread', name: 'Waxed thread', tier: 1, category: 'trade', quality: 'common', base: 4, vendorBuy: 4 },
+  { id: 'simple-vial', name: 'Simple vial', tier: 1, category: 'trade', quality: 'common', base: 4, vendorBuy: 4 },
+  { id: 'stoppered-vial', name: 'Stoppered vial', tier: 3, category: 'trade', quality: 'common', base: 12, vendorBuy: 12 },
+  { id: 'cut-glass-vial', name: 'Cut-glass vial', tier: 5, category: 'trade', quality: 'common', base: 25, vendorBuy: 25 },
 
   // ---- Blacksmithing, tier 1 (copper) ----
   { id: 'rough-grit', name: 'Rough grit', tier: 1, category: 'material', quality: 'common', base: 16, demand: 6 },
@@ -150,6 +166,86 @@ export const items = [
   { id: 'starmetal-ringmail-cuirass', name: 'Starmetal ringmail cuirass', tier: 5, category: 'gear', armor: 'mail', quality: 'common', base: 2520, demand: 0.35 },
   { id: 'starmetal-plate-breastplate', name: 'Starmetal plate breastplate', tier: 5, category: 'gear', armor: 'plate', quality: 'uncommon', base: 2930, demand: 0.3 },
   { id: 'starmetal-maul', name: 'Starmetal maul', tier: 5, category: 'gear', armor: 'weapon', quality: 'uncommon', base: 3600, demand: 0.3 },
+
+  // ---- Leatherworking, tier 1 (boar) ----
+  { id: 'cured-boar-hide', name: 'Cured boar hide', tier: 1, category: 'material', quality: 'common', base: 25, demand: 5 },
+  { id: 'soft-armor-kit', name: 'Soft armor kit', tier: 1, category: 'consumable', quality: 'common', base: 31, demand: 12 },
+  { id: 'soft-leather-boots', name: 'Soft leather boots', tier: 1, category: 'gear', armor: 'leather', quality: 'common', base: 110, demand: 0.6 },
+  { id: 'soft-leather-vest', name: 'Soft leather vest', tier: 1, category: 'gear', armor: 'leather', quality: 'common', base: 125, demand: 0.6 },
+  { id: 'linen-lined-cloak', name: 'Linen-lined cloak', tier: 1, category: 'gear', armor: 'cloak', quality: 'common', base: 95, demand: 0.9 },
+  { id: 'simple-quiver', name: 'Simple quiver', tier: 1, category: 'gear', armor: 'quiver', quality: 'common', base: 110, demand: 0.4 },
+  { id: 'boar-tusk-belt', name: 'Boar-tusk belt', tier: 1, category: 'gear', armor: 'leather', quality: 'uncommon', base: 230, demand: 0.4 },
+
+  // ---- Leatherworking, tier 2 (wolf) ----
+  { id: 'cured-wolf-hide', name: 'Cured wolf hide', tier: 2, category: 'material', quality: 'common', base: 38, demand: 5 },
+  { id: 'supple-armor-kit', name: 'Supple armor kit', tier: 2, category: 'consumable', quality: 'common', base: 52, demand: 10 },
+  { id: 'supple-leather-gloves', name: 'Supple leather gloves', tier: 2, category: 'gear', armor: 'leather', quality: 'common', base: 210, demand: 0.5 },
+  { id: 'supple-leather-leggings', name: 'Supple leather leggings', tier: 2, category: 'gear', armor: 'leather', quality: 'common', base: 335, demand: 0.5 },
+  { id: 'wolfskin-cloak', name: 'Wolfskin cloak', tier: 2, category: 'gear', armor: 'cloak', quality: 'common', base: 200, demand: 0.8 },
+  { id: 'wolfhide-ammo-pouch', name: 'Wolfhide ammo pouch', tier: 2, category: 'gear', armor: 'quiver', quality: 'common', base: 210, demand: 0.35 },
+  { id: 'fen-stalker-hood', name: 'Fen-stalker hood', tier: 2, category: 'gear', armor: 'leather', quality: 'uncommon', base: 470, demand: 0.35 },
+
+  // ---- Leatherworking, tier 3 (bear) ----
+  { id: 'cured-bear-hide', name: 'Cured bear hide', tier: 3, category: 'material', quality: 'common', base: 56, demand: 5 },
+  { id: 'tough-armor-kit', name: 'Tough armor kit', tier: 3, category: 'consumable', quality: 'common', base: 83, demand: 9 },
+  { id: 'tough-leather-jerkin', name: 'Tough leather jerkin', tier: 3, category: 'gear', armor: 'leather', quality: 'common', base: 595, demand: 0.4 },
+  { id: 'tough-leather-bracers', name: 'Tough leather bracers', tier: 3, category: 'gear', armor: 'leather', quality: 'common', base: 345, demand: 0.4 },
+  { id: 'silk-lined-cloak', name: 'Silk-lined cloak', tier: 3, category: 'gear', armor: 'cloak', quality: 'common', base: 400, demand: 0.7 },
+  { id: 'bearhide-quiver', name: 'Bearhide quiver', tier: 3, category: 'gear', armor: 'quiver', quality: 'common', base: 395, demand: 0.3 },
+  { id: 'bear-claw-gauntlets', name: 'Bear-claw gauntlets', tier: 3, category: 'gear', armor: 'leather', quality: 'uncommon', base: 810, demand: 0.3 },
+
+  // ---- Leatherworking, tier 4 (basilisk) ----
+  { id: 'cured-basilisk-hide', name: 'Cured basilisk hide', tier: 4, category: 'material', quality: 'common', base: 79, demand: 5 },
+  { id: 'boiled-armor-kit', name: 'Boiled armor kit', tier: 4, category: 'consumable', quality: 'common', base: 120, demand: 8 },
+  { id: 'boiled-leather-cap', name: 'Boiled leather cap', tier: 4, category: 'gear', armor: 'leather', quality: 'common', base: 670, demand: 0.35 },
+  { id: 'boiled-leather-spaulders', name: 'Boiled leather spaulders', tier: 4, category: 'gear', armor: 'leather', quality: 'common', base: 890, demand: 0.35 },
+  { id: 'basilisk-scale-cloak', name: 'Basilisk-scale cloak', tier: 4, category: 'gear', armor: 'cloak', quality: 'common', base: 695, demand: 0.6 },
+  { id: 'basilisk-ammo-pouch', name: 'Basilisk ammo pouch', tier: 4, category: 'gear', armor: 'quiver', quality: 'common', base: 670, demand: 0.3 },
+  { id: 'basilisk-eye-mask', name: 'Basilisk-eye mask', tier: 4, category: 'gear', armor: 'leather', quality: 'uncommon', base: 1320, demand: 0.3 },
+
+  // ---- Leatherworking, tier 5 (drakeling) ----
+  { id: 'cured-drakeling-hide', name: 'Cured drakeling hide', tier: 5, category: 'material', quality: 'common', base: 110, demand: 5 },
+  { id: 'ironhide-armor-kit', name: 'Ironhide armor kit', tier: 5, category: 'consumable', quality: 'common', base: 172, demand: 8 },
+  { id: 'ironhide-leather-tunic', name: 'Ironhide leather tunic', tier: 5, category: 'gear', armor: 'leather', quality: 'common', base: 1560, demand: 0.35 },
+  { id: 'ironhide-leather-boots', name: 'Ironhide leather boots', tier: 5, category: 'gear', armor: 'leather', quality: 'common', base: 1010, demand: 0.35 },
+  { id: 'drakeling-cloak', name: 'Drakeling cloak', tier: 5, category: 'gear', armor: 'cloak', quality: 'common', base: 1170, demand: 0.6 },
+  { id: 'drakeling-quiver', name: 'Drakeling quiver', tier: 5, category: 'gear', armor: 'quiver', quality: 'common', base: 1130, demand: 0.3 },
+  { id: 'drakewing-mantle', name: 'Drakewing mantle', tier: 5, category: 'gear', armor: 'leather', quality: 'uncommon', base: 2410, demand: 0.3 },
+
+  // ---- Alchemy, tier 1 ----
+  { id: 'faint-mending-draught', name: 'Faint mending draught', tier: 1, category: 'consumable', quality: 'common', base: 16, demand: 14 },
+  { id: 'faint-focus-draught', name: 'Faint focus draught', tier: 1, category: 'consumable', quality: 'common', base: 18, demand: 12 },
+  { id: 'ox-strength-tonic', name: 'Ox-strength tonic', tier: 1, category: 'consumable', quality: 'common', base: 40, demand: 6 },
+  { id: 'owl-wit-tonic', name: 'Owl-wit tonic', tier: 1, category: 'consumable', quality: 'common', base: 42, demand: 6 },
+  { id: 'bottled-sunrise', name: 'Bottled sunrise', tier: 1, category: 'consumable', quality: 'uncommon', base: 120, demand: 2 },
+
+  // ---- Alchemy, tier 2 ----
+  { id: 'mild-mending-draught', name: 'Mild mending draught', tier: 2, category: 'consumable', quality: 'common', base: 47, demand: 12 },
+  { id: 'mild-focus-draught', name: 'Mild focus draught', tier: 2, category: 'consumable', quality: 'common', base: 52, demand: 10 },
+  { id: 'thornhide-tonic', name: 'Thornhide tonic', tier: 2, category: 'consumable', quality: 'common', base: 70, demand: 6 },
+  { id: 'swiftstep-tonic', name: 'Swiftstep tonic', tier: 2, category: 'consumable', quality: 'common', base: 73, demand: 6 },
+  { id: 'fenlight-tonic', name: 'Fenlight tonic', tier: 2, category: 'consumable', quality: 'uncommon', base: 215, demand: 2 },
+
+  // ---- Alchemy, tier 3 ----
+  { id: 'sturdy-mending-draught', name: 'Sturdy mending draught', tier: 3, category: 'consumable', quality: 'common', base: 88, demand: 10 },
+  { id: 'sturdy-focus-draught', name: 'Sturdy focus draught', tier: 3, category: 'consumable', quality: 'common', base: 94, demand: 9 },
+  { id: 'bulwark-elixir', name: 'Bulwark elixir', tier: 3, category: 'consumable', quality: 'common', base: 127, demand: 6 },
+  { id: 'keen-eye-elixir', name: 'Keen-eye elixir', tier: 3, category: 'consumable', quality: 'common', base: 130, demand: 6 },
+  { id: 'philter-of-second-wind', name: 'Philter of second wind', tier: 3, category: 'consumable', quality: 'uncommon', base: 355, demand: 2 },
+
+  // ---- Alchemy, tier 4 ----
+  { id: 'potent-mending-draught', name: 'Potent mending draught', tier: 4, category: 'consumable', quality: 'common', base: 125, demand: 9 },
+  { id: 'potent-focus-draught', name: 'Potent focus draught', tier: 4, category: 'consumable', quality: 'common', base: 135, demand: 8 },
+  { id: 'emberward-draught', name: 'Emberward draught', tier: 4, category: 'consumable', quality: 'common', base: 185, demand: 5 },
+  { id: 'frostward-draught', name: 'Frostward draught', tier: 4, category: 'consumable', quality: 'common', base: 190, demand: 5 },
+  { id: 'ghostlight-draught', name: 'Ghostlight draught', tier: 4, category: 'consumable', quality: 'uncommon', base: 520, demand: 2 },
+
+  // ---- Alchemy, tier 5 ----
+  { id: 'grand-mending-draught', name: 'Grand mending draught', tier: 5, category: 'consumable', quality: 'common', base: 194, demand: 9 },
+  { id: 'grand-focus-draught', name: 'Grand focus draught', tier: 5, category: 'consumable', quality: 'common', base: 204, demand: 8 },
+  { id: 'starlight-elixir', name: 'Starlight elixir', tier: 5, category: 'consumable', quality: 'common', base: 280, demand: 5 },
+  { id: 'shadowward-draught', name: 'Shadowward draught', tier: 5, category: 'consumable', quality: 'common', base: 285, demand: 5 },
+  { id: 'draught-of-the-long-night', name: 'Draught of the long night', tier: 5, category: 'consumable', quality: 'uncommon', base: 780, demand: 2 },
 ];
 
 export const itemById = Object.fromEntries(items.map((item) => [item.id, item]));

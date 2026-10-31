@@ -2,7 +2,7 @@
 // Run from the repo folder:  node tools/engine-check.js
 // Prints PASS or FAIL for each check. Run it after changing anything in js/engine/.
 
-import { newGame, debugFastForward, catchUp, collectMailbox } from '../js/engine/game.js';
+import { newGame, debugFastForward, catchUp, collectMailbox, SAVE_VERSION } from '../js/engine/game.js';
 import { listItem, undercutPrice, lowestOtherPrice, quoteBuy, buyItems, sellToVendor } from '../js/engine/trading.js';
 import { queueCraft, cancelOrder, smeltAtCity } from '../js/engine/crafting.js';
 import { hireHero, zonesFor, expectedHaul, hireFee, regularsInTown } from '../js/engine/heroes.js';
@@ -13,7 +13,7 @@ import { roomFor, addOrMail } from '../js/engine/bags.js';
 import { saleProceeds } from '../js/engine/market.js';
 import { advance, schedule, TICK_MS } from '../js/engine/clock.js';
 import { createRng, rngNext } from '../js/engine/rng.js';
-import { recipeColor, nextTraining, trainRank, debugSetSkill, learnRecipe, trainerRecipes, learnFromScroll } from '../js/engine/skills.js';
+import { recipeColor, nextTraining, trainRank, debugSetSkill, learnRecipe, trainerRecipes, learnFromScroll, debugUnlockProfessions } from '../js/engine/skills.js';
 import { recipes, recipeById } from '../data/recipes.js';
 import { ranks } from '../data/professions.js';
 import { encodeExport, decodeExport, migrate, writeSave, readSave } from '../js/engine/save.js';
@@ -414,7 +414,7 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   const sum = catchUp(s, t0 + 9 * H);
   check('a trip earns levels', reg().level === hero.level + 1 && sum.lines.some((l) => l.includes('is now level')), `level ${reg().level}`);
   check('a regular just home is in town', regularsInTown(s).some((r) => r.id === hero.id));
-  hireHero(s, hero.id, zone.id, 8, t0 + 9 * H);
+  hireHero(s, hero.id, zonesFor(reg())[0].id, 8, t0 + 9 * H); // a level gained can move them to the next band
   check('hiring again adds loyalty', reg().loyalty === 1);
   catchUp(s, t0 + 18 * H);
   const loyal = { ...reg(), level: hero.level, skills: { ...hero.skills } };
@@ -437,6 +437,31 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   check(`the tavern remembers at most ${max} regulars`, s.tavern.regulars.length === max, `${s.tavern.regulars.length}`);
 }
 
+// Three professions: you start with one; the others are locked until a wing opens.
+{
+  const s = newGame({ name: 'Tan', factionId: 'blue', professionId: 'leatherworking', seed: 23, now: t0 });
+  check('a leatherworker starts with hides and thread', s.bags['boar-hide'] > 0 && s.bags['waxed-thread'] > 0 && !s.bags['copper-bar']);
+  check('a leatherworker\'s first hero is a skinner', 'skinning' in s.tavern.board[0].skills);
+  queueCraft(s, 'cured-boar-hide', 2, t0);
+  catchUp(s, t0 + 60 * 1000);
+  check('workbench crafts raise Leatherworking', s.skills.leatherworking.skill === 3 && s.bags['cured-boar-hide'] === 2 && s.skills.blacksmithing.skill === 1);
+  s.bags['rough-stone'] = 4;
+  let threw = false;
+  try { queueCraft(s, 'rough-grit', 1, t0 + 60 * 1000); } catch { threw = true; }
+  check('a profession you don\'t have is refused', threw);
+  debugUnlockProfessions(s);
+  check('opening all professions allows the anvil', queueCraft(s, 'rough-grit', 1, t0 + 60 * 1000) !== undefined);
+}
+{
+  const s = learnAll(newGame({ name: 'Alc', factionId: 'red', professionId: 'alchemy', seed: 24, now: t0 }));
+  check('an alchemist\'s first hero is a herbalist', 'herbalism' in s.tavern.board[0].skills);
+  debugSetSkill(s, 'alchemy', 180);
+  s.bags = { 'iron-bar': 4, ironleaf: 2 };
+  queueCraft(s, 'transmute-iron-to-moonsilver', 2, t0);
+  catchUp(s, t0 + 2 * 60 * 1000);
+  check('a transmute makes two bars from two', s.bags['moonsilver-bar'] === 4 && !s.bags['iron-bar']);
+}
+
 // Old saves upgrade.
 {
   const v1 = { version: 1, createdAt: t0, player: { name: 'Old', factionId: 'blue' }, copper: 5000, reputation: 0,
@@ -444,7 +469,7 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
     timers: [], nextTimerId: 1, settings: { debug: false, mute: false } };
   const s = migrate(structuredClone(v1));
   catchUp(s, t0 + H);
-  check('version 1 save upgrades and runs', s.version === 6 && Array.isArray(s.tavern.regulars) && s.knownRecipes['copper-cleaver'] && s.skills.blacksmithing.skill === 1 && s.market && s.tavern.board.length === 3 && s.stations.anvil);
+  check('version 1 save upgrades and runs', s.version === SAVE_VERSION && s.player.professions[0] === 'blacksmithing' && s.stations.workbench && s.skills.alchemy && Array.isArray(s.tavern.regulars) && s.knownRecipes['copper-cleaver'] && s.skills.blacksmithing.skill === 1 && s.market && s.tavern.board.length === 3 && s.stations.anvil);
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');
