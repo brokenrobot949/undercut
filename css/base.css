@@ -18,7 +18,7 @@
   --q-common: #e8e8e8;
   --q-uncommon: #3fc35a;
   --q-rare: #3d8bf0;
-  --q-epic: #a855f7;
+  --q-epic: #bf8bff; /* light enough to read on dark panels in both themes */
 
   /* Coin colors. */
   --coin-gold: #e8c24a;
@@ -756,3 +756,4 @@ input[type="number"] {
   max-width: 100%;
 }
 .shop-title { color: var(--highlight); font-weight: 600; }
+.older-recipes summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--text-dim); }

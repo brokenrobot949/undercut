@@ -23,7 +23,7 @@ const TIER_NAMES = ['', 'Copper', 'Bronze', 'Iron', 'Moonsilver', 'Starmetal'];
 
 // The Ledger's sell-time estimate, in words.
 function saleText({ soldShare, hours }) {
-  if (hours !== null) return `Ledger: likely sells out in about ${hours < 1 ? 'under an hour' : `${Math.round(hours)} h`}.`;
+  if (hours !== null) return `Ledger: likely sells out in ${hours < 1 ? 'under an hour' : `about ${Math.round(hours)} h`}.`;
   if (soldShare >= 0.1) return `Ledger: about ${Math.round(soldShare * 100)}% likely to sell before it expires.`;
   return 'Ledger: unlikely to sell at this price.';
 }

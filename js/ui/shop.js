@@ -119,7 +119,8 @@ function upgradeEffect(state, id) {
 // The town crier: market events running now, and when each one ends. With
 // the top-level Ledger, also the ones starting soon.
 function crierPanel(ctx) {
-  const running = activeEvents(ctx.state);
+  // A glut that has sold out is over as far as the player cares.
+  const running = activeEvents(ctx.state).filter((e) => eventById[e.type].kind !== 'glut' || glutLeft(ctx.state, e) > 0);
   const warn = eventWarnHours(ctx.state);
   const soon = warn ? upcomingEvents(ctx.state, ctx.now(), warn) : [];
   return el('section', { class: 'panel crier' },
@@ -129,7 +130,7 @@ function crierPanel(ctx) {
       el('p', { class: 'small dim' },
         e.itemId ? [el('button', { class: 'link', type: 'button', onclick: () => openItemSheet(ctx, e.itemId) }, itemById[e.itemId].name), ' · '] : null,
         eventById[e.type].kind !== 'glut' ? ['Ends in ', countdown(e.endsAt)]
-          : glutLeft(ctx.state, e) ? [`${glutLeft(ctx.state, e)} left · gone in at most `, countdown(e.endsAt)] : 'All sold.'))))
+          : [`${glutLeft(ctx.state, e)} left · gone in at most `, countdown(e.endsAt)]))))
       : el('p', { class: 'dim' }, 'No news in the city today. A quiet market.'),
     soon.length ? [el('h3', {}, 'Coming soon (from your Ledger)'), el('ul', { class: 'crier-list' }, soon.map((e) => el('li', {},
       el('p', {}, eventById[e.type].name),
@@ -195,8 +196,10 @@ function recipeOffers(ctx, professionId) {
   const offers = trainerRecipes(ctx.state, professionId);
   if (!offers.length) return el('p', { class: 'small dim' }, 'You know every recipe the trainer sells.');
   const skill = ctx.state.skills[professionId].skill;
-  const shown = [...offers.filter((o) => o.recipe.skill[0] <= skill), ...offers.filter((o) => o.recipe.skill[0] > skill).slice(0, 3)];
-  return el('div', { class: 'market-list trainer-recipes' }, shown.map((o) => {
+  // Recipes that still give skill-ups, then the next few; gray ones fold away.
+  const gray = offers.filter((o) => recipeColor(ctx.state, o.recipe) === 'gray');
+  const shown = [...offers.filter((o) => o.recipe.skill[0] <= skill && !gray.includes(o)), ...offers.filter((o) => o.recipe.skill[0] > skill).slice(0, 3)];
+  const row = (o) => {
     const out = itemById[o.recipe.makes.item];
     const color = recipeColor(ctx.state, o.recipe);
     return el('div', { class: `my-listing skill-${color}` },
@@ -204,7 +207,13 @@ function recipeOffers(ctx, professionId) {
       el('button', { class: `btn small-btn${o.ready ? ' btn-primary' : ''}`, type: 'button', disabled: !o.ready,
         onclick: () => ctx.act((s) => learnRecipe(s, o.recipe.id)) }, 'Learn ', coins(o.cost)),
       el('span', { class: 'small dim market-sub' }, color === 'red' ? colorText(o.recipe, color) : o.reason || colorText(o.recipe, color)));
-  }));
+  };
+  return [
+    shown.length ? el('div', { class: 'market-list trainer-recipes' }, shown.map(row)) : null,
+    gray.length ? el('details', { class: 'older-recipes' },
+      el('summary', { class: 'small' }, `${gray.length} older recipe${gray.length > 1 ? 's' : ''} (no skill-ups, still sellable)`),
+      el('div', { class: 'market-list trainer-recipes' }, gray.map(row))) : null,
+  ];
 }
 
 function trainerRow(ctx, professionId) {

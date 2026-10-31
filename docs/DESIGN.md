@@ -621,6 +621,11 @@ The auction house is the riskiest part of the design, so Phase 1 builds the full
     - Trade Guild standing, quartermaster recipes, profession wings, shop upgrades and the Ledger.
     - Market events, raid expeditions, endgame materials and masterwork recipes.
     - **Gate:** the sim reaches Exalted with all three professions at 300 in 6 to 8 weeks.
+    - **Passed Oct 31, 2026:** a fresh reviewer ran the sim and checked every tab at phone size in both themes. The steady bots reached the gate on days 43–52. There were no layout problems or console errors, and the IP and hard-constraint checks were clean. Carried into Phase 4:
+      - Gold piles up once every upgrade is bought (130–300 g by day 60), so it needs a late-game sink.
+      - Spare endgame materials sell slowly on the auction house.
+      - A few thin-market items (the Guildsteel warhammer, some blue and epic gear, a couple of scrolls) show "Hot" 13–18% of the time in a quiet market.
+      - Some bot listings sell under 50%: iron bars, flintstone, two quartermaster gear items.
 5. **Phase 4 · Polish and launch**
     - Icon pass and credits screen, motion, onboarding polish, home-screen install, sound effects.
     - Final tuning and a full phone test pass.

@@ -3,8 +3,10 @@
 import { el } from './components.js';
 import { professionById } from '../../data/professions.js';
 import { tuning } from '../../data/tuning.js';
-import { skillOf, rankOf, capOf, MAX_SKILL, nextTraining, knowsRecipe, recipeColor, recipeProfession, startingProfession } from '../engine/skills.js';
+import { skillOf, rankOf, capOf, MAX_SKILL, nextTraining, knowsRecipe, recipeColor, recipeProfession, startingProfession, hasProfession } from '../engine/skills.js';
 import { tutorialDone } from '../engine/tutorial.js';
+import { nextWing } from '../engine/wings.js';
+import { getStanding } from '../engine/guild.js';
 import { recipes } from '../../data/recipes.js';
 import { itemById } from '../../data/items.js';
 
@@ -49,7 +51,25 @@ export function nextGoal(state) {
   if (!skillUps && skill < MAX_SKILL) return { text: `None of your ${name} recipes give skill-ups now. Learn a new one at the trainer below.` };
   if (t) return { text: `Reach ${name} ${capOf(state, prof)} (you're at ${skill}), then train ${t.rank.name}.` };
   if (skill < MAX_SKILL) return { text: `Reach ${name} ${MAX_SKILL} (you're at ${skill}).` };
-  return { text: `You've mastered ${name}. Keep filling commissions to raise your standing with the guild.` };
+  return endgameGoal(state, name);
+}
+
+// Once your first profession is mastered: the next wing, the other
+// professions, Exalted, then masterworks.
+function endgameGoal(state, name) {
+  const wing = nextWing(state);
+  if (wing) {
+    if (/standing/.test(wing.reason ?? '')) return { text: `You've mastered ${name}. Reach ${tuning.standings.find((s) => s.id === wing.standing).name} standing to open another profession wing.` };
+    return { text: 'Open your next profession wing in Shop upgrades below, for ', cost: wing.cost, after: '.' };
+  }
+  const behind = state.player.professions.find((p) => skillOf(state, p) < MAX_SKILL);
+  if (behind) return { text: `Reach ${professionById[behind].name} ${MAX_SKILL} (you're at ${skillOf(state, behind)}).` };
+  const { next } = getStanding(state);
+  if (next) return { text: `Every profession mastered. Fill commissions to reach ${next.name} standing with the guild.` };
+  if (recipes.some((r) => r.masterwork && !knowsRecipe(state, r) && hasProfession(state, recipeProfession(r)))) {
+    return { text: "You're the Guildmaster. Buy masterwork recipes from the quartermaster and send raiders for their endgame materials." };
+  }
+  return { text: "You're the Guildmaster, with every profession mastered. Masterworks and raids are the top of the market now." };
 }
 
 // When the next recipe needs materials from a higher tier than anything you
