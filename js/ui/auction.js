@@ -12,6 +12,7 @@ const CATEGORIES = [
   { id: 'material', label: 'Materials' },
   { id: 'consumable', label: 'Consumables' },
   { id: 'gear', label: 'Gear' },
+  { id: 'scroll', label: 'Recipe scrolls' },
 ];
 
 export function renderAuction(ctx) {

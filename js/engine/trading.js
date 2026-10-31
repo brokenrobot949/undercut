@@ -36,6 +36,7 @@ export function matchPrice(state, itemId) {
 export function listItem(state, { itemId, qty, price, hours }, now) {
   const item = itemById[itemId];
   if (item.category === 'trade') throw new Error('Trade goods can only be sold to a vendor.');
+  if (item.category === 'junk') throw new Error('Nobody on the auction house wants junk. Sell it to a vendor.');
   qty = Math.floor(qty);
   price = Math.round(price);
   if (!(qty >= 1)) throw new Error('Choose how many to list.');

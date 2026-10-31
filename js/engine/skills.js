@@ -8,7 +8,9 @@
 import { tuning } from '../../data/tuning.js';
 import { professions, professionById, professionForStation, ranks } from '../../data/professions.js';
 import { recipes, recipeById } from '../../data/recipes.js';
+import { itemById } from '../../data/items.js';
 import { rngChance } from './rng.js';
+import { takeFromBags } from './bags.js';
 
 export const MAX_SKILL = ranks[ranks.length - 1].cap;
 
@@ -172,4 +174,17 @@ export function learnRecipe(state, recipeId) {
 
 export function debugLearnAll(state) {
   for (const r of recipes) if (r.skill) state.knownRecipes[r.id] = true;
+}
+
+// Reads a recipe scroll from your bags: learns its recipe and uses up the scroll.
+// Needs the recipe's first skill number, like the trainer.
+export function learnFromScroll(state, itemId) {
+  const recipe = recipeById[itemById[itemId]?.teaches];
+  if (!recipe) throw new Error('That isn\'t a recipe scroll.');
+  if (knowsRecipe(state, recipe)) throw new Error('You already know that recipe. You could sell the scroll instead.');
+  const profession = recipeProfession(recipe);
+  if (skillOf(state, profession) < recipe.skill[0]) throw new Error(`Needs ${professionById[profession].name} ${recipe.skill[0]} to learn.`);
+  takeFromBags(state, itemId, 1);
+  state.knownRecipes[recipe.id] = true;
+  return recipe;
 }

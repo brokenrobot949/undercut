@@ -7,7 +7,7 @@ import { items } from '../../data/items.js';
 import { addOrMail } from './bags.js';
 import { createRng } from './rng.js';
 import { createClock, advance, gameNow, schedule, newSummary } from './clock.js';
-import { createMarket, marketTick, freshMarket, saleProceeds } from './market.js';
+import { createMarket, syncMarketItems, marketTick, freshMarket, saleProceeds } from './market.js';
 import { createStations, finishUnit } from './crafting.js';
 import { createTavern, refreshBoardTimer, expeditionReturns } from './heroes.js';
 import { createSkills, createKnownRecipes } from './skills.js';
@@ -114,6 +114,7 @@ function gameSummary(state) {
 // Runs everything that happened up to real time `realNow`.
 export function catchUp(state, realNow, summary = gameSummary(state)) {
   if (!state.market) createMarket(state, state.clock.lastSeenAt);
+  else syncMarketItems(state, state.clock.lastSeenAt);
   if (!state.tavern) createTavern(state, state.clock.lastSeenAt);
   return advance(state, gameNow(state, realNow), handlers, summary);
 }

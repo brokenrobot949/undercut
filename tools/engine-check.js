@@ -3,14 +3,16 @@
 // Prints PASS or FAIL for each check. Run it after changing anything in js/engine/.
 
 import { newGame, debugFastForward, catchUp, collectMailbox } from '../js/engine/game.js';
-import { listItem, undercutPrice, lowestOtherPrice, quoteBuy, buyItems } from '../js/engine/trading.js';
+import { listItem, undercutPrice, lowestOtherPrice, quoteBuy, buyItems, sellToVendor } from '../js/engine/trading.js';
 import { queueCraft, cancelOrder, smeltAtCity } from '../js/engine/crafting.js';
-import { hireHero, zonesFor } from '../js/engine/heroes.js';
+import { hireHero, zonesFor, expectedHaul } from '../js/engine/heroes.js';
+import { zoneById } from '../data/zones.js';
+import { itemById } from '../data/items.js';
 import { roomFor, addOrMail } from '../js/engine/bags.js';
 import { saleProceeds } from '../js/engine/market.js';
 import { advance, schedule, TICK_MS } from '../js/engine/clock.js';
 import { createRng, rngNext } from '../js/engine/rng.js';
-import { recipeColor, nextTraining, trainRank, debugSetSkill, learnRecipe, trainerRecipes } from '../js/engine/skills.js';
+import { recipeColor, nextTraining, trainRank, debugSetSkill, learnRecipe, trainerRecipes, learnFromScroll } from '../js/engine/skills.js';
 import { recipes, recipeById } from '../data/recipes.js';
 import { ranks } from '../data/professions.js';
 import { encodeExport, decodeExport, migrate, writeSave, readSave } from '../js/engine/save.js';
@@ -347,6 +349,55 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   catchUp(s, t0 + 4 * H + 60000); // board refresh
   const lv = s.tavern.board[0].level;
   check('at skill 160 the first hero suits tier 3', lv >= 25 && lv <= 35, `level ${lv}`);
+}
+
+// New items in a content update join an old save's market instead of crashing it.
+{
+  const s = game(18);
+  delete s.market.items['starmetal-bar'];
+  delete s.market.items['iron-ore'];
+  let ok = true;
+  try { catchUp(s, t0 + 2 * H); } catch { ok = false; }
+  check('an old market gains new items on load', ok && s.market.items['starmetal-bar'] && s.market.items['iron-ore'].listings.length > 0);
+}
+
+// Gathering: herbalists and skinners, two-profession heroes, bonus loot.
+{
+  const s = game(19);
+  s.copper = 1e6;
+  const hero = { id: 999, name: 'Test', race: 'orc', classId: 'warrior', level: 10, skills: { herbalism: 60, skinning: 60 } };
+  const glade = zoneById['fernwhistle-glade'];
+  check('a herbalist-skinner can go to the glade but not the mine', zonesFor(hero).includes(glade) && !zonesFor(hero).some((z) => z.loot.mining));
+  const both = expectedHaul(hero, glade, 4);
+  const solo = expectedHaul({ ...hero, skills: { herbalism: 60 } }, glade, 4);
+  const qty = (h, id) => h.find((x) => x.item === id)?.qty ?? 0;
+  check('two professions gather both, each at 60%', qty(both, 'boar-hide') > 0 && Math.abs(qty(both, 'dawnpetal') - qty(solo, 'dawnpetal') * 0.6) <= 1,
+    `${qty(both, 'dawnpetal')} vs ${qty(solo, 'dawnpetal')}`);
+  s.tavern.board.push(hero);
+  hireHero(s, 999, 'fernwhistle-glade', 8, t0);
+  catchUp(s, t0 + 9 * H);
+  const got = Object.keys(s.mailbox.items);
+  check('a trip brings home herbs and hides', got.includes('dawnpetal') && got.includes('soft-leather'));
+  check('every trip brings bonus loot from its tier', got.some((id) => itemById[id].loot && itemById[id].tier === 1));
+}
+{
+  const s = game(20);
+  s.bags = { 'bent-horseshoe': 2 };
+  let threw = false;
+  try { listItem(s, { itemId: 'bent-horseshoe', qty: 1, price: 50, hours: 2 }, t0); } catch { threw = true; }
+  check('junk cannot be listed on the auction house', threw && !s.market.items['bent-horseshoe']);
+  const before = s.copper;
+  sellToVendor(s, 'bent-horseshoe', 2);
+  check('junk sells to a vendor', s.copper - before === 2 * Math.floor(20 * 0.25));
+  s.bags = { 'scroll-copper-spurred-knuckles': 1 };
+  s.skills.blacksmithing.skill = 20;
+  threw = false;
+  try { learnFromScroll(s, 'scroll-copper-spurred-knuckles'); } catch { threw = true; }
+  check('a scroll waits for the skill it needs', threw && s.bags['scroll-copper-spurred-knuckles'] === 1);
+  s.skills.blacksmithing.skill = 35;
+  learnFromScroll(s, 'scroll-copper-spurred-knuckles');
+  check('reading a scroll teaches the recipe and uses it up', s.knownRecipes['copper-spurred-knuckles'] && !s.bags['scroll-copper-spurred-knuckles']);
+  check('scroll recipes are not sold by the trainer', !trainerRecipes(s, 'blacksmithing').some((o) => o.recipe.learn === 'scroll'));
 }
 
 // Old saves upgrade.

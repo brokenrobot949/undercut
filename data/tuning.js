@@ -52,6 +52,11 @@ export const tuning = {
     haulSpread: 0.2,
     // Hero levels on the board, [lowest, highest].
     heroLevels: [3, 60],
+    // Chance a hero knows two gathering professions instead of one.
+    dualProfessionChance: 0.3,
+    // A hero gathering with two professions on one trip gathers each at this
+    // share (0.6 each = a bit more in total, less of each).
+    dualGatherShare: 0.6,
   },
 
   // ---- Auction house ----
@@ -80,11 +85,11 @@ export const tuning = {
     // NPC sellers. Each category restocks at this share of its demand...
     // A little above 1 keeps stock on the board to undercut. Much above 1 and
     // there's always something cheaper, so listing high never sells.
-    npcSupply: { material: 1.2, consumable: 1.2, gear: 1.15 },
+    npcSupply: { material: 1.2, consumable: 1.2, gear: 1.15, scroll: 1.15 },
     // ...and stops posting once this many hours of demand are already listed.
     npcMaxStockHours: 8,
     // Units per NPC listing, [smallest, largest].
-    npcLotSize: { material: [5, 20], consumable: [2, 10], gear: [1, 1] },
+    npcLotSize: { material: [5, 20], consumable: [2, 10], gear: [1, 1], scroll: [1, 1] },
     // NPCs post at fair price x somewhere in this range...
     npcPriceRange: [0.9, 1.25],
     // ...except this share of them, who undercut the lowest listing by 1-5%...

@@ -26,26 +26,34 @@ const HISTORY_HOURS = 168; // 7 days of hourly sale records, for the Ledger
 export function createMarket(state, now) {
   const market = { nextListingId: 1, items: {} };
   state.market = market;
-  for (const item of tradeableItems) {
-    const m = {
-      fair: item.base,
-      drift: 1,
-      reservoir: demandPerHour(state, item) * 2,
-      npcPending: 0,
-      listings: [],
-      histHour: Math.floor(now / HOUR),
-      salesCount: new Array(HISTORY_HOURS).fill(0),
-      salesSum: new Array(HISTORY_HOURS).fill(0),
-    };
-    market.items[item.id] = m;
-    // Start with a normal amount of NPC stock, as if the market had been running.
-    const stockHours = M.npcMaxStockHours * 0.75;
-    const posted = { units: 0 };
-    while (posted.units < demandPerHour(state, item) * stockHours) {
-      postNpcLot(state, item, m, now - rngRange(state.rng, 0, stockHours) * HOUR, posted);
-    }
-  }
+  for (const item of tradeableItems) addItemMarket(state, item, now);
   return market;
+}
+
+// Adds items that are new in the data since this save's market was made, so
+// a content update never breaks an old save. Called before every catch-up.
+export function syncMarketItems(state, now) {
+  for (const item of tradeableItems) if (!state.market.items[item.id]) addItemMarket(state, item, now);
+}
+
+function addItemMarket(state, item, now) {
+  const m = {
+    fair: item.base,
+    drift: 1,
+    reservoir: demandPerHour(state, item) * 2,
+    npcPending: 0,
+    listings: [],
+    histHour: Math.floor(now / HOUR),
+    salesCount: new Array(HISTORY_HOURS).fill(0),
+    salesSum: new Array(HISTORY_HOURS).fill(0),
+  };
+  state.market.items[item.id] = m;
+  // Start with a normal amount of NPC stock, as if the market had been running.
+  const stockHours = M.npcMaxStockHours * 0.75;
+  const posted = { units: 0 };
+  while (posted.units < demandPerHour(state, item) * stockHours) {
+    postNpcLot(state, item, m, now - rngRange(state.rng, 0, stockHours) * HOUR, posted);
+  }
 }
 
 // ---- Numbers the UI and simulator read ----------------------------------

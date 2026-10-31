@@ -23,7 +23,7 @@ import { listItem, cancelListing, undercutPrice, buyItems, buyFromVendor, quoteB
 import { bagSlots, slotsUsed, roomFor } from '../js/engine/bags.js';
 import { queueCraft, maxCraftable } from '../js/engine/crafting.js';
 import { hireHero, hireFee, zonesFor, expeditionSlots } from '../js/engine/heroes.js';
-import { nextTraining, trainRank, recipeColor, capOf, knowsRecipe, trainerRecipes, learnRecipe, forgeRankNeeded } from '../js/engine/skills.js';
+import { nextTraining, trainRank, recipeColor, capOf, knowsRecipe, trainerRecipes, learnRecipe, forgeRankNeeded, learnFromScroll } from '../js/engine/skills.js';
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -173,6 +173,8 @@ const BOTS = [
 ];
 const SELL_CATEGORIES = new Set(['consumable', 'gear']);
 const PROF = 'blacksmithing';
+// Materials some recipe uses; the bots keep a stock of these.
+const USED_MATS = new Set(recipes.flatMap((r) => r.mats.map((m) => m.item)));
 // Anvil recipes that make a material other recipes use (grit).
 const GRITS = recipes.filter((r) => r.station === 'anvil' && itemById[r.makes.item].category === 'material').map((r) => r.id);
 // Skill milestones the sim records, with the pacing target from DESIGN.md (days).
@@ -247,12 +249,13 @@ function botCheckIn(bot, state, now, stats) {
   // Heroes: fill every expedition slot while the bags have room. The first goes
   // to the tier the bot is leveling in, the rest to the best zone it can use:
   // no more than one tier up, and only ore its own forge can smelt.
-  const usable = (z) => z.tier <= wantTier + 1 && !recipes.some((r) => r.station === 'forge' &&
-    r.mats.some((m) => m.item === z.loot.mining[0].item) && forgeRankNeeded(state, r));
+  // Blacksmith bots only hire miners for ore zones.
+  const usable = (z, h) => z.loot.mining && h.skills.mining >= z.minSkill && z.tier <= wantTier + 1 &&
+    !recipes.some((r) => r.station === 'forge' && r.mats.some((m) => m.item === z.loot.mining[0].item) && forgeRankNeeded(state, r));
   while (freeSlots() >= 8 && state.tavern.expeditions.length < expeditionSlots(state)) {
     const first = state.tavern.expeditions.length === 0;
     const rank = (z) => (first && z.tier !== wantTier ? 1 : 0);
-    const options = state.tavern.board.flatMap((h) => zonesFor(h).filter(usable).map((z) => ({ h, z })))
+    const options = state.tavern.board.flatMap((h) => zonesFor(h).filter((z) => usable(z, h)).map((z) => ({ h, z })))
       .sort((a, b) => rank(a.z) - rank(b.z) || b.z.tier - a.z.tier);
     if (!options.length) break;
     const { h, z } = options[0];
@@ -315,7 +318,9 @@ function botCheckIn(bot, state, now, stats) {
   const mine = playerListings(state);
   for (const [itemId, have] of Object.entries(state.bags)) {
     const item = itemById[itemId];
-    const surplus = item.category === 'material' && have > 100;
+    // Materials no recipe uses (herbs, hides, cloth, gems, essences from bonus loot) all go up for sale.
+    const keep = USED_MATS.has(itemId) ? 100 : 0;
+    const surplus = (item.category === 'material' && have > keep) || item.category === 'scroll';
     const flipReady = (stats.flipStock[itemId] || 0) > 0 && undercutPrice(state, itemId) >= item.base * 0.95;
     if (!SELL_CATEGORIES.has(item.category) && !surplus && !flipReady) continue;
     const existing = mine.filter((x) => x.itemId === itemId);
@@ -324,7 +329,7 @@ function botCheckIn(bot, state, now, stats) {
     } else if (existing.length) continue;
     const listedNow = playerListings(state).filter((x) => x.itemId === itemId).reduce((n, x) => n + x.listing.qty, 0);
     let want = Math.min(state.bags[itemId] || 0, Math.ceil(demandPerHour(state, item) * bot.listHours) - listedNow);
-    if (surplus && !SELL_CATEGORIES.has(item.category)) want = Math.min(want, have - 100);
+    if (surplus && !SELL_CATEGORIES.has(item.category)) want = Math.min(want, have - keep);
     if (flipReady) want = Math.max(want, Math.min(state.bags[itemId] || 0, stats.flipStock[itemId]));
     if (want > 0) {
       const before = state.copper;
@@ -334,6 +339,16 @@ function botCheckIn(bot, state, now, stats) {
         if (stats.flipStock[itemId]) stats.flipStock[itemId] = Math.max(0, stats.flipStock[itemId] - want);
       }
     }
+  }
+
+  // Read any recipe scroll the bot can use; the rest get sold above.
+  for (const itemId of Object.keys(state.bags)) {
+    if (itemById[itemId].teaches && tryAct(() => learnFromScroll(state, itemId))) stats.scrollsRead++;
+  }
+
+  // Junk from trips goes to the vendor.
+  for (const [itemId, have] of Object.entries(state.bags)) {
+    if (itemById[itemId].category === 'junk' && tryAct(() => sellToVendor(state, itemId, have))) stats.junkSold += have;
   }
 
   // Leveling junk: vendor finished goods beyond two days of demand.
@@ -363,7 +378,7 @@ function botCheckIn(bot, state, now, stats) {
 function botRun(bot, seed) {
   const state = newGame({ name: bot.name, factionId: 'red', seed, now: START });
   const stats = { sold: {}, listed: {}, firstSale: null, heroFees: 0, deposits: 0, relists: 0, flips: 0, flipStock: {},
-    levelCrafts: 0, vendored: 0, recipeSpend: 0, gold: {}, skill: {}, reached: {}, flooded: {} };
+    levelCrafts: 0, vendored: 0, recipeSpend: 0, scrollsRead: 0, junkSold: 0, gold: {}, skill: {}, reached: {}, flooded: {} };
   const checkpoints = [1, 3, 7, 14, 30, 60];
   for (let t = START; t <= START + 60 * DAY; t += bot.every * HOUR) {
     botCheckIn(bot, state, t, stats);
@@ -401,6 +416,7 @@ function botReport() {
     }
     const flooded = Object.entries(runs[0].flooded).filter(([, n]) => n > runs[0].checkIns * 0.25).map(([id]) => itemById[id].name);
     if (flooded.length) console.log(`${pad('', 10)}flooded over 25% of the time: ${flooded.join(', ')}`);
+    console.log(`${pad('', 10)}${avg((r) => r.scrollsRead).toFixed(1)} recipe scrolls read, ${Math.round(avg((r) => r.junkSold))} junk vendored`);
     if (bot.flip) console.log(`${pad('', 10)}flipped ${Math.round(avg((r) => r.flips))} units`);
     if (avg((r) => r.gold[60]) < tuning.startingCopper) problems.push(`${bot.name} bot ends with less gold than it started with`);
     pacing.push({ runs, first });

@@ -4,7 +4,8 @@
 import { el, coins, openSheet, stepper, fill, coinInput, toast, coinText } from './components.js';
 import { itemById } from '../../data/items.js';
 import { recipes } from '../../data/recipes.js';
-import { knowsRecipe } from '../engine/skills.js';
+import { knowsRecipe, learnFromScroll } from '../engine/skills.js';
+import { recipeById } from '../../data/recipes.js';
 import { tuning } from '../../data/tuning.js';
 import { bagCount } from '../engine/bags.js';
 import {
@@ -27,15 +28,18 @@ export function openItemSheet(ctx, itemId) {
   function draw() {
     const { state } = ctx;
     const have = bagCount(state, itemId);
-    const tradeable = item.category !== 'trade';
+    const tradeable = item.category !== 'trade' && item.category !== 'junk';
     fill(sheet.body, 
       el('p', { class: 'small' },
         el('span', { class: `q-${item.quality}` }, item.quality[0].toUpperCase() + item.quality.slice(1)),
         ` · ${TIER_NAMES[item.tier]} tier · ${item.category}${item.armor ? ` (${item.armor})` : ''} · In bags: `,
         el('strong', {}, have)),
-      tradeable ? marketInfo() : el('p', { class: 'small dim' }, `Sold by the trade goods vendor for ${item.vendorBuy} copper each.`),
+      tradeable ? marketInfo() : item.category === 'junk'
+        ? el('p', { class: 'small dim' }, 'Junk a hero brought home. Only a vendor will take it.')
+        : el('p', { class: 'small dim' }, `Sold by the trade goods vendor for ${item.vendorBuy} copper each.`),
+      item.teaches && have > 0 ? scrollSection() : null,
       tradeable && have > 0 ? sellSection(have) : null,
-      tradeable ? buySection() : vendorBuySection(),
+      tradeable ? buySection() : item.category === 'junk' ? null : vendorBuySection(),
       have > 0 ? vendorSellSection(have) : null,
       recipeSection(),
       tradeable ? listingsSection() : null,
@@ -145,6 +149,16 @@ export function openItemSheet(ctx, itemId) {
       el('p', { class: 'small dim' }, 'Instant, at the floor price of ', coins(vendorPrice(item)), ' each.'),
       el('div', { class: 'field' }, qty.node),
       el('button', { class: 'btn wide', type: 'button', onclick: () => act((s) => sellToVendor(s, itemId, qty.value)) }, 'Sell to vendor'));
+  }
+
+  function scrollSection() {
+    const recipe = recipeById[item.teaches];
+    const known = knowsRecipe(ctx.state, recipe);
+    return el('section', { class: 'panel' },
+      el('h3', {}, 'Learn this recipe'),
+      el('p', { class: 'small dim' }, known ? 'You already know it. Sell the scroll to someone who doesn\'t.'
+        : `Teaches ${itemById[recipe.makes.item].name}. Needs skill ${recipe.skill[0]}. The scroll is used up.`),
+      known ? null : el('button', { class: 'btn btn-primary wide', type: 'button', onclick: () => act((s) => learnFromScroll(s, itemId)) }, 'Learn recipe'));
   }
 
   function recipeSection() {

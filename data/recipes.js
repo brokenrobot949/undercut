@@ -14,6 +14,8 @@
 //             (smelting gives none).
 //   learn     how you get it: 'start' (known from the start) or a price in copper at the
 //             Trade Guild trainer, who sells it once your skill reaches its first number.
+//             It can also be 'scroll': only learned from a recipe scroll that heroes
+//             sometimes bring back.
 //             Recipes with no skill (smelting) are always known.
 //
 // Every material named here must exist in data/items.js.
@@ -48,6 +50,8 @@ export const recipes = [
     makes: { item: 'copper-ringmail-vest', qty: 1 }, mats: [{ item: 'copper-bar', qty: 6 }] },
   { id: 'copper-plate-cuffs', station: 'anvil', tier: 1, skill: [40, 55, 65, 75], learn: 500, seconds: 25,
     makes: { item: 'copper-plate-cuffs', qty: 1 }, mats: [{ item: 'copper-bar', qty: 5 }, { item: 'rough-grit', qty: 1 }] },
+  { id: 'copper-spurred-knuckles', station: 'anvil', tier: 1, skill: [35, 50, 60, 70], learn: 'scroll', seconds: 25,
+    makes: { item: 'copper-spurred-knuckles', qty: 1 }, mats: [{ item: 'copper-bar', qty: 5 }, { item: 'rough-grit', qty: 1 }] },
 
   // ---- Anvil: Blacksmithing tier 2 ----
   { id: 'coarse-grit', station: 'anvil', tier: 2, skill: [55, 70, 80, 90], learn: 300, seconds: 8,
@@ -64,6 +68,9 @@ export const recipes = [
   { id: 'bronze-plate-gauntlets', station: 'anvil', tier: 2, skill: [105, 120, 130, 140], learn: 2500, seconds: 40,
     makes: { item: 'bronze-plate-gauntlets', qty: 1 },
     mats: [{ item: 'bronze-bar', qty: 6 }, { item: 'coarse-grit', qty: 1 }, { item: 'smithing-flux', qty: 1 }] },
+  { id: 'bronze-crested-helm', station: 'anvil', tier: 2, skill: [100, 115, 125, 135], learn: 'scroll', seconds: 45,
+    makes: { item: 'bronze-crested-helm', qty: 1 },
+    mats: [{ item: 'bronze-bar', qty: 7 }, { item: 'coarse-grit', qty: 1 }, { item: 'smithing-flux', qty: 2 }] },
 
   // ---- Anvil: Blacksmithing tier 3 ----
   { id: 'ironstone-grit', station: 'anvil', tier: 3, skill: [125, 140, 150, 160], learn: 3000, seconds: 10,
@@ -80,6 +87,9 @@ export const recipes = [
   { id: 'steel-plate-pauldrons', station: 'anvil', tier: 3, skill: [175, 190, 200, 210], learn: 15000, seconds: 70,
     makes: { item: 'steel-plate-pauldrons', qty: 1 },
     mats: [{ item: 'steel-bar', qty: 6 }, { item: 'ironstone-grit', qty: 1 }, { item: 'smithing-flux', qty: 2 }] },
+  { id: 'steel-war-pick', station: 'anvil', tier: 3, skill: [170, 185, 195, 205], learn: 'scroll', seconds: 70,
+    makes: { item: 'steel-war-pick', qty: 1 },
+    mats: [{ item: 'steel-bar', qty: 7 }, { item: 'ironstone-grit', qty: 1 }, { item: 'smithing-flux', qty: 2 }] },
 
   // ---- Anvil: Blacksmithing tier 4 ----
   { id: 'flintstone-grit', station: 'anvil', tier: 4, skill: [190, 205, 215, 225], learn: 6000, seconds: 12,
@@ -96,6 +106,9 @@ export const recipes = [
   { id: 'moonsilver-plate-helm', station: 'anvil', tier: 4, skill: [240, 255, 265, 275], learn: 30000, seconds: 90,
     makes: { item: 'moonsilver-plate-helm', qty: 1 },
     mats: [{ item: 'moonsilver-bar', qty: 10 }, { item: 'steel-bar', qty: 2 }, { item: 'flintstone-grit', qty: 1 }, { item: 'smithing-flux', qty: 2 }] },
+  { id: 'moonsilver-lamellar-vest', station: 'anvil', tier: 4, skill: [235, 250, 260, 270], learn: 'scroll', seconds: 90,
+    makes: { item: 'moonsilver-lamellar-vest', qty: 1 },
+    mats: [{ item: 'moonsilver-bar', qty: 12 }, { item: 'tough-leather', qty: 2 }, { item: 'smithing-flux', qty: 3 }] },
 
   // ---- Anvil: Blacksmithing tier 5 ----
   { id: 'basalt-grit', station: 'anvil', tier: 5, skill: [250, 265, 275, 285], learn: 15000, seconds: 15,
@@ -112,6 +125,9 @@ export const recipes = [
   { id: 'starmetal-plate-breastplate', station: 'anvil', tier: 5, skill: [290, 305, 315, 325], learn: 50000, seconds: 120,
     makes: { item: 'starmetal-plate-breastplate', qty: 1 },
     mats: [{ item: 'starmetal-bar', qty: 12 }, { item: 'steel-bar', qty: 4 }, { item: 'basalt-grit', qty: 1 }, { item: 'smithing-flux', qty: 3 }] },
+  { id: 'starmetal-maul', station: 'anvil', tier: 5, skill: [280, 295, 305, 315], learn: 'scroll', seconds: 120,
+    makes: { item: 'starmetal-maul', qty: 1 },
+    mats: [{ item: 'starmetal-bar', qty: 14 }, { item: 'diamond', qty: 1 }, { item: 'basalt-grit', qty: 2 }, { item: 'smithing-flux', qty: 3 }] },
 ];
 
 export const recipeById = Object.fromEntries(recipes.map((r) => [r.id, r]));

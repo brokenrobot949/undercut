@@ -129,7 +129,7 @@ A typical recipe is orange for 15 points after you learn it, then yellow for 10,
 - **Starting recipes:** every profession starts knowing its two skill-1 recipes (for Blacksmithing, rough grit and the copper cleaver). Smelting needs no recipe.
 - **Guild trainer:** core recipes, bought with gold once your skill reaches the recipe's orange number. Starting prices: 50 c to 5 s for tier 1, 3 s to 25 s for tier 2. The Workshop only lists recipes you know, and points to the trainer when a new one is for sale.
 - **Guild quartermaster:** better recipes, gated by guild standing.
-- **Rare drops:** heroes sometimes bring back a recipe scroll. It can be learned or sold on the auction house.
+- **Rare drops:** heroes sometimes bring back a recipe scroll. It can be learned (once your skill reaches the recipe) or sold on the auction house. Each profession has one scroll-only recipe per tier. Blacksmithing: Copper spurred knuckles, Bronze crested helm, Steel war pick, Moonsilver lamellar vest, Starmetal maul.
 
 Intermediate recipes count for skill too: grinding stones from stone (Blacksmithing) and cured hides from hides and salt (Leatherworking).
 
@@ -145,13 +145,23 @@ Materials come in five tiers that follow hero level bands, with original names o
 
 | Tier | Hero levels | Ore and bars | Stone | Leather | Herbs | Vial |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 1–15 | Copper ore → copper bar | Rough stone | Light leather | Dawnpetal, Silverfern | Simple vial |
-| 2 | 15–25 | Tin ore → tin bar; 1 copper bar + 1 tin bar → 2 bronze bars | Coarse stone | Medium leather | Thornbriar, Bruisewort | Simple vial |
-| 3 | 25–35 | Iron ore → iron bar; iron bar + coal → steel bar | Ironstone | Heavy leather | Ironleaf, Wild sage | Leaded vial |
-| 4 | 35–45 | Moonsilver ore → moonsilver bar | Flintstone | Thick leather | Sunbloom, Ghostcap | Leaded vial |
-| 5 | 45–60 | Starmetal ore → starmetal bar | Basalt | Hardened leather | Starlily, Gravemoss | Crystal vial |
+| 1 | 1–15 | Copper ore → copper bar | Rough stone | Soft leather | Dawnpetal, Silverfern | Simple vial |
+| 2 | 15–25 | Tin ore → tin bar; 1 copper bar + 1 tin bar → 2 bronze bars | Coarse stone | Supple leather | Thistlebur, Bruisewort | Simple vial |
+| 3 | 25–35 | Iron ore → iron bar; iron bar + coal → steel bar | Ironstone | Tough leather | Ironleaf, Wild sage | Stoppered vial |
+| 4 | 35–45 | Moonsilver ore → moonsilver bar | Flintstone | Boiled leather | Sunbloom, Ghostcap | Stoppered vial |
+| 5 | 45–60 | Starmetal ore → starmetal bar | Basalt | Ironhide leather | Starlily, Barrowmoss | Cut-glass vial |
 
-Each tier also has a hide (cured into leather goods with salt), a cloth, an elemental essence and one or two gems. Endgame recipes need rare materials from raid expeditions: Ember core, Voidglass shard and Wyrm scale.
+Each tier also has a hide (cured into leather goods with salt), a cloth, an elemental essence and a gem. Endgame recipes need rare materials from raid expeditions: Ember core, Voidglass shard and Wyrm scale.
+
+| Tier | Hide | Cloth | Essence | Gem | Junk (vendor only) |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Boar hide | Linen scraps | Cinder essence | Quartz | Bent horseshoe, Chipped bone dice |
+| 2 | Wolf hide | Wool scraps | Tide essence | Garnet | Rusty buckle, Torn map scrap |
+| 3 | Bear hide | Silk scraps | Gale essence | Topaz | Cracked tankard, Dull arrowhead |
+| 4 | Basilisk hide | Brocade scraps | Stone essence | Tourmaline | Moth-eaten cloak, Broken compass |
+| 5 | Drakeling hide | Samite scraps | Aether essence | Diamond | Faded love letter, Tarnished locket |
+
+Junk never trades on the auction house. Until Leatherworking and Alchemy are playable, herbs, hides and leather sell to NPC crafters on the auction house.
 
 **Four ways to get materials**
 
@@ -188,14 +198,14 @@ Hiring is one pick from a board, with no roster to manage. The tavern board show
 
 **What decides the haul**
 
-- **Gathering profession:** what they bring back. A miner brings ore, stone and sometimes gems.
+- **Gathering profession:** what they bring back. A miner brings ore and stone, a herbalist herbs, a skinner hides and leather. A hero with two professions gathers with both when the zone has loot for both, each at 60% of the usual rate.
 - **Gathering skill and level:** which tier they can reach and how much they gather.
 - **Trip length:** how much. Yield grows with time faster than the fee does, so long trips are cheaper per unit.
-- **General loot:** every trip also rolls cloth, essences, gray trash and a small chance of a recipe scroll.
+- **General loot:** every trip also gets one bonus roll per hour (at least one; Risen get one more): cloth 45%, junk 29%, an essence 20%, a gem 6%, all from the zone's tier. Each trip also has about a 1% chance per hour of a recipe scroll. A bad haul halves only the gathered materials, never the bonus loot.
 
 **No failed trips.** A trip never comes back empty. A bad haul comes with a short flavor line, like "Brakka was chased off by a bear and came home with half a load." This keeps the idle loop low-stress.
 
-**Zones.** Ten zones, two per tier: one leans toward ore, the other toward herbs and hides. Heroes only go to zones within their level band. Ore zones: Rustvein Hollow (tier 1), Tinmouth Ridge (tier 2), Emberfall Quarry (tier 3), Moonscar Basin (tier 4) and Skyfall Crater (tier 5). The herb and hide zones are still to be named. At Revered standing, raid expeditions open: level-60 heroes only, 8 hours, a high fee, and the only source of endgame materials.
+**Zones.** Ten zones, two per tier: one leans toward ore, the other toward herbs and hides. Heroes only go to zones within their level band. Ore zones: Rustvein Hollow (tier 1), Tinmouth Ridge (tier 2), Emberfall Quarry (tier 3), Moonscar Basin (tier 4) and Skyfall Crater (tier 5). Herb and hide zones: Fernwhistle Glade (1), Bramblewick Fen (2), Wildsage Downs (3), Ghostlight Marsh (4) and Barrowmoor (5). The first hero on the board always gathers for your profession at the tier you're crafting in. At Revered standing, raid expeditions open: level-60 heroes only, 8 hours, a high fee, and the only source of endgame materials.
 
 **Races, classes and perks**
 
@@ -517,7 +527,7 @@ All open design calls are settled.
 | Game title | Undercut. The only other use found is a 2004 tabletop auction game, low risk for a free browser game |
 | Faction, capital and guild names | Ember Pact and Kragmar, Azure Crown and Aldmere |
 | Race names | Hornkin and Risen |
-| Material and herb names | As written in Materials and smelting. Stones for tiers 3–5 use real rock names (ironstone, flintstone, basalt) to keep clear of the original game's stone ladder |
+| Material and herb names | As written in Materials and smelting. Stones for tiers 3–5 use real rock names (ironstone, flintstone, basalt), and leathers, two herbs and two vials were renamed (Oct 30, 2026), to keep clear of the original game's names |
 | Sound | In scope: a small set of effects in Phase 4 |
 | Pacing | About 6 to 8 weeks to the full endgame |
 | Save slots | One save with export, plus "New game" |
