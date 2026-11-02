@@ -65,7 +65,7 @@ export function renderNewGame(root, { onStart }) {
     el('h2', {}, 'Choose your capital'),
     el('div', { class: 'faction-choices' }, cards),
     el('h2', {}, 'Choose your craft'),
-    el('p', { class: 'small dim' }, 'Your first profession is yours for good. The other two open later with a new wing for your shop.'),
+    el('p', { class: 'small dim' }, 'Your first profession is yours for good. More open later, one new wing for your shop at a time.'),
     el('div', { class: 'faction-choices' }, profCards),
     startBtn,
   ));

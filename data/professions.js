@@ -10,7 +10,7 @@
 //   startable  false: can't be a shop's first profession, only opened with a wing.
 //
 // The player picks one profession when starting a shop; it is permanent. The
-// other two open with profession wings (see wings below).
+// others open with profession wings (see wings below).
 //
 // Ranks (shared by every profession), in order:
 //   cap        highest skill this rank allows. Skill stops here until you train the next rank.

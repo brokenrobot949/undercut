@@ -42,6 +42,13 @@ export function uiIcon(key) {
   return iconSpan(uiIcons[key]);
 }
 
+// Blue and purple gear is valuable: ask before breaking it down.
+export function confirmDisenchant(itemId, qty) {
+  const item = itemById[itemId];
+  if (item.quality !== 'rare' && item.quality !== 'epic') return true;
+  return confirm(`Disenchant ${qty} × ${item.name}? It's ${item.quality === 'epic' ? 'a purple masterwork' : 'blue gear'}, and it's gone for good.`);
+}
+
 // Replaces a node's contents. Like el(), skips null/false and flattens arrays
 // (the browser's own replaceChildren would print them as text).
 export function fill(node, ...children) {

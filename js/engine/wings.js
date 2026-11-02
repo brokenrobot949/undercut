@@ -1,4 +1,4 @@
-// Profession wings: open your second and third professions, gated by guild
+// Profession wings: open your second to fifth professions, gated by guild
 // standing and bought with gold.
 
 import { tuning } from '../../data/tuning.js';

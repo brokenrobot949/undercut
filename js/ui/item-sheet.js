@@ -1,7 +1,7 @@
 // The one item sheet: tap any item anywhere to open it. Market info, your
 // stock, List / Buy / Vendor, and the recipes that make or use it.
 
-import { el, coins, openSheet, stepper, fill, coinInput, toast, coinText, itemIcon } from './components.js';
+import { el, coins, openSheet, stepper, fill, coinInput, toast, coinText, itemIcon, confirmDisenchant } from './components.js';
 import { disenchant, disenchantYield, canDisenchant } from '../engine/enchanting.js';
 import { itemById } from '../../data/items.js';
 import { recipes } from '../../data/recipes.js';
@@ -175,7 +175,7 @@ export function openItemSheet(ctx, itemId) {
       el('h3', {}, 'Disenchant'),
       el('p', { class: 'small dim' }, `Each one gives ${yields.join(', ')}.`),
       qty.node,
-      el('button', { class: 'btn wide', type: 'button', onclick: () => act((s) => {
+      el('button', { class: 'btn wide', type: 'button', onclick: () => confirmDisenchant(itemId, qty.value) && act((s) => {
         const got = disenchant(s, itemId, qty.value);
         toast(`Got ${Object.entries(got).map(([g, n]) => `${n} × ${itemById[g].name}`).join(', ')}.`);
       }) }, 'Disenchant'));

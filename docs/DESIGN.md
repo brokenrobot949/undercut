@@ -733,6 +733,9 @@ The auction house is the riskiest part of the design, so Phase 1 builds the full
     - Fourth and fifth profession wings (Revered, Exalted).
     - The endgame stays Exalted with any three professions at 300.
     - **Gate:** the sim's steady bots, including a tailor, reach the gate in 6–8 weeks; icons, credits and phone screenshots checked.
+    - **Gate passed Nov 2, 2026:** a fresh reviewer ran the engine checks (all pass) and the sim (no problems). The steady bots reached the gate on days 42–54: cautious 44–47, tanner 50, alchemist 43–46, tailor 51–53, enchanter 49–54. Quiet-market Hot tags peaked at 7%. They checked the new screens at 390 × 844 in both themes with no layout problems or console errors, the IP and hard-constraint checks were clean, and a pre-Phase-5 save loaded and worked. Fixed after the review: a confirmation before disenchanting blue or purple gear; the guild panel lists the fourth (Revered) and fifth (Exalted) wings; the new-game text no longer says "the other two". Still open:
+      - Tailor and enchanter shops are poorer in the sim than the older professions: about 10–14 g on day 60 against 52–110 g, with fewer raids and gold sinks bought. The enchanter's gate day (54) is close to the limit.
+      - A new tailor's Workshop shows the City Smelter panel, as an alchemist's does.
 
 **Later updates:** Engineering, Cooking, First Aid, and a neutral port market.
 

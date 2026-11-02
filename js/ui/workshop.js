@@ -3,7 +3,7 @@
 // Smelter at the forge. Recipe names are colored by skill-up odds: orange,
 // yellow, green, gray, and red when too hard.
 
-import { el, coins, openSheet, stepper, progress, countdown, fill, itemIcon, toast } from './components.js';
+import { el, coins, openSheet, stepper, progress, countdown, fill, itemIcon, toast, confirmDisenchant } from './components.js';
 import { disenchant } from '../engine/enchanting.js';
 import { recipes, recipeById } from '../../data/recipes.js';
 import { itemById } from '../../data/items.js';
@@ -55,7 +55,7 @@ function disenchantPanel(ctx) {
     gear.length ? el('div', { class: 'market-list' }, gear.map(([id, qty]) => el('div', { class: 'my-listing with-icon one-line' },
       itemIcon(id, 'sm'),
       el('button', { class: `link item-name q-${itemById[id].quality}`, type: 'button', onclick: () => openItemSheet(ctx, id) }, `${qty} × ${itemById[id].name}`),
-      el('button', { class: 'btn small-btn', type: 'button', onclick: () => ctx.act((s) => {
+      el('button', { class: 'btn small-btn', type: 'button', onclick: () => confirmDisenchant(id, 1) && ctx.act((s) => {
         const got = disenchant(s, id, 1);
         toast(`Got ${Object.entries(got).map(([g, n]) => `${n} × ${itemById[g].name}`).join(', ')}.`);
       }) }, 'Disenchant'))))

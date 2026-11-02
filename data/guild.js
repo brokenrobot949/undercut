@@ -22,10 +22,12 @@ export const standingUnlocks = [
     { text: 'Blue-quality quartermaster recipes' },
   ] },
   { standing: 'revered', unlocks: [
+    { text: 'Your fourth profession wing' },
     { text: 'Raid expeditions and endgame materials' },
     { text: 'Top blue quartermaster recipes' },
   ] },
   { standing: 'exalted', unlocks: [
+    { text: 'Your fifth profession wing' },
     { text: 'Masterwork (epic) recipes' },
     { text: 'The Guildmaster title and a top-tier shop banner' },
   ] },
