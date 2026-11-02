@@ -226,7 +226,10 @@ Income pass (Nov 2, 2026, after the Phase 5 gate):
 - Charms now sell for 1.6× their material cost and a focus for 2.0× (were 1.3× and 1.6×).
 - Cloth gear, satchels and patch kits have 30% more buyers, since three classes wear cloth.
 - Sim result: enchanter gate days 44, tailor 54–56, every steady bot 44–56, no problems.
-- Still open: shops without Blacksmithing end day 60 with much less gold (tailor and enchanter about 17 g, against 60–100 g for bots with Blacksmithing). On paper the loom's best profit per day is higher than the anvil's, but miners and the free forge make a smith's materials nearly free. Worth a look in a future balance pass.
+- The Blacksmithing gap was the sim, not the game (Nov 2, 2026). Sim bots crafted goods to sell only from what was already in their bags, and never bought materials to do it. Smith bots had bags full of bars from their miners, so their anvil earned about 315 g a run; the tailor bot crafted under 1 g for sale, because its tier 3+ gear needs a dye herb its heroes don't bring. On paper every profession's market can absorb a similar profit per day. Two sim fixes:
+  - Bots now buy the missing materials for up to 3 crafts of a sellable recipe that earns at least 15% over material cost. They spend at most 15% of their spare gold, and never more than 80% of what the goods will sell for. The flipper bot doesn't, so it still tests flipping on its own.
+  - Bots keep materials for their top-tier (tier 5) recipes even once those turn gray, instead of selling them raw.
+- Result: every steady bot reaches the gate on days 44–56, with no problems. Gold on day 60: tailor 37 g, tanner 54 g, enchanter 84 g, alchemist 109 g, cautious smith 123 g. No game numbers changed in this step.
 
 ## Materials and smelting
 
@@ -742,7 +745,7 @@ The auction house is the riskiest part of the design, so Phase 1 builds the full
     - The endgame stays Exalted with any three professions at 300.
     - **Gate:** the sim's steady bots, including a tailor, reach the gate in 6–8 weeks; icons, credits and phone screenshots checked.
     - **Gate passed Nov 2, 2026:** a fresh reviewer ran the engine checks (all pass) and the sim (no problems). The steady bots reached the gate on days 42–54: cautious 44–47, tanner 50, alchemist 43–46, tailor 51–53, enchanter 49–54. Quiet-market Hot tags peaked at 7%. They checked the new screens at 390 × 844 in both themes with no layout problems or console errors, the IP and hard-constraint checks were clean, and a pre-Phase-5 save loaded and worked. Fixed after the review: a confirmation before disenchanting blue or purple gear; the guild panel lists the fourth (Revered) and fifth (Exalted) wings; the new-game text no longer says "the other two". Still open:
-      - Tailor and enchanter shops are poorer in the sim than the older professions: about 10–14 g on day 60 against 52–110 g, with fewer raids and gold sinks bought. The enchanter's gate day (54) is close to the limit.
+      - Tailor and enchanter shops were poorer in the sim than the older professions. Fixed in the income pass below (dust from trips for enchanters, better charm prices, more cloth-gear buyers) and by bots that buy materials to craft for sale.
       - A new tailor's Workshop shows the City Smelter panel, as an alchemist's does.
 
 **Later updates:** Engineering, Cooking, First Aid, and a neutral port market.

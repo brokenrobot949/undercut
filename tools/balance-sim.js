@@ -209,6 +209,8 @@ const GATE_BOTS = new Set(['cautious', 'tanner', 'alchemist', 'tailor', 'enchant
 const SELL_CATEGORIES = new Set(['consumable', 'gear']);
 // Materials some recipe uses; the bots keep this many of each and sell the rest.
 const KEEP_MATS = 40;
+// Crafts a bot buys materials for at once, when a sellable recipe is worth it.
+const BUY_TO_CRAFT = 3;
 // Grit and cured hides the bots keep made ahead, for leveling and gear.
 const INTERMEDIATE_STOCK = 12;
 // Materials each profession's recipes use.
@@ -283,12 +285,13 @@ function botCheckIn(bot, state, now, stats) {
   const profs = state.player.professions;
   const has = (p) => profs.includes(p);
   const stations = profs.flatMap((p) => professionById[p].stations).filter((s) => s !== 'forge');
-  // Materials worth keeping: what the bot's not-yet-gray recipes use (and the
-  // forge, for a smith). Old-tier leftovers get sold.
+  // Materials worth keeping: what the bot's not-yet-gray recipes use, its
+  // top-tier recipes (still its best gear to sell, even once gray), and the
+  // forge, for a smith. Old-tier leftovers get sold.
   const usedMats = new Set(recipes.filter((r) => {
     const prof = recipeProfession(r);
     if (!prof) return r.station === 'forge' && has('blacksmithing') && !forgeRankNeeded(state, r);
-    return has(prof) && recipeColor(state, r) !== 'gray';
+    return has(prof) && (recipeColor(state, r) !== 'gray' || r.tier === 5);
   }).flatMap((r) => r.mats.map((m) => m.item)));
   const summary = catchUp(state, now);
   for (const [id, s] of Object.entries(summary.sold)) {
@@ -505,7 +508,14 @@ function botCheckIn(bot, state, now, stats) {
   for (const { r } of ranked) {
     if (!queueFree(r.station)) continue;
     const room = Math.floor(demandPerHour(state, itemById[r.makes.item]) * 24) - onHand(r.makes.item);
-    const n = Math.min(maxCraftable(state, r.id), room);
+    let n = Math.min(maxCraftable(state, r.id), room);
+    // Short of materials for a good earner: buy what's missing for a few, like a
+    // player would, with a slice of the spare gold. Recipes making less than 15%
+    // over material cost aren't worth the trouble.
+    const want = Math.min(room, BUY_TO_CRAFT);
+    if (!bot.flip && n < want && botProfit(state, r, now) > 0.15 * r.mats.reduce((c, m) => c + botValue(state, m.item, now) * m.qty, 0) &&
+      // Never pay more than 80% of what the goods will sell for.
+      tryAct(() => buyMissing(state, r, want, Math.min(spare() * 0.15, 0.8 * want * botValue(state, r.makes.item, now) * r.makes.qty), now))) n = want;
     if (n > 0) tryAct(() => queueCraft(state, r.id, n, now));
   }
 
