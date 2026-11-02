@@ -17,6 +17,7 @@ import { heroNames, badHaulLines } from '../../data/names.js';
 import { items } from '../../data/items.js';
 import { professionById } from '../../data/professions.js';
 import { generalLoot } from '../../data/loot.js';
+import { disenchanting } from '../../data/enchanting.js';
 import { schedule } from './clock.js';
 import { rngNext, rngInt, rngPick, rngChance, rngRange } from './rng.js';
 import { recipes } from '../../data/recipes.js';
@@ -280,6 +281,13 @@ export function expeditionReturns(state, timer, summary) {
     const exact = generalLoot.tailoringClothPerHour * trip.hours * rngRange(state.rng, 1 - TV.haulSpread, 1 + TV.haulSpread) * (bad ? 0.5 : 1);
     const qty = Math.floor(exact) + (rngNext(state.rng) < exact % 1 ? 1 : 0);
     if (cloth && qty > 0) give(cloth.id, qty);
+  }
+  // A shop with Enchanting: heroes also bring home magical dust.
+  if (!zone.raid && hasProfession(state, 'enchanting')) {
+    const dust = disenchanting.dustByTier[Math.min(zone.tier, workingTier(state, 'enchanting')) - 1];
+    const exact = disenchanting.dustPerHour * trip.hours * rngRange(state.rng, 1 - TV.haulSpread, 1 + TV.haulSpread) * (bad ? 0.5 : 1);
+    const qty = Math.floor(exact) + (rngNext(state.rng) < exact % 1 ? 1 : 0);
+    if (qty > 0) give(dust, qty);
   }
   rollBonusLoot(state, zone, trip.hours, p.type === 'extraLoot' ? p.value : 0, give);
   const lines = badHaulLines[profs[0]] ?? badHaulLines.mining;

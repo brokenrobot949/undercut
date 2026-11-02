@@ -165,7 +165,7 @@ Tailors weave cloth scraps into cloth armor (Priests, Mages and Warlocks wear cl
 - **Materials:** cloth scraps of the tier and waxed thread. From tier 3, gear also needs an herb as dye (wild sage, sunbloom, starlily).
 - **Intermediate:** spun cloth (2 scraps + thread), used by every piece of gear, like cured hides.
 - **Consumable:** patch kits, sold in bulk like armor kits.
-- **Cloth supply:** Tailoring has no gathering profession. While a shop has Tailoring, every gathering trip also brings home about 8 cloth an hour from the zone's tier (halved on a bad haul), and bonus loot rolls cloth 60% of the time instead of 45%. Both numbers are in `data/loot.js`.
+- **Cloth supply:** Tailoring has no gathering profession. While a shop has Tailoring, every gathering trip also brings home about 8 cloth an hour from the zone's tier (halved on a bad haul), and bonus loot rolls cloth 60% of the time instead of 45%. Both numbers are in `data/loot.js`. Cloth gear, satchels and patch kits sell to 30% more buyers than their Leatherworking counterparts.
 
 | Tier | Intermediate | Consumable | Cloth gear | Satchel | Scroll-only |
 | --- | --- | --- | --- | --- | --- |
@@ -219,6 +219,14 @@ As built (Nov 2, 2026):
 - Older saves learn any new profession's starting recipes on load.
 - All commission reputation was raised slightly (repScale 0.68 → 0.70) so the steady bots stay inside 6–8 weeks.
 - In the sim (Nov 2, 2026), a leatherworker who adds Enchanting, then Tailoring, reaches the gate on days 49–54. Every steady bot reaches it on days 42–54, with no sim problems.
+
+Income pass (Nov 2, 2026, after the Phase 5 gate):
+
+- Enchanting earned little because every grain of dust was bought. While a shop has Enchanting, every gathering trip now also brings home about 2 dust an hour, of the tier its Enchanting is working on (up to the zone's tier); this is `dustPerHour` in `data/enchanting.js`. 4 an hour made the enchanter bot too fast (day 38.5).
+- Charms now sell for 1.6× their material cost and a focus for 2.0× (were 1.3× and 1.6×).
+- Cloth gear, satchels and patch kits have 30% more buyers, since three classes wear cloth.
+- Sim result: enchanter gate days 44, tailor 54–56, every steady bot 44–56, no problems.
+- Still open: shops without Blacksmithing end day 60 with much less gold (tailor and enchanter about 17 g, against 60–100 g for bots with Blacksmithing). On paper the loom's best profit per day is higher than the anvil's, but miners and the free forge make a smith's materials nearly free. Worth a look in a future balance pass.
 
 ## Materials and smelting
 

@@ -13,4 +13,9 @@ export const disenchanting = {
   dustByTier: ['cinder-dust', 'tide-dust', 'gale-dust', 'stone-dust', 'aether-dust'],
   essenceByTier: ['cinder-essence', 'tide-essence', 'gale-essence', 'stone-essence', 'aether-essence'],
   crystal: 'lucent-crystal',
+
+  // A shop with Enchanting: every gathering trip (not raids) also brings home
+  // about this much dust an hour, of the tier your Enchanting is working on
+  // (up to the zone's tier). Halved on a bad haul.
+  dustPerHour: 2,
 };
