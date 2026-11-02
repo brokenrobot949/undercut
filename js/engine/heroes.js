@@ -20,7 +20,7 @@ import { generalLoot } from '../../data/loot.js';
 import { schedule } from './clock.js';
 import { rngNext, rngInt, rngPick, rngChance, rngRange } from './rng.js';
 import { recipes } from '../../data/recipes.js';
-import { knowsRecipe, recipeColor, recipeProfession, startingProfession } from './skills.js';
+import { knowsRecipe, recipeColor, recipeProfession, startingProfession, hasProfession } from './skills.js';
 import { noteTutorial } from './tutorial.js';
 import { boardSizeFor, expeditionSlotsFor } from './upgrades.js';
 import { donationMult } from './shop-extras.js';
@@ -272,11 +272,31 @@ export function expeditionReturns(state, timer, summary) {
       if (qty > 0) give(l.item, qty);
     }
   }
+  // A shop with Tailoring: heroes also bring home cloth they find on the way.
+  if (!zone.raid && hasProfession(state, 'tailoring')) {
+    const cloth = items.find((i) => i.loot === 'cloth' && i.tier === zone.tier);
+    const exact = generalLoot.tailoringClothPerHour * trip.hours * rngRange(state.rng, 1 - TV.haulSpread, 1 + TV.haulSpread) * (bad ? 0.5 : 1);
+    const qty = Math.floor(exact) + (rngNext(state.rng) < exact % 1 ? 1 : 0);
+    if (cloth && qty > 0) give(cloth.id, qty);
+  }
   rollBonusLoot(state, zone, trip.hours, p.type === 'extraLoot' ? p.value : 0, give);
   const lines = badHaulLines[profs[0]] ?? badHaulLines.mining;
   const line = bad ? rngPick(state.rng, lines).replace('{name}', hero.name).replace('{zone}', zone.name) : null;
   summary.returns.push({ name: hero.name, zone: zone.name, haul, line });
   gainLevels(state, trip, summary);
+}
+
+// Which kind of bonus loot one roll gives. Tailors get cloth more often.
+function rollLootKind(state) {
+  const table = generalLoot.table;
+  const cloth = hasProfession(state, 'tailoring') ? generalLoot.tailoringClothChance : null;
+  const clothBase = table.find((e) => e.loot === 'cloth').chance;
+  let r = rngNext(state.rng);
+  for (const e of table) {
+    const chance = cloth === null ? e.chance : e.loot === 'cloth' ? cloth : e.chance * (1 - cloth) / (1 - clothBase);
+    if ((r -= chance) < 0) return e;
+  }
+  return table[table.length - 1];
 }
 
 // Bonus loot from the zone's tier: cloth, junk, essences, gems, and now and
@@ -285,8 +305,7 @@ function rollBonusLoot(state, zone, hours, extraRolls, give) {
   const ofKind = (kind) => items.filter((i) => i.loot === kind && i.tier === zone.tier);
   const rolls = Math.max(1, Math.ceil(hours * generalLoot.rollsPerHour)) + extraRolls;
   for (let i = 0; i < rolls; i++) {
-    let r = rngNext(state.rng);
-    const entry = generalLoot.table.find((e) => (r -= e.chance) < 0) ?? generalLoot.table[generalLoot.table.length - 1];
+    const entry = rollLootKind(state);
     const choices = ofKind(entry.loot);
     if (choices.length) give(rngPick(state.rng, choices).id, rngInt(state.rng, ...entry.qty));
   }

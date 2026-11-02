@@ -4,9 +4,10 @@
 // Professions:
 //   id         unique, lowercase-with-hyphens. Never change one after release.
 //   name       shown in the game.
-//   gathering  the gathering profession that feeds it.
+//   gathering  the gathering profession that feeds it (null: none of its own).
 //   stations   workstations whose recipes give this profession skill.
 //   blurb      one line for the new-game screen.
+//   startable  false: can't be a shop's first profession, only opened with a wing.
 //
 // The player picks one profession when starting a shop; it is permanent. The
 // other two open with profession wings (see wings below).
@@ -23,10 +24,12 @@ export const professions = [
     blurb: 'Leather armor, armor kits, cloaks, quivers and ammo pouches. Skinners bring your hides.' },
   { id: 'alchemy', name: 'Alchemy', gathering: 'herbalism', stations: ['alchemy-table'],
     blurb: 'Mending and focus draughts, tonics, elixirs, wards and transmutes. Herbalists bring your herbs.' },
+  { id: 'tailoring', name: 'Tailoring', gathering: null, stations: ['loom'],
+    blurb: 'Robes, cowls, handwraps, satchels and patch kits. Every hero trip brings cloth, and more of it once you tailor.' },
 ];
 
 // Profession wings, bought on the Shop tab: the first wing opens your second
-// profession, the next your third. You pick which profession each opens.
+// profession, the next your third, and so on. You pick which profession each opens.
 //   standing   Trade Guild standing needed (ids from data/tuning.js)
 //   cost       price in copper (10,000 = 1 gold)
 // A new wing also comes with that profession's starter materials
@@ -34,10 +37,12 @@ export const professions = [
 export const wings = [
   { standing: 'friendly', cost: 30000 },
   { standing: 'honored', cost: 80000 },
+  { standing: 'revered', cost: 150000 },
+  { standing: 'exalted', cost: 250000 },
 ];
 
 // Workstation names, as shown in the Workshop.
-export const stationNames = { anvil: 'Anvil', forge: 'Forge', workbench: 'Workbench', 'alchemy-table': 'Alchemy table' };
+export const stationNames = { anvil: 'Anvil', forge: 'Forge', workbench: 'Workbench', 'alchemy-table': 'Alchemy table', loom: 'Loom' };
 
 export const ranks = [
   { id: 'apprentice', name: 'Apprentice', cap: 75, cost: 0, standing: 'neutral' },

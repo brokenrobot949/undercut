@@ -25,6 +25,7 @@ const BLURBS = {
   forge: 'Smelting is free here, but takes time. The City Smelter is instant, for a fee.',
   workbench: 'Each finished craft can raise your skill. Cure hides here first: most leather goods need them.',
   'alchemy-table': 'Each finished craft can raise your skill. Transmutes turn your herbs into smithing materials.',
+  loom: 'Each finished craft can raise your skill. Spin cloth here first: robes, cowls and satchels need it.',
 };
 
 export function renderWorkshop(ctx) {

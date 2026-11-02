@@ -24,7 +24,8 @@ export function renderNewGame(root, { onStart }) {
       ['--bg', '--panel', '--accent', '--accent-strong', '--highlight'].map((v) => el('span', { style: `background:var(${v})` }))),
   ));
 
-  const profCards = professions.map((p) => el('button', {
+  const startable = professions.filter((p) => p.startable !== false);
+  const profCards = startable.map((p) => el('button', {
     class: 'faction-card profession-card', type: 'button', 'aria-pressed': 'false', onclick: () => chooseProfession(p),
   },
     el('h2', {}, p.name),
@@ -32,7 +33,7 @@ export function renderNewGame(root, { onStart }) {
 
   function chooseProfession(p) {
     profession = p;
-    profCards.forEach((card, i) => card.setAttribute('aria-pressed', String(professions[i] === p)));
+    profCards.forEach((card, i) => card.setAttribute('aria-pressed', String(startable[i] === p)));
     update();
   }
 

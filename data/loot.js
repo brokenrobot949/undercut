@@ -17,4 +17,11 @@ export const generalLoot = {
   // Chance per hour of trip of also bringing back a recipe scroll
   // (0.01 = 1%, so about 8% on an 8-hour trip).
   scrollChancePerHour: 0.01,
+
+  // A shop with Tailoring gets cloth on this share of rolls instead of 0.45;
+  // the other kinds share what's left in the same proportions.
+  tailoringClothChance: 0.60,
+  // ...and every gathering trip (not raids) also brings home about this much
+  // cloth an hour from the zone's tier, like a gatherer's haul. Halved on a bad haul.
+  tailoringClothPerHour: 8,
 };

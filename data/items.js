@@ -8,7 +8,8 @@
 //               Also 'junk' (gray vendor trash from hero trips; vendor only, never on the
 //               auction house) and 'scroll' (a recipe scroll that can be learned or sold).
 //   armor       gear only: 'plate', 'mail', 'leather', 'cloth', 'weapon',
-//               'cloak' (worn by every class) or 'quiver' (hunters: quivers and ammo pouches).
+//               'cloak' (worn by every class), 'quiver' (hunters: quivers and ammo pouches)
+//               or 'bag' (satchels, bought by every class).
 //   quality     'poor', 'common', 'uncommon', 'rare' or 'epic'.
 //   base        anchor price in copper (100 copper = 1 silver).
 //   demand      NPC buyers per hour on the auction house at a normal price.
@@ -65,11 +66,11 @@ export const items = [
   { id: 'ironhide-leather', name: 'Ironhide leather', tier: 5, category: 'material', quality: 'common', base: 64, demand: 9 },
 
   // ---- Cloth (bonus loot) ----
-  { id: 'linen-scraps', name: 'Linen scraps', tier: 1, category: 'material', quality: 'common', base: 6, demand: 12, loot: 'cloth' },
-  { id: 'wool-scraps', name: 'Wool scraps', tier: 2, category: 'material', quality: 'common', base: 12, demand: 10, loot: 'cloth' },
-  { id: 'silk-scraps', name: 'Silk scraps', tier: 3, category: 'material', quality: 'common', base: 22, demand: 9, loot: 'cloth' },
-  { id: 'brocade-scraps', name: 'Brocade scraps', tier: 4, category: 'material', quality: 'common', base: 34, demand: 8, loot: 'cloth' },
-  { id: 'samite-scraps', name: 'Samite scraps', tier: 5, category: 'material', quality: 'common', base: 50, demand: 8, loot: 'cloth' },
+  { id: 'linen-scraps', name: 'Linen scraps', tier: 1, category: 'material', quality: 'common', base: 6, demand: 17, loot: 'cloth' },
+  { id: 'wool-scraps', name: 'Wool scraps', tier: 2, category: 'material', quality: 'common', base: 12, demand: 14, loot: 'cloth' },
+  { id: 'silk-scraps', name: 'Silk scraps', tier: 3, category: 'material', quality: 'common', base: 22, demand: 13, loot: 'cloth' },
+  { id: 'brocade-scraps', name: 'Brocade scraps', tier: 4, category: 'material', quality: 'common', base: 34, demand: 11, loot: 'cloth' },
+  { id: 'samite-scraps', name: 'Samite scraps', tier: 5, category: 'material', quality: 'common', base: 50, demand: 11, loot: 'cloth' },
 
   // ---- Essences (bonus loot) ----
   { id: 'cinder-essence', name: 'Cinder essence', tier: 1, category: 'material', quality: 'uncommon', base: 40, demand: 3, loot: 'essence' },
@@ -94,8 +95,10 @@ export const items = [
   // ---- Masterwork (epic) items: Exalted quartermaster recipes ----
   { id: 'emberheart-greatsword', name: 'Emberheart greatsword', tier: 5, category: 'gear', armor: 'weapon', quality: 'epic', base: 19130, demand: 0.2 },
   { id: 'wyrmscale-warplate', name: 'Wyrmscale warplate', tier: 5, category: 'gear', armor: 'plate', quality: 'epic', base: 19130, demand: 0.2 },
-  { id: 'wyrmscale-hunters-mantle', name: 'Wyrmscale hunter\'s mantle', tier: 5, category: 'gear', armor: 'mail', quality: 'epic', base: 16745, demand: 0.2 },
+  { id: 'wyrmscale-hunters-mantle', name: "Wyrmscale hunter\'s mantle", tier: 5, category: 'gear', armor: 'mail', quality: 'epic', base: 16745, demand: 0.2 },
   { id: 'voidglass-studded-jerkin', name: 'Voidglass-studded jerkin', tier: 5, category: 'gear', armor: 'leather', quality: 'epic', base: 16745, demand: 0.2 },
+  { id: 'flame-woven-robe', name: 'Flame-woven robe', tier: 5, category: 'gear', armor: 'cloth', quality: 'epic', base: 17143, demand: 0.2 },
+  { id: 'voidglass-beaded-cowl', name: 'Voidglass-beaded cowl', tier: 5, category: 'gear', armor: 'cloth', quality: 'epic', base: 17143, demand: 0.2 },
   { id: 'phoenix-ember-philter', name: 'Phoenix-ember philter', tier: 5, category: 'consumable', quality: 'epic', base: 9193, demand: 2 },
   { id: 'voidglass-tincture-of-clarity', name: 'Voidglass tincture of clarity', tier: 5, category: 'consumable', quality: 'epic', base: 9193, demand: 2 },
 
@@ -211,7 +214,7 @@ export const items = [
   { id: 'silk-lined-cloak', name: 'Silk-lined cloak', tier: 3, category: 'gear', armor: 'cloak', quality: 'common', base: 400, demand: 0.7 },
   { id: 'bearhide-quiver', name: 'Bearhide quiver', tier: 3, category: 'gear', armor: 'quiver', quality: 'common', base: 395, demand: 0.3 },
   { id: 'bear-claw-gauntlets', name: 'Bear-claw gauntlets', tier: 3, category: 'gear', armor: 'leather', quality: 'uncommon', base: 810, demand: 0.3 },
-  { id: 'guild-couriers-boots', name: 'Guild courier\'s boots', tier: 3, category: 'gear', armor: 'leather', quality: 'uncommon', base: 799, demand: 0.3 },
+  { id: 'guild-couriers-boots', name: "Guild courier\'s boots", tier: 3, category: 'gear', armor: 'leather', quality: 'uncommon', base: 799, demand: 0.3 },
 
   // ---- Leatherworking, tier 4 (basilisk) ----
   { id: 'cured-basilisk-hide', name: 'Cured basilisk hide', tier: 4, category: 'material', quality: 'common', base: 79, demand: 5 },
@@ -221,7 +224,7 @@ export const items = [
   { id: 'basilisk-scale-cloak', name: 'Basilisk-scale cloak', tier: 4, category: 'gear', armor: 'cloak', quality: 'common', base: 695, demand: 0.6 },
   { id: 'basilisk-ammo-pouch', name: 'Basilisk ammo pouch', tier: 4, category: 'gear', armor: 'quiver', quality: 'common', base: 670, demand: 0.3 },
   { id: 'basilisk-eye-mask', name: 'Basilisk-eye mask', tier: 4, category: 'gear', armor: 'leather', quality: 'uncommon', base: 1320, demand: 0.3 },
-  { id: 'basilisk-trackers-vest', name: 'Basilisk tracker\'s vest', tier: 4, category: 'gear', armor: 'leather', quality: 'rare', base: 2062, demand: 0.35 },
+  { id: 'basilisk-trackers-vest', name: "Basilisk tracker\'s vest", tier: 4, category: 'gear', armor: 'leather', quality: 'rare', base: 2062, demand: 0.35 },
 
   // ---- Leatherworking, tier 5 (drakeling) ----
   { id: 'cured-drakeling-hide', name: 'Cured drakeling hide', tier: 5, category: 'material', quality: 'common', base: 110, demand: 5 },
@@ -231,7 +234,60 @@ export const items = [
   { id: 'drakeling-cloak', name: 'Drakeling cloak', tier: 5, category: 'gear', armor: 'cloak', quality: 'common', base: 1170, demand: 0.6 },
   { id: 'drakeling-quiver', name: 'Drakeling quiver', tier: 5, category: 'gear', armor: 'quiver', quality: 'common', base: 1130, demand: 0.3 },
   { id: 'drakewing-mantle', name: 'Drakewing mantle', tier: 5, category: 'gear', armor: 'leather', quality: 'uncommon', base: 2410, demand: 0.3 },
-  { id: 'drakeling-far-rangers-cloak', name: 'Drakeling far-ranger\'s cloak', tier: 5, category: 'gear', armor: 'cloak', quality: 'rare', base: 3192, demand: 0.35 },
+  { id: 'drakeling-far-rangers-cloak', name: "Drakeling far-ranger\'s cloak", tier: 5, category: 'gear', armor: 'cloak', quality: 'rare', base: 3192, demand: 0.35 },
+
+  // ---- Tailoring, tier 1 (linen) ----
+  { id: 'spun-linen', name: 'Spun linen', tier: 1, category: 'material', quality: 'common', base: 21, demand: 5 },
+  { id: 'linen-patch-kit', name: 'Linen patch kit', tier: 1, category: 'consumable', quality: 'common', base: 28, demand: 12 },
+  { id: 'linen-handwraps', name: 'Linen handwraps', tier: 1, category: 'gear', armor: 'cloth', quality: 'common', base: 107, demand: 0.6 },
+  { id: 'linen-robe', name: 'Linen robe', tier: 1, category: 'gear', armor: 'cloth', quality: 'common', base: 116, demand: 0.6 },
+  { id: 'linen-satchel', name: 'Linen satchel', tier: 1, category: 'gear', armor: 'bag', quality: 'common', base: 95, demand: 0.9 },
+  { id: 'linen-cowl', name: 'Linen cowl', tier: 1, category: 'gear', armor: 'cloth', quality: 'common', base: 107, demand: 0.4 },
+  { id: 'hedgewitch-shawl', name: 'Hedgewitch shawl', tier: 1, category: 'gear', armor: 'cloth', quality: 'uncommon', base: 226, demand: 0.4 },
+  { id: 'scroll-hedgewitch-shawl', name: 'Recipe scroll: Hedgewitch shawl', tier: 1, category: 'scroll', quality: 'uncommon', base: 300, demand: 0.3, loot: 'scroll', teaches: 'hedgewitch-shawl' },
+
+  // ---- Tailoring, tier 2 (wool) ----
+  { id: 'spun-wool', name: 'Spun wool', tier: 2, category: 'material', quality: 'common', base: 37, demand: 5 },
+  { id: 'wool-patch-kit', name: 'Wool patch kit', tier: 2, category: 'consumable', quality: 'common', base: 52, demand: 10 },
+  { id: 'wool-slippers', name: 'Wool slippers', tier: 2, category: 'gear', armor: 'cloth', quality: 'common', base: 218, demand: 0.5 },
+  { id: 'wool-trousers', name: 'Wool trousers', tier: 2, category: 'gear', armor: 'cloth', quality: 'common', base: 341, demand: 0.5 },
+  { id: 'wool-satchel', name: 'Wool satchel', tier: 2, category: 'gear', armor: 'bag', quality: 'common', base: 200, demand: 0.8 },
+  { id: 'wool-shawl', name: 'Wool shawl', tier: 2, category: 'gear', armor: 'cloth', quality: 'common', base: 218, demand: 0.35 },
+  { id: 'lamplighters-hood', name: "Lamplighter's hood", tier: 2, category: 'gear', armor: 'cloth', quality: 'uncommon', base: 468, demand: 0.35 },
+  { id: 'scroll-lamplighters-hood', name: "Recipe scroll: Lamplighter's hood", tier: 2, category: 'scroll', quality: 'uncommon', base: 800, demand: 0.3, loot: 'scroll', teaches: 'lamplighters-hood' },
+
+  // ---- Tailoring, tier 3 (silk) ----
+  { id: 'spun-silk', name: 'Spun silk', tier: 3, category: 'material', quality: 'common', base: 63, demand: 5 },
+  { id: 'silk-patch-kit', name: 'Silk patch kit', tier: 3, category: 'consumable', quality: 'common', base: 91, demand: 9 },
+  { id: 'silk-gloves', name: 'Silk gloves', tier: 3, category: 'gear', armor: 'cloth', quality: 'common', base: 671, demand: 0.4 },
+  { id: 'silk-robe', name: 'Silk robe', tier: 3, category: 'gear', armor: 'cloth', quality: 'common', base: 412, demand: 0.4 },
+  { id: 'silk-satchel', name: 'Silk satchel', tier: 3, category: 'gear', armor: 'bag', quality: 'common', base: 456, demand: 0.7 },
+  { id: 'silk-sash', name: 'Silk sash', tier: 3, category: 'gear', armor: 'cloth', quality: 'common', base: 449, demand: 0.3 },
+  { id: 'night-heron-veil', name: 'Night-heron veil', tier: 3, category: 'gear', armor: 'cloth', quality: 'uncommon', base: 895, demand: 0.3 },
+  { id: 'scroll-night-heron-veil', name: 'Recipe scroll: Night-heron veil', tier: 3, category: 'scroll', quality: 'uncommon', base: 2000, demand: 0.3, loot: 'scroll', teaches: 'night-heron-veil' },
+  { id: 'guild-clerks-robe', name: "Guild clerk's robe", tier: 3, category: 'gear', armor: 'cloth', quality: 'uncommon', base: 877, demand: 0.3 },
+
+  // ---- Tailoring, tier 4 (brocade) ----
+  { id: 'spun-brocade', name: 'Spun brocade', tier: 4, category: 'material', quality: 'common', base: 93, demand: 5 },
+  { id: 'brocade-patch-kit', name: 'Brocade patch kit', tier: 4, category: 'consumable', quality: 'common', base: 138, demand: 8 },
+  { id: 'brocade-slippers', name: 'Brocade slippers', tier: 4, category: 'gear', armor: 'cloth', quality: 'common', base: 763, demand: 0.35 },
+  { id: 'brocade-doublet', name: 'Brocade doublet', tier: 4, category: 'gear', armor: 'cloth', quality: 'common', base: 990, demand: 0.35 },
+  { id: 'brocade-satchel', name: 'Brocade satchel', tier: 4, category: 'gear', armor: 'bag', quality: 'common', base: 781, demand: 0.6 },
+  { id: 'brocade-cowl', name: 'Brocade cowl', tier: 4, category: 'gear', armor: 'cloth', quality: 'common', base: 763, demand: 0.3 },
+  { id: 'courtiers-gloves', name: "Courtier's gloves", tier: 4, category: 'gear', armor: 'cloth', quality: 'uncommon', base: 1404, demand: 0.3 },
+  { id: 'scroll-courtiers-gloves', name: "Recipe scroll: Courtier's gloves", tier: 4, category: 'scroll', quality: 'uncommon', base: 4000, demand: 0.3, loot: 'scroll', teaches: 'courtiers-gloves' },
+  { id: 'archivists-brocade-gloves', name: "Archivist's brocade gloves", tier: 4, category: 'gear', armor: 'cloth', quality: 'rare', base: 2234, demand: 0.35 },
+
+  // ---- Tailoring, tier 5 (samite) ----
+  { id: 'spun-samite', name: 'Spun samite', tier: 5, category: 'material', quality: 'common', base: 135, demand: 5 },
+  { id: 'samite-patch-kit', name: 'Samite patch kit', tier: 5, category: 'consumable', quality: 'common', base: 201, demand: 8 },
+  { id: 'samite-robe', name: 'Samite robe', tier: 5, category: 'gear', armor: 'cloth', quality: 'common', base: 1779, demand: 0.35 },
+  { id: 'samite-handwraps', name: 'Samite handwraps', tier: 5, category: 'gear', armor: 'cloth', quality: 'common', base: 1170, demand: 0.35 },
+  { id: 'samite-satchel', name: 'Samite satchel', tier: 5, category: 'gear', armor: 'bag', quality: 'common', base: 1285, demand: 0.6 },
+  { id: 'samite-trousers', name: 'Samite trousers', tier: 5, category: 'gear', armor: 'cloth', quality: 'common', base: 1265, demand: 0.3 },
+  { id: 'stargazers-mantle', name: "Stargazer's mantle", tier: 5, category: 'gear', armor: 'cloth', quality: 'uncommon', base: 2642, demand: 0.3 },
+  { id: 'scroll-stargazers-mantle', name: "Recipe scroll: Stargazer's mantle", tier: 5, category: 'scroll', quality: 'uncommon', base: 8000, demand: 0.3, loot: 'scroll', teaches: 'stargazers-mantle' },
+  { id: 'samite-oracles-robe', name: "Samite oracle's robe", tier: 5, category: 'gear', armor: 'cloth', quality: 'rare', base: 3350, demand: 0.35 },
 
   // ---- Alchemy, tier 1 ----
   { id: 'faint-mending-draught', name: 'Faint mending draught', tier: 1, category: 'consumable', quality: 'common', base: 18, demand: 14 },
@@ -253,7 +309,7 @@ export const items = [
   { id: 'bulwark-elixir', name: 'Bulwark elixir', tier: 3, category: 'consumable', quality: 'common', base: 127, demand: 6 },
   { id: 'keen-eye-elixir', name: 'Keen-eye elixir', tier: 3, category: 'consumable', quality: 'common', base: 130, demand: 6 },
   { id: 'philter-of-second-wind', name: 'Philter of second wind', tier: 3, category: 'consumable', quality: 'uncommon', base: 355, demand: 2 },
-  { id: 'assayers-tonic', name: 'Assayer\'s tonic', tier: 3, category: 'consumable', quality: 'uncommon', base: 503, demand: 4 },
+  { id: 'assayers-tonic', name: "Assayer\'s tonic", tier: 3, category: 'consumable', quality: 'uncommon', base: 503, demand: 4 },
 
   // ---- Alchemy, tier 4 ----
   { id: 'potent-mending-draught', name: 'Potent mending draught', tier: 4, category: 'consumable', quality: 'common', base: 125, demand: 9 },

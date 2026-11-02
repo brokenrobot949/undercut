@@ -54,4 +54,16 @@ export const tutorialSteps = {
     { goal: 'hire', title: 'Hands for hire',
       text: 'Hire a hero at the tavern to gather while you\'re away. A herbalist brings herbs, plus some bonus loot.', pay: 2500, rep: 50 },
   ],
+  tailoring: [
+    { goal: 'craft', recipe: 'linen-patch-kit', title: 'Your first stitches',
+      text: 'Sew a linen patch kit at the loom. Your bags hold the linen scraps and waxed thread.', pay: 1000, rep: 25 },
+    { goal: 'list', title: 'Open for business',
+      text: 'List something on the auction house: the patch kit will do. Price it at or near the market, and a customer should come by within a couple of minutes.', pay: 1000, rep: 25 },
+    { goal: 'buy', title: 'Shopping run',
+      text: 'Buy a material on the auction house. Linen scraps are cheap and always useful.', pay: 1500, rep: 25 },
+    { goal: 'craft', recipe: 'spun-linen', title: 'Spin a yarn',
+      text: 'Spin linen at the loom. Robes, cowls and satchels all need spun cloth.', pay: 1500, rep: 25 },
+    { goal: 'hire', title: 'Hands for hire',
+      text: 'Hire a hero at the tavern. Any hero brings home cloth as bonus loot, and tailors get more of it.', pay: 2500, rep: 50 },
+  ],
 };

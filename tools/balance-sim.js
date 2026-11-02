@@ -16,7 +16,7 @@
 
 import { newGame, catchUp, collectMailbox } from '../js/engine/game.js';
 import { itemById, tradeableItems } from '../data/items.js';
-import { professionById } from '../data/professions.js';
+import { professionById, professions } from '../data/professions.js';
 import { recipes, recipeById } from '../data/recipes.js';
 import { tuning } from '../data/tuning.js';
 import {
@@ -196,22 +196,25 @@ const BOTS = [
   { name: 'flipper', prof: 'blacksmithing', every: 4, listHours: 6, relist: true, flip: true, wings: ['leatherworking', 'alchemy'] },
   { name: 'tanner', prof: 'leatherworking', every: 4, listHours: 6, relist: true, flip: false, wings: ['blacksmithing', 'alchemy'] },
   { name: 'alchemist', prof: 'alchemy', every: 4, listHours: 6, relist: true, flip: false, wings: ['blacksmithing', 'leatherworking'] },
+  { name: 'tailor', prof: 'tailoring', every: 4, listHours: 6, relist: true, flip: false, wings: ['leatherworking', 'alchemy'] },
 ];
+// SIM_BOTS=tailor,cautious runs just those bots.
+const RUN_BOTS = process.env.SIM_BOTS ? BOTS.filter((b) => process.env.SIM_BOTS.split(',').includes(b.name)) : BOTS;
 // Days each bot plays. The Phase 3 gate is at 6 to 8 weeks.
 const RUN_DAYS = 70;
 // Bots that play like a steady, regular player; the Phase 3 gate is checked on these.
-const GATE_BOTS = new Set(['cautious', 'tanner', 'alchemist']);
+const GATE_BOTS = new Set(['cautious', 'tanner', 'alchemist', 'tailor']);
 const SELL_CATEGORIES = new Set(['consumable', 'gear']);
 // Materials some recipe uses; the bots keep this many of each and sell the rest.
 const KEEP_MATS = 40;
 // Grit and cured hides the bots keep made ahead, for leveling and gear.
 const INTERMEDIATE_STOCK = 12;
 // Materials each profession's recipes use.
-const USED_MATS = Object.fromEntries(['blacksmithing', 'leatherworking', 'alchemy'].map((prof) =>
+const USED_MATS = Object.fromEntries(professions.map((p) => p.id).map((prof) =>
   [prof, new Set(recipes.filter((r) => recipeProfession(r) === prof || (prof === 'blacksmithing' && r.station === 'forge')).flatMap((r) => r.mats.map((m) => m.item)))]));
 // Recipes that make a material other recipes of the same profession use
 // (grit, cured hides), by profession.
-const INTERMEDIATES = Object.fromEntries(['blacksmithing', 'leatherworking', 'alchemy'].map((prof) => {
+const INTERMEDIATES = Object.fromEntries(professions.map((p) => p.id).map((prof) => {
   const own = recipes.filter((r) => recipeProfession(r) === prof);
   const used = new Set(own.flatMap((r) => r.mats.map((m) => m.item)));
   return [prof, own.filter((r) => itemById[r.makes.item].category === 'material' && used.has(r.makes.item)).map((r) => r.id)];
@@ -299,7 +302,7 @@ function botCheckIn(bot, state, now, stats) {
   const training = () => profs.reduce((n, p) => n + (state.skills[p].skill >= capOf(state, p) - 15 ? nextTraining(state, p)?.cost ?? 0 : 0), 0);
   // Bots nearly finish one profession before starting the next: a wing once
   // every profession they have has Artisan trained and skill 270.
-  const wingTime = () => profs.every((p) => state.skills[p].rank >= 3 && state.skills[p].skill >= 270) && nextWing(state) && !/standing/.test(nextWing(state).reason ?? '');
+  const wingTime = () => state.player.professions.length < 3 && profs.every((p) => state.skills[p].rank >= 3 && state.skills[p].skill >= 270) && nextWing(state) && !/standing/.test(nextWing(state).reason ?? '');
   // ...and for that wing.
   const reserve = () => training() + (wingTime() ? nextWing(state).cost : 0);
   // Gold the bot will spend on materials: what's left after training money.
@@ -307,6 +310,12 @@ function botCheckIn(bot, state, now, stats) {
 
   // Tutorial: claim any step the bot has already done.
   while (tutorialStep(state) && stepMet(state)) claimTutorialStep(state, now);
+  // Follow the tutorial card: make the item a craft step asks for.
+  const tut = tutorialStep(state);
+  if (tut?.goal === 'craft' && !stepMet(state) && !Object.values(state.stations).some((st) => (st.queue ?? st.orders ?? []).some((o) => o.recipeId === tut.recipe))) {
+    tryAct(() => queueCraft(state, tut.recipe, 1, now));
+  }
+  if (tut?.goal === 'buy' && !stepMet(state)) tryAct(() => buyItems(state, FIRST_BUY[profs[0]], 1, now));
 
   // Commissions: hand in whatever's ready, then queue crafts for the rest.
   for (const c of [...state.commissions.list]) {
@@ -331,8 +340,9 @@ function botCheckIn(bot, state, now, stats) {
   // Profession wings: open the next profession when it's time and the gold
   // left after saving for training covers it.
   const wing = nextWing(state);
-  if (wingTime() && wing.ready && wing.cost <= state.copper - training()) {
-    const pick = bot.wings.find((p) => wing.choices.some((c) => c.id === p));
+  // Bots open only the wings on their list (two), so they play three professions.
+  const pick = wing && bot.wings.find((p) => wing.choices.some((c) => c.id === p));
+  if (pick && wingTime() && wing.ready && wing.cost <= state.copper - training()) {
     buyWing(state, pick);
     stats.wingDays.push((now - START) / DAY);
   }
@@ -412,11 +422,16 @@ function botCheckIn(bot, state, now, stats) {
   const smeltable = (z) => !has('blacksmithing') ||
     !recipes.some((r) => r.station === 'forge' && r.mats.some((m) => m.item === z.loot.mining[0].item) && forgeRankNeeded(state, r));
   const needs = profs.map((p) => ({ gathering: professionById[p].gathering, tier: lvls[p] ? lvls[p].r.tier : 1 }));
+  // Every trip brings a tailor cloth, so Tailoring only needs its own heroes when it's the only profession.
+  if (needs.length > 1) needs.splice(0, needs.length, ...needs.filter((n) => n.gathering));
   const gatheringOut = (g) => state.tavern.expeditions.filter((e) => !zoneById[e.zoneId].raid && gatheredProfessions(e.hero, zoneById[e.zoneId]).includes(g)).length;
   while (freeSlots() >= 8 && state.tavern.expeditions.length < expeditionSlots(state)) {
     let hired = false;
     for (const need of [...needs].sort((a, b) => gatheringOut(a.gathering) - gatheringOut(b.gathering))) {
-      const usable = (z, h) => z.loot[need.gathering] && h.skills[need.gathering] >= z.minSkill && z.tier <= need.tier + 1 &&
+      // A profession with no gathering of its own (Tailoring) hires anyone, for the bonus cloth.
+      const gathers = (z, h) => need.gathering ? z.loot[need.gathering] && h.skills[need.gathering] >= z.minSkill
+        : Object.keys(h.skills).some((g) => z.loot[g] && h.skills[g] >= z.minSkill);
+      const usable = (z, h) => gathers(z, h) && z.tier <= need.tier + 1 &&
         (need.gathering !== 'mining' || smeltable(z));
       const first = gatheringOut(need.gathering) === 0;
       const rank = (z) => (first && z.tier !== need.tier ? 1 : 0);
@@ -469,9 +484,11 @@ function botCheckIn(bot, state, now, stats) {
       const qty = Math.max(0, Math.min(20, Math.ceil(Math.min(nextColorAt - s, capLeft) / lvl.chance)));
       if (qty > 0) {
         const have = maxCraftable(state, lvl.r.id);
-        if (have >= qty || tryAct(() => buyMissing(state, lvl.r, qty, spare() * 0.4, now))) {
-          if (tryAct(() => queueCraft(state, lvl.r.id, qty, now))) stats.levelCrafts += qty;
-        } else if (have > 0 && tryAct(() => queueCraft(state, lvl.r.id, have, now))) stats.levelCrafts += have;
+        // When the auction house can't supply the whole batch, try half, then half again.
+        let n = qty;
+        while (n > have && !tryAct(() => buyMissing(state, lvl.r, n, spare() * 0.4, now))) n = Math.floor(n / 2);
+        n = Math.max(n, Math.min(have, qty));
+        if (n > 0 && tryAct(() => queueCraft(state, lvl.r.id, n, now))) stats.levelCrafts += n;
       }
     }
   }
@@ -594,7 +611,7 @@ function botReport() {
   const allListed = {};
   const allSold = {};
   const pacing = [];
-  for (const bot of BOTS) {
+  for (const bot of RUN_BOTS) {
     const runs = [101, 202].map((seed) => botRun(bot, seed));
     const avg = (f) => runs.reduce((n, r) => n + f(r), 0) / runs.length;
     const gold = [1, 3, 7, 14, 30, 60].map((d) => lpad(gsc(avg((r) => r.gold[d] ?? 0)), 9)).join('');
@@ -627,7 +644,7 @@ function botReport() {
   // Pacing targets from DESIGN.md. Phase 2 content is still being built, so
   // misses show here but don't count as problems until the Phase 2 gate.
   console.log('\nPacing (day each milestone was reached, one column per seed):');
-  console.log(`${pad('milestone', 14)}${lpad('target', 8)}${BOTS.map((b) => lpad(b.name, 18)).join('')}`);
+  console.log(`${pad('milestone', 14)}${lpad('target', 8)}${RUN_BOTS.map((b) => lpad(b.name, 18)).join('')}`);
   const fmt = (d) => (d === undefined ? 'never' : d.toFixed(1));
   console.log(`${pad('first sale', 14)}${lpad('5 min', 8)}${pacing.map((p) => lpad(`${Math.round(p.first)} min`, 18)).join('')}`);
   for (const m of MILESTONES) {
@@ -647,7 +664,7 @@ function botReport() {
 // A brand-new player of each profession follows the tutorial, looking at the
 // game every 30 seconds for the first hour. Checks the first-sale target.
 
-const FIRST_BUY = { blacksmithing: 'copper-ore', leatherworking: 'soft-leather', alchemy: 'dawnpetal' };
+const FIRST_BUY = { blacksmithing: 'copper-ore', leatherworking: 'soft-leather', alchemy: 'dawnpetal', tailoring: 'linen-scraps' };
 
 function sessionAct(state, now, stats) {
   const tryAct = (fn) => { try { return fn(); } catch { return null; } };
@@ -694,7 +711,7 @@ function firstSession() {
   console.log('\n5. FIRST SESSION (a new player follows the tutorial, looking every 30 s; 3 seeds)');
   console.log(`${pad('profession', 16)}${lpad('first sale', 14)}${lpad('tutorial done', 16)}${lpad('gold after 1 h', 16)}`);
   const problems = [];
-  for (const prof of ['blacksmithing', 'leatherworking', 'alchemy']) {
+  for (const prof of ['blacksmithing', 'leatherworking', 'alchemy', 'tailoring']) {
     const rows = [301, 302, 303].map((seed) => {
       const state = newGame({ name: 'New', factionId: seed % 2 ? 'red' : 'blue', professionId: prof, seed, now: START });
       const stats = { firstSale: null, doneAt: null };

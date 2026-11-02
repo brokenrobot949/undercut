@@ -676,14 +676,14 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   err = null; try { buyWing(s, 'alchemy'); } catch (e) { err = e.message; }
   check('a wing can’t reopen a profession you have', /already/.test(err ?? ''));
   buyWing(s, 'leatherworking');
-  check('after the third wing there are no more', s.player.professions.length === 3 && nextWing(s) === null);
+  check('the fourth wing needs Revered', s.player.professions.length === 3 && nextWing(s)?.standing === 'revered' && !nextWing(s).ready);
 }
 
 // Market events: a seeded calendar, effects while running, catch-up.
 {
   const s = game(3);
   const list = s.events.list;
-  check('a new game plans a week of events, none in the first day', list.length > 5 && list.every((e) => e.startsAt >= t0 + 24 * H && e.startsAt < t0 + 7 * DAY + 1));
+  check('a new game plans a week of events, none in the first day', list.length > 5 && list.every((e) => e.startsAt >= t0 + 24 * H && e.startsAt < t0 + 8 * DAY));
   const groups = list.filter((e) => eventById[e.type].group);
   const clash = groups.some((a) => groups.some((b) => a !== b && eventById[a.type].group === eventById[b.type].group && a.startsAt < b.endsAt && b.startsAt < a.endsAt));
   check('demand events in the same group never overlap', !clash);
@@ -750,9 +750,9 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
 // The quartermaster: recipes gated by standing and skill, bought for gold.
 {
   const qm = recipes.filter((r) => r.learn === 'quartermaster' && !r.masterwork);
-  check('nine quartermaster recipes, three per profession, none sold by the trainer', qm.length === 9 &&
-    ['anvil', 'workbench', 'alchemy-table'].every((st) => qm.filter((r) => r.station === st).length === 3) &&
-    !['blacksmithing', 'leatherworking', 'alchemy'].some((p) => trainerRecipes(game(), p).some((o) => o.recipe.learn === 'quartermaster')));
+  check('twelve quartermaster recipes, three per profession, none sold by the trainer', qm.length === 12 &&
+    ['anvil', 'workbench', 'alchemy-table', 'loom'].every((st) => qm.filter((r) => r.station === st).length === 3) &&
+    !['blacksmithing', 'leatherworking', 'alchemy', 'tailoring'].some((p) => trainerRecipes(game(), p).some((o) => o.recipe.learn === 'quartermaster')));
   check('blue quartermaster items from Honored, green at Friendly', qm.every((r) => itemById[r.makes.item].quality === (r.standing === 'friendly' ? 'uncommon' : 'rare')));
   const s = game();
   s.copper = 10_000_000;
@@ -798,8 +798,8 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
 {
   const mw = recipes.filter((r) => r.masterwork);
   const endgame = ['ember-core', 'voidglass-shard', 'wyrm-scale'];
-  check('six masterworks, two per profession, epic, each needing an endgame material', mw.length === 6 &&
-    ['anvil', 'workbench', 'alchemy-table'].every((st) => mw.filter((r) => r.station === st).length === 2) &&
+  check('eight masterworks, two per profession, epic, each needing an endgame material', mw.length === 8 &&
+    ['anvil', 'workbench', 'alchemy-table', 'loom'].every((st) => mw.filter((r) => r.station === st).length === 2) &&
     mw.every((r) => r.learn === 'quartermaster' && r.standing === 'exalted' && itemById[r.makes.item].quality === 'epic' && r.mats.some((m) => endgame.includes(m.item))));
   const s = game();
   s.copper = 10_000_000;
@@ -848,6 +848,31 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   delete old.extras;
   const m = migrate(structuredClone(old));
   check('version 11 save gets empty shop extras', m.version === SAVE_VERSION && m.extras && !Object.keys(m.extras.trophies).length && m.extras.sign === null);
+}
+
+// Tailoring: a fourth profession, startable, with more cloth from hero trips.
+{
+  const s = newGame({ name: 'T', factionId: 'blue', professionId: 'tailoring', seed: 11, now: t0 });
+  check('a tailor starts with linen and thread and knows two loom recipes', s.bags['linen-scraps'] === 12 &&
+    recipes.filter((r) => r.station === 'loom' && s.knownRecipes[r.id]).length === 2);
+  queueCraft(s, 'linen-patch-kit', 1, t0);
+  catchUp(s, t0 + 60 * 1000);
+  check('a tailor can sew a patch kit, and it counts for the tutorial', madeCount(s, 'linen-patch-kit') === 1 && stepMet(s));
+  check('every Tailoring item and material exists', recipes.filter((r) => r.station === 'loom').every((r) => itemById[r.makes.item] && r.mats.every((m) => itemById[m.item])));
+  const clothFrom = (prof) => {
+    let cloth = 0;
+    for (const seed of [21, 22, 23, 24, 25, 26]) {
+      const g = newGame({ name: 'T', factionId: 'red', professionId: prof, seed, now: t0 });
+      g.copper = 1e7;
+      const hero = g.tavern.board[0];
+      hireHero(g, hero.id, zonesFor(hero)[0].id, 8, t0);
+      catchUp(g, t0 + 9 * H);
+      cloth += Object.entries(g.mailbox.items).filter(([id]) => itemById[id].loot === 'cloth').reduce((n, [, q]) => n + q, 0);
+    }
+    return cloth;
+  };
+  const tailor = clothFrom('tailoring'), smith = clothFrom('blacksmithing');
+  check('tailors get more cloth from hero trips', tailor > smith, `${tailor} vs ${smith}`);
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');

@@ -86,7 +86,7 @@ export function postCommission(state, now, forced = null) {
   if (type.id === 'regular') {
     regular = rngPick(state.rng, state.tavern.regulars);
     const armor = classById[regular.classId].armor;
-    const fits = pool.filter((r) => [armor, 'weapon', 'cloak'].includes(itemById[r.makes.item].armor));
+    const fits = pool.filter((r) => [armor, 'weapon', 'cloak', 'bag'].includes(itemById[r.makes.item].armor));
     if (fits.length) pool = fits;
   }
   if (!pool.length) return null;

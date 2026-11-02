@@ -20,6 +20,7 @@ export const tuning = {
     blacksmithing: { 'copper-bar': 4, 'rough-stone': 6 },
     leatherworking: { 'soft-leather': 6, 'boar-hide': 2, 'curing-salt': 2, 'waxed-thread': 3 },
     alchemy: { dawnpetal: 6, silverfern: 6, 'simple-vial': 10 },
+    tailoring: { 'linen-scraps': 12, 'waxed-thread': 6 },
   },
 
   // ---- Shop ----

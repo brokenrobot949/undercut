@@ -85,7 +85,7 @@ There are no push notifications, since a static site can't send them. The summar
 
 ## Professions, skill and recipes
 
-The player starts with Blacksmithing, Leatherworking or Alchemy and unlocks the other two through shop expansions. Each pairs with one gathering profession, so the first choice also decides which heroes you hire first.
+The player starts with Blacksmithing, Leatherworking, Alchemy or Tailoring and unlocks more through shop expansions (wings). Enchanting (Phase 5) opens only with a wing. The first three each pair with a gathering profession, so the first choice also decides which heroes you hire first. Tailoring has no gathering profession; cloth comes from every hero trip instead (see Tailoring below).
 
 | Profession | Makes | Main materials | Gathering pair |
 | --- | --- | --- | --- |
@@ -157,6 +157,57 @@ Intermediate recipes count for skill too: grit from stone (Blacksmithing) and cu
 
 **Maker's mark.** Every crafted item carries your name. Commissions accept only items you made.
 
+## Tailoring (Phase 5)
+
+Tailors weave cloth scraps into cloth armor (Priests, Mages and Warlocks wear cloth) and satchels (every class buys them). Approved Nov 2, 2026.
+
+- **Workstation:** the Loom. A shop can start as a tailor (starting bags: 12 linen scraps and 6 waxed thread) or open Tailoring with a wing.
+- **Materials:** cloth scraps of the tier and waxed thread. From tier 3, gear also needs an herb as dye (wild sage, sunbloom, starlily).
+- **Intermediate:** spun cloth (2 scraps + thread), used by every piece of gear, like cured hides.
+- **Consumable:** patch kits, sold in bulk like armor kits.
+- **Cloth supply:** Tailoring has no gathering profession. While a shop has Tailoring, every gathering trip also brings home about 8 cloth an hour from the zone's tier (halved on a bad haul), and bonus loot rolls cloth 60% of the time instead of 45%. Both numbers are in `data/loot.js`.
+
+| Tier | Intermediate | Consumable | Cloth gear | Satchel | Scroll-only |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Spun linen | Linen patch kit | Linen handwraps, Linen robe, Linen cowl | Linen satchel | Hedgewitch shawl |
+| 2 | Spun wool | Wool patch kit | Wool slippers, Wool trousers, Wool shawl | Wool satchel | Lamplighter's hood |
+| 3 | Spun silk | Silk patch kit | Silk gloves, Silk robe, Silk sash | Silk satchel | Night-heron veil |
+| 4 | Spun brocade | Brocade patch kit | Brocade slippers, Brocade doublet, Brocade cowl | Brocade satchel | Courtier's gloves |
+| 5 | Spun samite | Samite patch kit | Samite robe, Samite handwraps, Samite trousers | Samite satchel | Stargazer's mantle |
+
+- **Quartermaster:** Guild clerk's robe (Friendly, green, tier 3), Archivist's brocade gloves (Honored, blue, tier 4), Samite oracle's robe (Revered, blue, tier 5).
+- **Masterworks (Exalted):** Flame-woven robe (Ember core), Voidglass-beaded cowl (Voidglass shard).
+
+As built (Nov 2, 2026):
+
+- Recipes copy Leatherworking's skill ranges, craft times and trainer prices. Scrap counts are scaled up so each recipe's material cost, and so its sale price, matches the Leatherworking piece it mirrors.
+- NPCs stock and buy about 40% more cloth than before (linen 17, wool 14, silk 13, brocade 11 and samite 11 buyers an hour), so there's enough to buy.
+- Cloth from trips started at 5 an hour; the sim showed tailors starved of cloth, so it went to 8.
+- A regular's request can now ask for a satchel as well as a cloak or their own armor type.
+- In the sim (Nov 2, 2026), the tailor bot reaches skill 300 on days 19–22 and the gate on days 48–54. Every steady bot reaches the gate on days 41–54, with no sim problems.
+- Sim bot changes: a tailor hires any hero (they all bring cloth), bots follow the tutorial's craft and buy steps, and a bot that can't buy a full leveling batch buys a smaller one.
+
+## Enchanting (Phase 5, planned)
+
+Enchanters break gear down into magical dust, then make charms that heroes use on their gear, plus a caster's off-hand focus. Approved Nov 2, 2026; not built yet.
+
+- **Workstation:** the Enchanting circle. Wing-only: it needs other gear to break down.
+- **Disenchanting:** break any gear item from your bags into its tier's dust (2–3), with a 25% chance of that tier's essence (cinder, tide, gale, stone, aether). Blue and purple gear can also give a Lucent crystal. Disenchanting is instant and gives no skill, like smelting. Leveling junk finally has a use, and cheap auction-house gear can be bought to break down.
+- **New materials:** Cinder dust, Tide dust, Gale dust, Stone dust, Aether dust and the Lucent crystal. All trade on the auction house, and NPCs sell them too.
+- **Recipes per tier:** four charms (consumables: edge for weapons, ward for armor, stride for boots, mind for casters) and one focus (gear for cloth wearers). No scroll-only recipes.
+
+| Tier | Charms | Focus |
+| --- | --- | --- |
+| 1 | Cinder edge charm, Cinder ward charm, Cinder stride charm, Cinder mind charm | Cinderglass focus |
+| 2 | Tide edge charm, Tide ward charm, Tide stride charm, Tide mind charm | Tideglass focus |
+| 3 | Gale edge charm, Gale ward charm, Gale stride charm, Gale mind charm | Galeglass focus |
+| 4 | Stone edge charm, Stone ward charm, Stone stride charm, Stone mind charm | Stoneglass focus |
+| 5 | Aether edge charm, Aether ward charm, Aether stride charm, Aether mind charm | Aetherglass focus |
+
+- **The shop service:** a new commission type, the Enchanting request. A hero asks you to enchant their gear with a charm you made. It pays well and gives reputation, like a rush order.
+- **Quartermaster:** Guild seal charm (Friendly, green, tier 3), Lucent focus (Honored, blue, tier 4), Starglass focus (Revered, blue, tier 5).
+- **Masterworks (Exalted):** Wyrmeye orb (Wyrm scale), Voidglass orb (Voidglass shard).
+
 ## Materials and smelting
 
 Materials come in five tiers that follow hero level bands, with original names on a familiar ladder. Heroes bring back ore, never bars, so smelting is a step the player controls.
@@ -190,7 +241,7 @@ Junk never trades on the auction house. Until Leatherworking and Alchemy are pla
 | Trade goods vendor | Smithing flux, coal, curing salt, waxed thread, and simple, stoppered and cut-glass vials at fixed prices, unlimited | Always there; a small, steady gold sink |
 | Auction house | Whatever NPC sellers have listed | Instant, at market price, and buying pushes the price up |
 
-Cloth sells on the auction house until Tailoring arrives in a later update.
+Cloth is Tailoring's main material (Phase 5). It also sells on the auction house.
 
 **Smelting: timed or instant with a cost**
 
@@ -424,7 +475,7 @@ Upgrades are bought with gold, and a few also need guild standing. Most have 5 l
 | Expedition charter | +1 expedition slot (4 levels) | 2 → 6 |
 | Counter | +1 commission slot, commission pay +5% (2 levels) | 3 → 5 |
 | Ledger | Level 1 price history, level 2 sell-time estimates, level 3 event warnings 6 h early | 3 levels |
-| Profession wing | Adds your second or third profession | Needs Friendly, then Honored |
+| Profession wing | Adds another profession | Needs Friendly, Honored, Revered, then Exalted |
 | Shop sign | Cosmetic banner that grows with your standing | Follows standing |
 
 First-level costs range from 50 s to 5 g. All costs are starting values in the data files.
@@ -433,7 +484,7 @@ As built (Oct 31, 2026; costs and standing gates are in `data/upgrades.js`):
 
 - First-level costs: bags 50 s, listing board 75 s, queue and bellows 1 g, tools 1.5 g, tavern table 2 g, counter 2.5 g, expedition charter 3 g, auctioneer's seal 5 g. Buying every level of all nine costs about 270 g.
 - Standing gates: the first level of each needs none. Later levels need Friendly, then Honored, and the top levels of the seal and charter need Revered.
-- Profession wings: the second costs 3 g at Friendly, the third 8 g at Honored, and you pick which profession each one opens. A new wing comes with that profession's starting materials. Costs are in `data/professions.js`.
+- Profession wings: the second costs 3 g at Friendly, the third 8 g at Honored, the fourth 15 g at Revered and the fifth 25 g at Exalted (Phase 5), and you pick which profession each one opens. A new wing comes with that profession's starting materials. Costs are in `data/professions.js`.
 - Ledger: 2 g, then 3.6 g, then 6.5 g, with level 3 needing Friendly. Level 1 adds a 7-day price chart (6-hour average sale prices against a dashed base-value line) to every item sheet. Level 2 adds a sell-time estimate under the listing form. It replays that item's market forward 5 times on a copy and reports "likely sells out in about N h", a chance to sell, or "unlikely to sell". Level 3 adds a "Coming soon" list to the town crier, 6 hours ahead.
 - Tools speed up every workstation except the forge, and bellows speed up the forge.
 - A listing keeps the auction house cut it was posted with.
@@ -664,7 +715,14 @@ The auction house is the riskiest part of the design, so Phase 1 builds the full
       - In the sim, bots' spare endgame materials still show low sell-through (10–40%). A direct test sells every unit listed at market price, so this looks like how the bots list rather than the market.
       - A few thin-market items sell about half of what bots list (some quartermaster gear, Fenlight tonic, Tourmaline, tin and iron bars).
 
-**Later updates:** Tailoring, Engineering, Enchanting (a shop service plus disenchanting), Cooking, First Aid, and a neutral port market.
+6. **Phase 5 · Tailoring and Enchanting** (approved Nov 2, 2026)
+    - Tailoring tiers 1–5 with quartermaster recipes and masterworks; a shop can start as a tailor.
+    - Enchanting: disenchanting, dusts, charms and foci, Enchanting requests at the counter.
+    - Fourth and fifth profession wings (Revered, Exalted).
+    - The endgame stays Exalted with any three professions at 300.
+    - **Gate:** the sim's steady bots, including a tailor, reach the gate in 6–8 weeks; icons, credits and phone screenshots checked.
+
+**Later updates:** Engineering, Cooking, First Aid, and a neutral port market.
 
 ## Decisions
 
@@ -676,6 +734,7 @@ All open design calls are settled.
 | Faction, capital and guild names | Ember Pact and Kragmar, Azure Crown and Aldmere |
 | Race names | Hornkin and Risen |
 | Material and herb names | As written in Materials and smelting. Stones for tiers 3–5 use real rock names (ironstone, flintstone, basalt), and leathers, two herbs and two vials were renamed (Oct 30, 2026), to keep clear of the original game's names |
+| Phase 5 names | Tailoring and Enchanting names as listed in their sections (approved Nov 2, 2026). Avoided as too close to the original game: "Bolt of … cloth", "… Bag", Spellthread, Embersilk, Duskweave, Minor/Lesser/Greater enchant tiers, Strange/Soul/Vision Dust, Glimmering/Prismatic Shard, Runed rods, Wizard oil |
 | Phase 4 names | Gold-sink decor, sign styles, donations and trophies as listed under Late-game gold sinks (approved Oct 31, 2026) |
 | Phase 3 names | Quartermaster recipes, masterwork recipes and raid destinations as listed above (approved Oct 31, 2026). Wyrmrest, Windrunner, Shadowhide, "Flask of…" and "… Depths" or "Molten …" raid names were rejected as too close to the original game |
 | Sound | A small set of effects, added in Phase 4 |

@@ -37,6 +37,7 @@ This file is written by `node tools/copy-icons.js`.
 | coal-pile.svg | Delapouite |
 | compass.svg | Lorc |
 | corked-tube.svg | Lorc |
+| cowled.svg | Lorc |
 | crafting.svg | Delapouite |
 | crested-helmet.svg | Lorc |
 | crown.svg | Lorc |
@@ -71,6 +72,7 @@ This file is written by `node tools/copy-icons.js`.
 | hood.svg | Lorc |
 | horseshoe.svg | Delapouite |
 | hourglass.svg | Lorc |
+| knapsack.svg | Lorc |
 | knight-banner.svg | Delapouite |
 | knot.svg | Delapouite |
 | layered-armor.svg | Lorc |
@@ -101,6 +103,7 @@ This file is written by `node tools/copy-icons.js`.
 | red-carpet.svg | Delapouite |
 | ringing-bell.svg | Lorc |
 | roast-chicken.svg | Lorc |
+| robe.svg | Lorc |
 | rock.svg | Lorc |
 | rolled-cloth.svg | Delapouite |
 | rolling-dices.svg | Delapouite |
@@ -109,6 +112,7 @@ This file is written by `node tools/copy-icons.js`.
 | scale-mail.svg | Lorc |
 | scales.svg | Lorc |
 | scroll-quill.svg | Delapouite |
+| sewing-machine.svg | Caro Asercion |
 | sewing-needle.svg | Lorc |
 | sewing-string.svg | Delapouite |
 | sharp-axe.svg | Delapouite |
@@ -116,11 +120,13 @@ This file is written by `node tools/copy-icons.js`.
 | shop.svg | Delapouite |
 | shoulder-armor.svg | Delapouite |
 | shoulder-scales.svg | Lorc |
+| slippers.svg | Delapouite |
 | snow-bottle.svg | Lorc |
 | speaker.svg | Delapouite |
 | speaker-off.svg | Delapouite |
 | spiked-armor.svg | Lorc |
 | spiked-shoulder-armor.svg | Delapouite |
+| spinning-wheel.svg | Caro Asercion |
 | spiral-bottle.svg | Lorc |
 | square-bottle.svg | Lorc |
 | standing-potion.svg | Lorc |
@@ -139,6 +145,7 @@ This file is written by `node tools/copy-icons.js`.
 | toolbox.svg | Delapouite |
 | treasure-map.svg | Lorc |
 | triorb.svg | Lorc |
+| trousers.svg | Lorc |
 | twirly-flower.svg | Lorc |
 | two-handed-sword.svg | Delapouite |
 | vampire-cape.svg | Delapouite |
@@ -146,6 +153,7 @@ This file is written by `node tools/copy-icons.js`.
 | walking-boot.svg | Lorc |
 | war-pick.svg | Delapouite |
 | warhammer.svg | Delapouite |
+| warlock-hood.svg | Delapouite |
 | watchtower.svg | Delapouite |
 | whirlwind.svg | Lorc |
 | window.svg | Delapouite |
