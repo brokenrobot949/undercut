@@ -32,6 +32,7 @@ import { buyDecor, buyTrophy, buySignStyle, donate, donationOffer, donationEndsA
 import { decor, signStyles, donations, trophies } from '../data/shop-extras.js';
 import { hireHero, hireFee, zonesFor, raidZonesFor, gatheredProfessions, expeditionSlots, regularsInTown } from '../js/engine/heroes.js';
 import { nextWing, buyWing } from '../js/engine/wings.js';
+import { disenchant } from '../js/engine/enchanting.js';
 import { zoneById } from '../data/zones.js';
 import { canDeliver, deliverCommission, claimTutorialStep } from '../js/engine/commissions.js';
 import { tutorialStep, stepMet } from '../js/engine/tutorial.js';
@@ -197,13 +198,14 @@ const BOTS = [
   { name: 'tanner', prof: 'leatherworking', every: 4, listHours: 6, relist: true, flip: false, wings: ['blacksmithing', 'alchemy'] },
   { name: 'alchemist', prof: 'alchemy', every: 4, listHours: 6, relist: true, flip: false, wings: ['blacksmithing', 'leatherworking'] },
   { name: 'tailor', prof: 'tailoring', every: 4, listHours: 6, relist: true, flip: false, wings: ['leatherworking', 'alchemy'] },
+  { name: 'enchanter', prof: 'leatherworking', every: 4, listHours: 6, relist: true, flip: false, wings: ['enchanting', 'tailoring'] },
 ];
 // SIM_BOTS=tailor,cautious runs just those bots.
 const RUN_BOTS = process.env.SIM_BOTS ? BOTS.filter((b) => process.env.SIM_BOTS.split(',').includes(b.name)) : BOTS;
 // Days each bot plays. The Phase 3 gate is at 6 to 8 weeks.
 const RUN_DAYS = 70;
 // Bots that play like a steady, regular player; the Phase 3 gate is checked on these.
-const GATE_BOTS = new Set(['cautious', 'tanner', 'alchemist', 'tailor']);
+const GATE_BOTS = new Set(['cautious', 'tanner', 'alchemist', 'tailor', 'enchanter']);
 const SELL_CATEGORIES = new Set(['consumable', 'gear']);
 // Materials some recipe uses; the bots keep this many of each and sell the rest.
 const KEEP_MATS = 40;
@@ -551,7 +553,9 @@ function botCheckIn(bot, state, now, stats) {
     const item = itemById[itemId];
     if (!SELL_CATEGORIES.has(item.category)) continue;
     const extra = have - Math.max(2, Math.ceil(demandPerHour(state, item) * 48));
-    if (extra > 0 && tryAct(() => sellToVendor(state, itemId, extra))) stats.vendored += extra;
+    // An enchanter breaks surplus gear down for dust instead of selling it to a vendor.
+    if (extra > 0 && item.category === 'gear' && has('enchanting') && tryAct(() => disenchant(state, itemId, extra))) stats.disenchanted += extra;
+    else if (extra > 0 && tryAct(() => sellToVendor(state, itemId, extra))) stats.vendored += extra;
   }
 
   // Flipping: buy listings under 80% of base value, spending at most a fifth
@@ -573,7 +577,7 @@ function botCheckIn(bot, state, now, stats) {
 function botRun(bot, seed) {
   const state = newGame({ name: bot.name, factionId: 'red', professionId: bot.prof, seed, now: START });
   const stats = { sold: {}, listed: {}, firstSale: null, heroFees: 0, deposits: 0, relists: 0, flips: 0, flipStock: {}, wingDays: [], raids: 0,
-    levelCrafts: 0, vendored: 0, recipeSpend: 0, upgradeSpend: 0, upgradeLevels: 0, extrasSpend: 0, extrasBought: 0, scrollsRead: 0, junkSold: 0, rep: {}, commissions: 0, commissionGold: 0, gold: {}, skill: {}, reached: {}, flooded: {} };
+    levelCrafts: 0, vendored: 0, recipeSpend: 0, upgradeSpend: 0, upgradeLevels: 0, extrasSpend: 0, extrasBought: 0, disenchanted: 0, scrollsRead: 0, junkSold: 0, rep: {}, commissions: 0, commissionGold: 0, gold: {}, skill: {}, reached: {}, flooded: {} };
   const checkpoints = [1, 3, 7, 14, 30, 60];
   for (let t = START; t <= START + RUN_DAYS * DAY; t += bot.every * HOUR) {
     botCheckIn(bot, state, t, stats);
@@ -619,7 +623,7 @@ function botReport() {
     console.log(`${pad(bot.name, 10)}${gold}${lpad(`${Math.round(first)} min`, 10)}${lpad(gsc(avg((r) => r.heroFees)), 11)}${lpad(gsc(avg((r) => r.deposits)), 10)}`);
     console.log(`${pad('', 10)}skill ${[1, 3, 7, 14, 30, 60].map((d) => `d${d} ${Math.round(avg((r) => r.skill[d] ?? 0))}`).join(', ')}` +
       `; reputation d7 ${Math.round(avg((r) => r.rep[7] ?? 0))}, d30 ${Math.round(avg((r) => r.rep[30] ?? 0))}; ${Math.round(avg((r) => r.commissions))} commissions (${gsc(avg((r) => r.commissionGold))})` +
-      `; ${Math.round(avg((r) => r.levelCrafts))} leveling crafts, ${Math.round(avg((r) => r.vendored))} vendored, ${gsc(avg((r) => r.recipeSpend))} on recipes, ${gsc(avg((r) => r.upgradeSpend))} on ${avg((r) => r.upgradeLevels).toFixed(0)} upgrade levels, ${gsc(avg((r) => r.extrasSpend))} on gold sinks (${avg((r) => r.extrasBought).toFixed(0)} of 13 bought)`);
+      `; ${Math.round(avg((r) => r.levelCrafts))} leveling crafts, ${Math.round(avg((r) => r.vendored))} vendored, ${Math.round(avg((r) => r.disenchanted))} disenchanted, ${gsc(avg((r) => r.recipeSpend))} on recipes, ${gsc(avg((r) => r.upgradeSpend))} on ${avg((r) => r.upgradeLevels).toFixed(0)} upgrade levels, ${gsc(avg((r) => r.extrasSpend))} on gold sinks (${avg((r) => r.extrasBought).toFixed(0)} of 13 bought)`);
     for (const r of runs) {
       for (const [id, n] of Object.entries(r.listed)) allListed[id] = (allListed[id] || 0) + n;
       for (const [id, n] of Object.entries(r.sold)) allSold[id] = (allSold[id] || 0) + n;

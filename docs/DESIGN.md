@@ -187,9 +187,9 @@ As built (Nov 2, 2026):
 - In the sim (Nov 2, 2026), the tailor bot reaches skill 300 on days 19–22 and the gate on days 48–54. Every steady bot reaches the gate on days 41–54, with no sim problems.
 - Sim bot changes: a tailor hires any hero (they all bring cloth), bots follow the tutorial's craft and buy steps, and a bot that can't buy a full leveling batch buys a smaller one.
 
-## Enchanting (Phase 5, planned)
+## Enchanting (Phase 5)
 
-Enchanters break gear down into magical dust, then make charms that heroes use on their gear, plus a caster's off-hand focus. Approved Nov 2, 2026; not built yet.
+Enchanters break gear down into magical dust, then make charms that heroes use on their gear, plus a caster's off-hand focus. Approved Nov 2, 2026.
 
 - **Workstation:** the Enchanting circle. Wing-only: it needs other gear to break down.
 - **Disenchanting:** break any gear item from your bags into its tier's dust (2–3), with a 25% chance of that tier's essence (cinder, tide, gale, stone, aether). Blue and purple gear can also give a Lucent crystal. Disenchanting is instant and gives no skill, like smelting. Leveling junk finally has a use, and cheap auction-house gear can be bought to break down.
@@ -207,6 +207,18 @@ Enchanters break gear down into magical dust, then make charms that heroes use o
 - **The shop service:** a new commission type, the Enchanting request. A hero asks you to enchant their gear with a charm you made. It pays well and gives reputation, like a rush order.
 - **Quartermaster:** Guild seal charm (Friendly, green, tier 3), Lucent focus (Honored, blue, tier 4), Starglass focus (Revered, blue, tier 5).
 - **Masterworks (Exalted):** Wyrmeye orb (Wyrm scale), Voidglass orb (Voidglass shard).
+
+As built (Nov 2, 2026):
+
+- Recipes copy Leatherworking's skill ranges, craft times and trainer prices. A new Enchanting wing comes with 12 cinder dust and 6 waxed thread.
+- Charms are dust and waxed thread only: edge 2 dust, ward 3, stride 4, mind 5. A focus is 5 dust, 1 essence and 1 bar of its tier. Gems, essences and lucent crystals are kept for the quartermaster and masterwork recipes, because they're scarce.
+- Dust base values are 10, 20, 40, 65 and 100 copper by tier. NPCs stock and buy 20, 18, 16, 14 and 14 an hour, so there's enough to buy while leveling.
+- Disenchanting numbers are in `data/enchanting.js`: dust per item is 1 (poor), 2 (common), 3 (uncommon), 4 (rare) or 6 (epic). There's a 25% chance of an essence, and a lucent crystal at 50% from rare gear, or 1 plus 50% from epic gear. Gear sheets have a Disenchant section, and the Enchanting circle lists every piece of gear in your bags.
+- Enchanting requests post with weight 25, for 1–2 charms over 6–12 hours, and pay 2.5× market. They count as a full-size order at a fifth of the usual value, so they earn rush-level reputation.
+- Trip cloth for a tailor now comes in the tier its Tailoring is working on, up to the zone's tier.
+- Older saves learn any new profession's starting recipes on load.
+- All commission reputation was raised slightly (repScale 0.68 → 0.70) so the steady bots stay inside 6–8 weeks.
+- In the sim (Nov 2, 2026), a leatherworker who adds Enchanting, then Tailoring, reaches the gate on days 49–54. Every steady bot reaches it on days 42–54, with no sim problems.
 
 ## Materials and smelting
 
@@ -427,7 +439,7 @@ The Trade Guild is the long-term goal. Standing unlocks training ranks, recipes 
 | Regular's request | 50–150 |
 | Guild drive (event) | Up to 2,000 |
 
-Commission reputation scales with what the order is worth. An order worth at least a typical piece of gear at its tier (150 c, 450 c, 8 s, 14 s, 26 s for tiers 1–5) earns the full amount; a smaller one earns less, never under a quarter. Guild contracts count as full size at four times that. All commission reputation is then multiplied by 0.68 (repScale in data/commissions.js; raised from 0.65 in the Phase 3 balance pass), tuned so a cautious player reaches Friendly in week 1, Honored in weeks 2–3, Revered in weeks 4–5 and Exalted in weeks 6–8.
+Commission reputation scales with what the order is worth. An order worth at least a typical piece of gear at its tier (150 c, 450 c, 8 s, 14 s, 26 s for tiers 1–5) earns the full amount; a smaller one earns less, never under a quarter. Guild contracts count as full size at four times that. All commission reputation is then multiplied by 0.70 (repScale in data/commissions.js; raised from 0.65 in the Phase 3 balance pass and to 0.70 in Phase 5), tuned so a cautious player reaches Friendly in week 1, Honored in weeks 2–3, Revered in weeks 4–5 and Exalted in weeks 6–8.
 
 **Quartermaster recipes** (bought from the guild quartermaster once you reach the standing)
 

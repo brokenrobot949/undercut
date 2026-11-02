@@ -99,6 +99,8 @@ export const items = [
   { id: 'voidglass-studded-jerkin', name: 'Voidglass-studded jerkin', tier: 5, category: 'gear', armor: 'leather', quality: 'epic', base: 16745, demand: 0.2 },
   { id: 'flame-woven-robe', name: 'Flame-woven robe', tier: 5, category: 'gear', armor: 'cloth', quality: 'epic', base: 17143, demand: 0.2 },
   { id: 'voidglass-beaded-cowl', name: 'Voidglass-beaded cowl', tier: 5, category: 'gear', armor: 'cloth', quality: 'epic', base: 17143, demand: 0.2 },
+  { id: 'wyrmeye-orb', name: 'Wyrmeye orb', tier: 5, category: 'gear', armor: 'cloth', quality: 'epic', base: 20600, demand: 0.2 },
+  { id: 'voidglass-orb', name: 'Voidglass orb', tier: 5, category: 'gear', armor: 'cloth', quality: 'epic', base: 20600, demand: 0.2 },
   { id: 'phoenix-ember-philter', name: 'Phoenix-ember philter', tier: 5, category: 'consumable', quality: 'epic', base: 9193, demand: 2 },
   { id: 'voidglass-tincture-of-clarity', name: 'Voidglass tincture of clarity', tier: 5, category: 'consumable', quality: 'epic', base: 9193, demand: 2 },
 
@@ -288,6 +290,52 @@ export const items = [
   { id: 'stargazers-mantle', name: "Stargazer's mantle", tier: 5, category: 'gear', armor: 'cloth', quality: 'uncommon', base: 2642, demand: 0.3 },
   { id: 'scroll-stargazers-mantle', name: "Recipe scroll: Stargazer's mantle", tier: 5, category: 'scroll', quality: 'uncommon', base: 8000, demand: 0.3, loot: 'scroll', teaches: 'stargazers-mantle' },
   { id: 'samite-oracles-robe', name: "Samite oracle's robe", tier: 5, category: 'gear', armor: 'cloth', quality: 'rare', base: 3350, demand: 0.35 },
+
+  // ---- Enchanting materials: dust from disenchanting, and the lucent crystal ----
+  { id: 'cinder-dust', name: 'Cinder dust', tier: 1, category: 'material', quality: 'common', base: 10, demand: 20 },
+  { id: 'tide-dust', name: 'Tide dust', tier: 2, category: 'material', quality: 'common', base: 20, demand: 18 },
+  { id: 'gale-dust', name: 'Gale dust', tier: 3, category: 'material', quality: 'common', base: 40, demand: 16 },
+  { id: 'stone-dust', name: 'Stone dust', tier: 4, category: 'material', quality: 'common', base: 65, demand: 14 },
+  { id: 'aether-dust', name: 'Aether dust', tier: 5, category: 'material', quality: 'common', base: 100, demand: 14 },
+  { id: 'lucent-crystal', name: 'Lucent crystal', tier: 5, category: 'material', quality: 'rare', base: 700, demand: 1 },
+
+  // ---- Enchanting, tier 1 (cinder) ----
+  { id: 'cinder-edge-charm', name: 'Cinder edge charm', tier: 1, category: 'consumable', quality: 'common', base: 31, demand: 5 },
+  { id: 'cinder-ward-charm', name: 'Cinder ward charm', tier: 1, category: 'consumable', quality: 'common', base: 44, demand: 5 },
+  { id: 'cinder-stride-charm', name: 'Cinder stride charm', tier: 1, category: 'consumable', quality: 'common', base: 57, demand: 5 },
+  { id: 'cinder-mind-charm', name: 'Cinder mind charm', tier: 1, category: 'consumable', quality: 'common', base: 70, demand: 5 },
+  { id: 'cinderglass-focus', name: 'Cinderglass focus', tier: 1, category: 'gear', armor: 'cloth', quality: 'common', base: 174, demand: 0.5 },
+
+  // ---- Enchanting, tier 2 (tide) ----
+  { id: 'tide-edge-charm', name: 'Tide edge charm', tier: 2, category: 'consumable', quality: 'common', base: 57, demand: 4 },
+  { id: 'tide-ward-charm', name: 'Tide ward charm', tier: 2, category: 'consumable', quality: 'common', base: 83, demand: 4 },
+  { id: 'tide-stride-charm', name: 'Tide stride charm', tier: 2, category: 'consumable', quality: 'common', base: 109, demand: 4 },
+  { id: 'tide-mind-charm', name: 'Tide mind charm', tier: 2, category: 'consumable', quality: 'common', base: 135, demand: 4 },
+  { id: 'tideglass-focus', name: 'Tideglass focus', tier: 2, category: 'gear', armor: 'cloth', quality: 'common', base: 330, demand: 0.5 },
+
+  // ---- Enchanting, tier 3 (gale) ----
+  { id: 'gale-edge-charm', name: 'Gale edge charm', tier: 3, category: 'consumable', quality: 'common', base: 109, demand: 4 },
+  { id: 'gale-ward-charm', name: 'Gale ward charm', tier: 3, category: 'consumable', quality: 'common', base: 161, demand: 4 },
+  { id: 'gale-stride-charm', name: 'Gale stride charm', tier: 3, category: 'consumable', quality: 'common', base: 213, demand: 4 },
+  { id: 'gale-mind-charm', name: 'Gale mind charm', tier: 3, category: 'consumable', quality: 'common', base: 265, demand: 4 },
+  { id: 'galeglass-focus', name: 'Galeglass focus', tier: 3, category: 'gear', armor: 'cloth', quality: 'common', base: 570, demand: 0.5 },
+  { id: 'guild-seal-charm', name: 'Guild seal charm', tier: 3, category: 'consumable', quality: 'uncommon', base: 590, demand: 2 },
+
+  // ---- Enchanting, tier 4 (stone) ----
+  { id: 'stone-edge-charm', name: 'Stone edge charm', tier: 4, category: 'consumable', quality: 'common', base: 174, demand: 3.5 },
+  { id: 'stone-ward-charm', name: 'Stone ward charm', tier: 4, category: 'consumable', quality: 'common', base: 259, demand: 3.5 },
+  { id: 'stone-stride-charm', name: 'Stone stride charm', tier: 4, category: 'consumable', quality: 'common', base: 343, demand: 3.5 },
+  { id: 'stone-mind-charm', name: 'Stone mind charm', tier: 4, category: 'consumable', quality: 'common', base: 428, demand: 3.5 },
+  { id: 'stoneglass-focus', name: 'Stoneglass focus', tier: 4, category: 'gear', armor: 'cloth', quality: 'common', base: 885, demand: 0.5 },
+  { id: 'lucent-focus', name: 'Lucent focus', tier: 4, category: 'gear', armor: 'cloth', quality: 'rare', base: 4066, demand: 0.35 },
+
+  // ---- Enchanting, tier 5 (aether) ----
+  { id: 'aether-edge-charm', name: 'Aether edge charm', tier: 5, category: 'consumable', quality: 'common', base: 265, demand: 3.5 },
+  { id: 'aether-ward-charm', name: 'Aether ward charm', tier: 5, category: 'consumable', quality: 'common', base: 395, demand: 3.5 },
+  { id: 'aether-stride-charm', name: 'Aether stride charm', tier: 5, category: 'consumable', quality: 'common', base: 525, demand: 3.5 },
+  { id: 'aether-mind-charm', name: 'Aether mind charm', tier: 5, category: 'consumable', quality: 'common', base: 655, demand: 3.5 },
+  { id: 'aetherglass-focus', name: 'Aetherglass focus', tier: 5, category: 'gear', armor: 'cloth', quality: 'common', base: 1341, demand: 0.5 },
+  { id: 'starglass-focus', name: 'Starglass focus', tier: 5, category: 'gear', armor: 'cloth', quality: 'rare', base: 5830, demand: 0.35 },
 
   // ---- Alchemy, tier 1 ----
   { id: 'faint-mending-draught', name: 'Faint mending draught', tier: 1, category: 'consumable', quality: 'common', base: 18, demand: 14 },

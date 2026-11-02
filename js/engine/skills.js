@@ -64,6 +64,8 @@ export function startingProfession(state) {
 // Adds skill entries for professions that are new since this save was made.
 export function syncSkills(state) {
   for (const p of professions) state.skills[p.id] ||= { skill: 1, rank: 0 };
+  // Starting recipes of professions added since the save was made.
+  for (const r of recipes) if (r.learn === 'start') state.knownRecipes[r.id] = true;
 }
 
 export function checkProfession(state, recipe) {

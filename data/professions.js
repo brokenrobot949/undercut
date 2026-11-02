@@ -26,6 +26,8 @@ export const professions = [
     blurb: 'Mending and focus draughts, tonics, elixirs, wards and transmutes. Herbalists bring your herbs.' },
   { id: 'tailoring', name: 'Tailoring', gathering: null, stations: ['loom'],
     blurb: 'Robes, cowls, handwraps, satchels and patch kits. Every hero trip brings cloth, and more of it once you tailor.' },
+  { id: 'enchanting', name: 'Enchanting', gathering: null, stations: ['enchanting-circle'], startable: false,
+    blurb: 'Break gear down into dust, then make charms for heroes and a focus for casters.' },
 ];
 
 // Profession wings, bought on the Shop tab: the first wing opens your second
@@ -42,7 +44,7 @@ export const wings = [
 ];
 
 // Workstation names, as shown in the Workshop.
-export const stationNames = { anvil: 'Anvil', forge: 'Forge', workbench: 'Workbench', 'alchemy-table': 'Alchemy table', loom: 'Loom' };
+export const stationNames = { anvil: 'Anvil', forge: 'Forge', workbench: 'Workbench', 'alchemy-table': 'Alchemy table', loom: 'Loom', 'enchanting-circle': 'Enchanting circle' };
 
 export const ranks = [
   { id: 'apprentice', name: 'Apprentice', cap: 75, cost: 0, standing: 'neutral' },

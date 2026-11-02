@@ -58,8 +58,9 @@ export function requestText(c) {
 
 // Recipes a request may ask for: your professions, a sellable result, and a
 // skill level near yours. Scroll-only recipes only once you know them.
-function candidates(state, category = null) {
+function candidates(state, category = null, station = null) {
   return recipes.filter((r) => {
+    if (station && r.station !== station) return false;
     const prof = recipeProfession(r);
     if (!prof || !hasProfession(state, prof)) return false;
     const item = itemById[r.makes.item];
@@ -73,15 +74,15 @@ function candidates(state, category = null) {
 }
 
 function pickType(state) {
-  const types = commissionTypes.filter((t) => t.id !== 'regular' || state.tavern?.regulars?.length);
+  const types = commissionTypes.filter((t) => (t.id !== 'regular' || state.tavern?.regulars?.length) && (!t.requires || hasProfession(state, t.requires)));
   let r = rngNext(state.rng) * types.reduce((n, t) => n + t.weight, 0);
   return types.find((t) => (r -= t.weight) < 0) ?? types[0];
 }
 
 export function postCommission(state, now, forced = null) {
   const type = forced ? commissionTypes.find((t) => t.id === forced) : pickType(state);
-  const category = type.id === 'contract' || type.id === 'drive' ? 'consumable' : type.id === 'regular' ? 'gear' : null;
-  let pool = candidates(state, category);
+  const category = type.id === 'contract' || type.id === 'drive' || type.id === 'enchant' ? 'consumable' : type.id === 'regular' ? 'gear' : null;
+  let pool = candidates(state, category, type.station);
   let regular = null;
   if (type.id === 'regular') {
     regular = rngPick(state.rng, state.tavern.regulars);

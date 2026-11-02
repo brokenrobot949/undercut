@@ -2,6 +2,7 @@
 // stock, List / Buy / Vendor, and the recipes that make or use it.
 
 import { el, coins, openSheet, stepper, fill, coinInput, toast, coinText, itemIcon } from './components.js';
+import { disenchant, disenchantYield, canDisenchant } from '../engine/enchanting.js';
 import { itemById } from '../../data/items.js';
 import { recipes } from '../../data/recipes.js';
 import { knowsRecipe, learnFromScroll, hasProfession } from '../engine/skills.js';
@@ -48,6 +49,7 @@ export function openItemSheet(ctx, itemId) {
         ? el('p', { class: 'small dim' }, 'Junk a hero brought home. Only a vendor will take it.')
         : el('p', { class: 'small dim' }, `Sold by the trade goods vendor for ${item.vendorBuy} copper each.`),
       item.teaches && have > 0 ? scrollSection() : null,
+      have > 0 && canDisenchant(ctx.state, itemId) ? disenchantSection(have) : null,
       tradeable && have > 0 ? sellSection(have) : null,
       tradeable ? buySection() : item.category === 'junk' ? null : vendorBuySection(),
       have > 0 ? vendorSellSection(have) : null,
@@ -164,6 +166,19 @@ export function openItemSheet(ctx, itemId) {
       el('p', { class: 'small dim' }, 'Instant, at the floor price of ', coins(vendorPrice(item)), ' each.'),
       el('div', { class: 'field' }, qty.node),
       el('button', { class: 'btn wide', type: 'button', onclick: () => act((s) => sellToVendor(s, itemId, qty.value)) }, 'Sell to vendor'));
+  }
+
+  function disenchantSection(have) {
+    const qty = stepper({ value: 1, max: have, label: 'How many to disenchant' });
+    const yields = disenchantYield(itemId).map((y) => `${Number.isInteger(y.qty) ? y.qty : y.qty < 1 ? `a ${Math.round(y.qty * 100)}% chance of` : `${Math.floor(y.qty)} (sometimes ${Math.floor(y.qty) + 1})`} ${itemById[y.item].name.toLowerCase()}`);
+    return el('section', { class: 'panel' },
+      el('h3', {}, 'Disenchant'),
+      el('p', { class: 'small dim' }, `Each one gives ${yields.join(', ')}.`),
+      qty.node,
+      el('button', { class: 'btn wide', type: 'button', onclick: () => act((s) => {
+        const got = disenchant(s, itemId, qty.value);
+        toast(`Got ${Object.entries(got).map(([g, n]) => `${n} × ${itemById[g].name}`).join(', ')}.`);
+      }) }, 'Disenchant'));
   }
 
   function scrollSection() {

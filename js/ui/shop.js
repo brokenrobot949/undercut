@@ -299,7 +299,7 @@ function commissionCard(ctx, c) {
     el('div', { class: 'commission-head' },
       el('span', { class: 'commission-type' }, type.name),
       el('span', { class: 'small dim' }, 'Ends in ', countdown(c.expiresAt))),
-    el('p', { class: 'small' }, requesterText(c), ' wants'),
+    el('p', { class: 'small' }, requesterText(c), ` ${type.verb ?? 'wants'}`),
     el('p', { class: 'commission-item' }, itemIcon(item.id, 'sm'), el('strong', {}, `${c.qty} × `),
       el('button', { class: `link q-${item.quality}`, type: 'button', onclick: () => openItemSheet(ctx, item.id) }, item.name)),
     el('p', { class: 'small' }, 'Pays ', coins(c.pay), ` and ${c.rep} reputation`,

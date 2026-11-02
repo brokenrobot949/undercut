@@ -52,13 +52,13 @@ function rollBoard(state) {
   }
 }
 
-// Highest tier among known recipes of your starting profession that still give
-// skill; tier 1 for a new shop.
-function workingTier(state) {
+// Highest tier among known recipes of a profession (your starting one unless
+// given) that still give skill; tier 1 for a new shop.
+function workingTier(state, prof = startingProfession(state)) {
   if (!state.skills || !state.player.professions) return 1;
   let tier = 1;
   for (const r of recipes) {
-    if (recipeProfession(r) !== startingProfession(state)) continue;
+    if (recipeProfession(r) !== prof) continue;
     const color = recipeColor(state, r);
     if (color && color !== 'red' && color !== 'gray' && knowsRecipe(state, r)) tier = Math.max(tier, r.tier);
   }
@@ -274,7 +274,9 @@ export function expeditionReturns(state, timer, summary) {
   }
   // A shop with Tailoring: heroes also bring home cloth they find on the way.
   if (!zone.raid && hasProfession(state, 'tailoring')) {
-    const cloth = items.find((i) => i.loot === 'cloth' && i.tier === zone.tier);
+    // The cloth your Tailoring is working with, up to the zone's tier.
+    const tier = Math.min(zone.tier, workingTier(state, 'tailoring'));
+    const cloth = items.find((i) => i.loot === 'cloth' && i.tier === tier);
     const exact = generalLoot.tailoringClothPerHour * trip.hours * rngRange(state.rng, 1 - TV.haulSpread, 1 + TV.haulSpread) * (bad ? 0.5 : 1);
     const qty = Math.floor(exact) + (rngNext(state.rng) < exact % 1 ? 1 : 0);
     if (cloth && qty > 0) give(cloth.id, qty);

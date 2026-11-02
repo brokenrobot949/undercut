@@ -3,7 +3,8 @@
 // Smelter at the forge. Recipe names are colored by skill-up odds: orange,
 // yellow, green, gray, and red when too hard.
 
-import { el, coins, openSheet, stepper, progress, countdown, fill, itemIcon } from './components.js';
+import { el, coins, openSheet, stepper, progress, countdown, fill, itemIcon, toast } from './components.js';
+import { disenchant } from '../engine/enchanting.js';
 import { recipes, recipeById } from '../../data/recipes.js';
 import { itemById } from '../../data/items.js';
 import { tuning } from '../../data/tuning.js';
@@ -26,6 +27,7 @@ const BLURBS = {
   workbench: 'Each finished craft can raise your skill. Cure hides here first: most leather goods need them.',
   'alchemy-table': 'Each finished craft can raise your skill. Transmutes turn your herbs into smithing materials.',
   loom: 'Each finished craft can raise your skill. Spin cloth here first: robes, cowls and satchels need it.',
+  'enchanting-circle': 'Each finished craft can raise your skill. Disenchant gear below for dust: leveling junk, or cheap gear from the auction house.',
 };
 
 export function renderWorkshop(ctx) {
@@ -37,11 +39,29 @@ export function renderWorkshop(ctx) {
       onclick: () => { shown = p.id; ctx.render(); },
     }, p.name))) : null,
     professionById[shown].stations.map((s) => stationPanel(ctx, s, stationNames[s], BLURBS[s])),
+    shown === 'enchanting' ? disenchantPanel(ctx) : null,
     hasProfession(ctx.state, 'blacksmithing') ? null : smelterPanel(ctx),
   );
 }
 
 // Shops without a forge can still use the City Smelter: instant, for a fee.
+// Disenchanting: every piece of gear in your bags, with a button to break one down.
+function disenchantPanel(ctx) {
+  const gear = Object.entries(ctx.state.bags).filter(([id]) => itemById[id].category === 'gear')
+    .sort((a, b) => itemById[a[0]].tier - itemById[b[0]].tier || itemById[a[0]].name.localeCompare(itemById[b[0]].name));
+  return el('section', { class: 'panel' },
+    el('h2', {}, 'Disenchant'),
+    el('p', { class: 'small dim' }, 'Break gear down into dust of its tier, with a chance of an essence. Blue and purple gear can give lucent crystals. Instant, and it gives no skill.'),
+    gear.length ? el('div', { class: 'market-list' }, gear.map(([id, qty]) => el('div', { class: 'my-listing with-icon one-line' },
+      itemIcon(id, 'sm'),
+      el('button', { class: `link item-name q-${itemById[id].quality}`, type: 'button', onclick: () => openItemSheet(ctx, id) }, `${qty} × ${itemById[id].name}`),
+      el('button', { class: 'btn small-btn', type: 'button', onclick: () => ctx.act((s) => {
+        const got = disenchant(s, id, 1);
+        toast(`Got ${Object.entries(got).map(([g, n]) => `${n} × ${itemById[g].name}`).join(', ')}.`);
+      }) }, 'Disenchant'))))
+      : el('p', { class: 'small dim' }, 'No gear in your bags. Craft some, or buy cheap gear on the auction house.'));
+}
+
 function smelterPanel(ctx) {
   return el('section', { class: 'panel' },
     el('h2', {}, 'City Smelter'),

@@ -1,9 +1,9 @@
-// Recipes. Blacksmithing, Leatherworking, Alchemy and Tailoring tiers 1-5, plus smelting at the forge.
+// Recipes. Blacksmithing, Leatherworking, Alchemy, Tailoring and Enchanting tiers 1-5, plus smelting at the forge.
 //
 // Fields:
 //   id        unique, lowercase-with-hyphens. Never change one after release.
 //   station   'anvil' (crafting) or 'forge' (smelting; the City Smelter can do these too).
-//             Also 'workbench' (Leatherworking), 'alchemy-table' (Alchemy) and 'loom' (Tailoring).
+//             Also 'workbench' (Leatherworking), 'alchemy-table' (Alchemy), 'loom' (Tailoring) and 'enchanting-circle' (Enchanting).
 //   tier      material tier.
 //   makes     { item, qty } produced per craft.
 //   mats      list of { item, qty } used per craft.
@@ -399,6 +399,106 @@ export const recipes = [
   { id: 'voidglass-beaded-cowl', station: 'loom', tier: 5, skill: [300, 310, 320, 330], learn: 'quartermaster', masterwork: true, standing: 'exalted', price: 100000, seconds: 150,
     makes: { item: 'voidglass-beaded-cowl', qty: 1 },
     mats: [{ item: 'voidglass-shard', qty: 2 }, { item: 'samite-scraps', qty: 19 }, { item: 'spun-samite', qty: 1 }, { item: 'waxed-thread', qty: 2 }, { item: 'diamond', qty: 1 }, { item: 'aether-essence', qty: 1 }, { item: 'starlily', qty: 2 }] },
+
+  // ---- Enchanting circle: Enchanting tier 1 ----
+  { id: 'cinder-edge-charm', station: 'enchanting-circle', tier: 1, skill: [1, 16, 26, 36], learn: 'start', seconds: 5,
+    makes: { item: 'cinder-edge-charm', qty: 1 },
+    mats: [{ item: 'cinder-dust', qty: 2 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'cinder-ward-charm', station: 'enchanting-circle', tier: 1, skill: [1, 16, 26, 36], learn: 'start', seconds: 6,
+    makes: { item: 'cinder-ward-charm', qty: 1 },
+    mats: [{ item: 'cinder-dust', qty: 3 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'cinder-stride-charm', station: 'enchanting-circle', tier: 1, skill: [10, 25, 35, 45], learn: 50, seconds: 20,
+    makes: { item: 'cinder-stride-charm', qty: 1 },
+    mats: [{ item: 'cinder-dust', qty: 4 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'cinder-mind-charm', station: 'enchanting-circle', tier: 1, skill: [20, 35, 45, 55], learn: 100, seconds: 25,
+    makes: { item: 'cinder-mind-charm', qty: 1 },
+    mats: [{ item: 'cinder-dust', qty: 5 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'cinderglass-focus', station: 'enchanting-circle', tier: 1, skill: [30, 45, 55, 65], learn: 400, seconds: 25,
+    makes: { item: 'cinderglass-focus', qty: 1 },
+    mats: [{ item: 'cinder-dust', qty: 5 }, { item: 'cinder-essence', qty: 1 }, { item: 'copper-bar', qty: 1 }] },
+
+  // ---- Enchanting circle: Enchanting tier 2 ----
+  { id: 'tide-edge-charm', station: 'enchanting-circle', tier: 2, skill: [55, 70, 80, 90], learn: 300, seconds: 8,
+    makes: { item: 'tide-edge-charm', qty: 1 },
+    mats: [{ item: 'tide-dust', qty: 2 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'tide-ward-charm', station: 'enchanting-circle', tier: 2, skill: [65, 80, 90, 100], learn: 500, seconds: 9,
+    makes: { item: 'tide-ward-charm', qty: 1 },
+    mats: [{ item: 'tide-dust', qty: 3 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'tide-stride-charm', station: 'enchanting-circle', tier: 2, skill: [75, 90, 100, 110], learn: 800, seconds: 40,
+    makes: { item: 'tide-stride-charm', qty: 1 },
+    mats: [{ item: 'tide-dust', qty: 4 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'tide-mind-charm', station: 'enchanting-circle', tier: 2, skill: [85, 100, 110, 120], learn: 1500, seconds: 45,
+    makes: { item: 'tide-mind-charm', qty: 1 },
+    mats: [{ item: 'tide-dust', qty: 5 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'tideglass-focus', station: 'enchanting-circle', tier: 2, skill: [95, 110, 120, 130], learn: 2000, seconds: 40,
+    makes: { item: 'tideglass-focus', qty: 1 },
+    mats: [{ item: 'tide-dust', qty: 5 }, { item: 'tide-essence', qty: 1 }, { item: 'bronze-bar', qty: 1 }] },
+
+  // ---- Enchanting circle: Enchanting tier 3 ----
+  { id: 'gale-edge-charm', station: 'enchanting-circle', tier: 3, skill: [125, 140, 150, 160], learn: 3000, seconds: 10,
+    makes: { item: 'gale-edge-charm', qty: 1 },
+    mats: [{ item: 'gale-dust', qty: 2 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'gale-ward-charm', station: 'enchanting-circle', tier: 3, skill: [135, 150, 160, 170], learn: 4000, seconds: 11,
+    makes: { item: 'gale-ward-charm', qty: 1 },
+    mats: [{ item: 'gale-dust', qty: 3 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'gale-stride-charm', station: 'enchanting-circle', tier: 3, skill: [145, 160, 170, 180], learn: 5000, seconds: 60,
+    makes: { item: 'gale-stride-charm', qty: 1 },
+    mats: [{ item: 'gale-dust', qty: 4 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'gale-mind-charm', station: 'enchanting-circle', tier: 3, skill: [155, 170, 180, 190], learn: 10000, seconds: 65,
+    makes: { item: 'gale-mind-charm', qty: 1 },
+    mats: [{ item: 'gale-dust', qty: 5 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'galeglass-focus', station: 'enchanting-circle', tier: 3, skill: [165, 180, 190, 200], learn: 12000, seconds: 65,
+    makes: { item: 'galeglass-focus', qty: 1 },
+    mats: [{ item: 'gale-dust', qty: 5 }, { item: 'gale-essence', qty: 1 }, { item: 'iron-bar', qty: 1 }] },
+  { id: 'guild-seal-charm', station: 'enchanting-circle', tier: 3, skill: [180, 195, 205, 215], learn: 'quartermaster', standing: 'friendly', price: 10000, seconds: 75,
+    makes: { item: 'guild-seal-charm', qty: 1 },
+    mats: [{ item: 'gale-dust', qty: 4 }, { item: 'gale-essence', qty: 1 }, { item: 'topaz', qty: 1 }, { item: 'waxed-thread', qty: 1 }] },
+
+  // ---- Enchanting circle: Enchanting tier 4 ----
+  { id: 'stone-edge-charm', station: 'enchanting-circle', tier: 4, skill: [190, 205, 215, 225], learn: 3000, seconds: 12,
+    makes: { item: 'stone-edge-charm', qty: 1 },
+    mats: [{ item: 'stone-dust', qty: 2 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'stone-ward-charm', station: 'enchanting-circle', tier: 4, skill: [200, 215, 225, 235], learn: 4000, seconds: 13,
+    makes: { item: 'stone-ward-charm', qty: 1 },
+    mats: [{ item: 'stone-dust', qty: 3 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'stone-stride-charm', station: 'enchanting-circle', tier: 4, skill: [210, 225, 235, 245], learn: 5000, seconds: 80,
+    makes: { item: 'stone-stride-charm', qty: 1 },
+    mats: [{ item: 'stone-dust', qty: 4 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'stone-mind-charm', station: 'enchanting-circle', tier: 4, skill: [220, 235, 245, 255], learn: 10000, seconds: 85,
+    makes: { item: 'stone-mind-charm', qty: 1 },
+    mats: [{ item: 'stone-dust', qty: 5 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'stoneglass-focus', station: 'enchanting-circle', tier: 4, skill: [230, 245, 255, 265], learn: 12500, seconds: 85,
+    makes: { item: 'stoneglass-focus', qty: 1 },
+    mats: [{ item: 'stone-dust', qty: 5 }, { item: 'stone-essence', qty: 1 }, { item: 'moonsilver-bar', qty: 1 }] },
+  { id: 'lucent-focus', station: 'enchanting-circle', tier: 4, skill: [245, 260, 270, 280], learn: 'quartermaster', standing: 'honored', price: 25000, seconds: 95,
+    makes: { item: 'lucent-focus', qty: 1 },
+    mats: [{ item: 'stone-dust', qty: 8 }, { item: 'stone-essence', qty: 2 }, { item: 'lucent-crystal', qty: 1 }, { item: 'moonsilver-bar', qty: 2 }, { item: 'tourmaline', qty: 1 }] },
+
+  // ---- Enchanting circle: Enchanting tier 5 ----
+  { id: 'aether-edge-charm', station: 'enchanting-circle', tier: 5, skill: [250, 265, 275, 285], learn: 7500, seconds: 15,
+    makes: { item: 'aether-edge-charm', qty: 1 },
+    mats: [{ item: 'aether-dust', qty: 2 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'aether-ward-charm', station: 'enchanting-circle', tier: 5, skill: [258, 273, 283, 293], learn: 9000, seconds: 16,
+    makes: { item: 'aether-ward-charm', qty: 1 },
+    mats: [{ item: 'aether-dust', qty: 3 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'aether-stride-charm', station: 'enchanting-circle', tier: 5, skill: [266, 281, 291, 301], learn: 10000, seconds: 100,
+    makes: { item: 'aether-stride-charm', qty: 1 },
+    mats: [{ item: 'aether-dust', qty: 4 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'aether-mind-charm', station: 'enchanting-circle', tier: 5, skill: [274, 289, 299, 309], learn: 20000, seconds: 110,
+    makes: { item: 'aether-mind-charm', qty: 1 },
+    mats: [{ item: 'aether-dust', qty: 5 }, { item: 'waxed-thread', qty: 1 }] },
+  { id: 'aetherglass-focus', station: 'enchanting-circle', tier: 5, skill: [282, 297, 307, 317], learn: 22500, seconds: 110,
+    makes: { item: 'aetherglass-focus', qty: 1 },
+    mats: [{ item: 'aether-dust', qty: 5 }, { item: 'aether-essence', qty: 1 }, { item: 'starmetal-bar', qty: 1 }] },
+  { id: 'starglass-focus', station: 'enchanting-circle', tier: 5, skill: [285, 300, 310, 320], learn: 'quartermaster', standing: 'revered', price: 50000, seconds: 125,
+    makes: { item: 'starglass-focus', qty: 1 },
+    mats: [{ item: 'aether-dust', qty: 10 }, { item: 'aether-essence', qty: 2 }, { item: 'lucent-crystal', qty: 1 }, { item: 'starmetal-bar', qty: 2 }, { item: 'diamond', qty: 1 }] },
+  { id: 'wyrmeye-orb', station: 'enchanting-circle', tier: 5, skill: [300, 310, 320, 330], learn: 'quartermaster', masterwork: true, standing: 'exalted', price: 100000, seconds: 150,
+    makes: { item: 'wyrmeye-orb', qty: 1 },
+    mats: [{ item: 'wyrm-scale', qty: 2 }, { item: 'aether-dust', qty: 12 }, { item: 'lucent-crystal', qty: 2 }, { item: 'diamond', qty: 1 }, { item: 'aether-essence', qty: 1 }] },
+  { id: 'voidglass-orb', station: 'enchanting-circle', tier: 5, skill: [300, 310, 320, 330], learn: 'quartermaster', masterwork: true, standing: 'exalted', price: 100000, seconds: 150,
+    makes: { item: 'voidglass-orb', qty: 1 },
+    mats: [{ item: 'voidglass-shard', qty: 2 }, { item: 'aether-dust', qty: 12 }, { item: 'lucent-crystal', qty: 2 }, { item: 'diamond', qty: 1 }, { item: 'aether-essence', qty: 1 }] },
 
   // ---- Alchemy table: Alchemy tier 1 ----
   { id: 'faint-mending-draught', station: 'alchemy-table', tier: 1, skill: [1, 16, 26, 36], learn: 'start', seconds: 5,

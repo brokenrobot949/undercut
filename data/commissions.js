@@ -16,11 +16,12 @@ export const commissionTuning = {
   repValueRef: [150, 450, 800, 1400, 2600],
   repFloor: 0.25,
   // Multiplies all commission reputation. Lower it to slow standing down.
-  repScale: 0.68,
+  repScale: 0.70,
 };
 
-// The four kinds. `weight` is how often each kind posts (a regular's request
-// only when you have regulars). `qty` is [fewest, most]; gear always asks for one.
+// The kinds. `weight` is how often each kind posts (a regular's request only
+// when you have regulars; one with `requires` only when your shop has that
+// profession, and `station` limits it to that workstation's recipes). `qty` is [fewest, most]; gear always asks for one.
 export const commissionTypes = [
   { id: 'standard', name: 'Standard', weight: 55, hours: [12, 24], payMult: 1.5,
     qty: { consumable: [3, 8], gear: [1, 1] }, rep: [75, 115, 160, 205, 250] },
@@ -39,6 +40,12 @@ export const commissionTypes = [
   // gives the regular a level boost.
   { id: 'regular', name: "Regular's request", weight: 15, hours: [24, 24], payMult: 1.5,
     qty: { gear: [1, 1] }, rep: [50, 75, 100, 125, 150], levelBoost: 3 },
+  // Enchanting request (the enchanter's shop service): a hero wants their gear
+  // enchanted with a charm you made. Pays and earns like a rush order.
+  { id: 'enchant', name: 'Enchanting request', weight: 25, hours: [6, 12], payMult: 2.5, requires: 'enchanting', station: 'enchanting-circle',
+    verb: 'wants their gear enchanted with', qty: { consumable: [1, 2] }, rep: [150, 210, 275, 340, 400],
+    // One or two charms is a small order, so it counts as full size at a fifth of the usual value.
+    repRefMult: 0.2 },
 ];
 
 // Who posts guild contracts.

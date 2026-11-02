@@ -37,6 +37,8 @@ import { quartermasterRecipes, buyQuartermasterRecipe } from '../js/engine/quart
 import { recipeHint } from '../js/engine/commissions.js';
 import { raidZonesFor, payRefresh } from '../js/engine/heroes.js';
 import { encodeExport, decodeExport, migrate, writeSave, readSave } from '../js/engine/save.js';
+import { disenchant, disenchantYield, canDisenchant } from '../js/engine/enchanting.js';
+import { professions as allProfessions } from '../data/professions.js';
 import { buyDecor, buyTrophy, buySignStyle, setSignStyle, signStyleOf, donate, donationMult, donationEndsAt } from '../js/engine/shop-extras.js';
 import { depositMult, commissionPayMult } from '../js/engine/upgrades.js';
 
@@ -750,9 +752,9 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
 // The quartermaster: recipes gated by standing and skill, bought for gold.
 {
   const qm = recipes.filter((r) => r.learn === 'quartermaster' && !r.masterwork);
-  check('twelve quartermaster recipes, three per profession, none sold by the trainer', qm.length === 12 &&
-    ['anvil', 'workbench', 'alchemy-table', 'loom'].every((st) => qm.filter((r) => r.station === st).length === 3) &&
-    !['blacksmithing', 'leatherworking', 'alchemy', 'tailoring'].some((p) => trainerRecipes(game(), p).some((o) => o.recipe.learn === 'quartermaster')));
+  check('fifteen quartermaster recipes, three per profession, none sold by the trainer', qm.length === 15 &&
+    ['anvil', 'workbench', 'alchemy-table', 'loom', 'enchanting-circle'].every((st) => qm.filter((r) => r.station === st).length === 3) &&
+    !['blacksmithing', 'leatherworking', 'alchemy', 'tailoring', 'enchanting'].some((p) => trainerRecipes(game(), p).some((o) => o.recipe.learn === 'quartermaster')));
   check('blue quartermaster items from Honored, green at Friendly', qm.every((r) => itemById[r.makes.item].quality === (r.standing === 'friendly' ? 'uncommon' : 'rare')));
   const s = game();
   s.copper = 10_000_000;
@@ -798,8 +800,8 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
 {
   const mw = recipes.filter((r) => r.masterwork);
   const endgame = ['ember-core', 'voidglass-shard', 'wyrm-scale'];
-  check('eight masterworks, two per profession, epic, each needing an endgame material', mw.length === 8 &&
-    ['anvil', 'workbench', 'alchemy-table', 'loom'].every((st) => mw.filter((r) => r.station === st).length === 2) &&
+  check('ten masterworks, two per profession, epic, each needing an endgame material', mw.length === 10 &&
+    ['anvil', 'workbench', 'alchemy-table', 'loom', 'enchanting-circle'].every((st) => mw.filter((r) => r.station === st).length === 2) &&
     mw.every((r) => r.learn === 'quartermaster' && r.standing === 'exalted' && itemById[r.makes.item].quality === 'epic' && r.mats.some((m) => endgame.includes(m.item))));
   const s = game();
   s.copper = 10_000_000;
@@ -873,6 +875,42 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   };
   const tailor = clothFrom('tailoring'), smith = clothFrom('blacksmithing');
   check('tailors get more cloth from hero trips', tailor > smith, `${tailor} vs ${smith}`);
+}
+
+// Enchanting: wing-only, disenchanting gear into dust, essences and crystals.
+{
+  check('Enchanting can’t be a first profession', allProfessions.find((p) => p.id === 'enchanting').startable === false);
+  const s = game(12);
+  s.bags['soft-leather-boots'] = 3;
+  let err = null; try { disenchant(s, 'soft-leather-boots', 1); } catch (e) { err = e.message; }
+  check('disenchanting needs Enchanting', /Enchanting/.test(err ?? '') && !canDisenchant(s, 'soft-leather-boots'));
+  s.player.professions.push('enchanting');
+  err = null; try { disenchant(s, 'copper-bar', 1); } catch (e) { err = e.message; }
+  check('only gear can be disenchanted', /gear/.test(err ?? ''));
+  const got = disenchant(s, 'soft-leather-boots', 3);
+  check('disenchanting turns gear into its tier’s dust', !s.bags['soft-leather-boots'] && got['cinder-dust'] === 6 && s.bags['cinder-dust'] === 6);
+  s.bags['basilisk-trackers-vest'] = 40;
+  const blue = disenchant(s, 'basilisk-trackers-vest', 40);
+  check('blue gear can give lucent crystals and essences', blue['stone-dust'] === 160 && blue['lucent-crystal'] > 5 && blue['stone-essence'] > 2, JSON.stringify(blue));
+  check('the expected yield lists dust, essence and crystal', disenchantYield('wyrmeye-orb').length === 3);
+  check('every Enchanting recipe’s items exist', recipes.filter((r) => r.station === 'enchanting-circle').every((r) => itemById[r.makes.item] && r.mats.every((m) => itemById[m.item])));
+  s.copper = 1e7;
+  s.reputation = tuning.standings.find((x) => x.id === 'exalted').rep;
+  for (const p of ['alchemy', 'leatherworking', 'tailoring']) if (!s.player.professions.includes(p)) s.player.professions.push(p);
+  s.player.professions = s.player.professions.filter((p) => p !== 'enchanting');
+  check('the fifth wing opens at Exalted', nextWing(s)?.standing === 'exalted' && nextWing(s).ready);
+  buyWing(s, 'enchanting');
+  check('after the fifth wing there are no more', nextWing(s) === null && s.bags['cinder-dust'] >= 12);
+  const old = game(13);
+  for (const r of recipes) if (r.station === 'enchanting-circle' || r.station === 'loom') delete old.knownRecipes[r.id];
+  catchUp(old, t0 + H);
+  check('an older save learns the new professions’ starting recipes on load', old.knownRecipes['cinder-edge-charm'] && old.knownRecipes['spun-linen']);
+  const e = game(14);
+  e.tutorial.done = true;
+  check('no Enchanting requests without Enchanting', postCommission(e, t0, 'enchant') === null);
+  e.player.professions.push('enchanting');
+  const req = postCommission(e, t0, 'enchant');
+  check('an Enchanting request asks for a charm you can make', req && req.type === 'enchant' && recipeById[req.recipeId].station === 'enchanting-circle' && req.qty <= 2 && req.requester.race);
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');

@@ -337,6 +337,49 @@ export const itemIcons = {
   // ---- Tailoring masterworks ----
   'flame-woven-robe': { icon: 'lorc/robe', tint: 'fire' },
   'voidglass-beaded-cowl': { icon: 'lorc/cowled', tint: 'void' },
+  // ---- Enchanting materials ----
+  'cinder-dust': { icon: 'lorc/pollen-dust', tint: 'fire' },
+  'tide-dust': { icon: 'lorc/pollen-dust', tint: 'water' },
+  'gale-dust': { icon: 'lorc/pollen-dust', tint: 'air' },
+  'stone-dust': { icon: 'lorc/pollen-dust', tint: 'earth' },
+  'aether-dust': { icon: 'lorc/pollen-dust', tint: 'aether' },
+  'lucent-crystal': { icon: 'delapouite/prism', tint: 'gem' },
+  // ---- Enchanting, tier 1 (cinder) ----
+  'cinder-edge-charm': { icon: 'lorc/sparkling-sabre', tint: 'fire' },
+  'cinder-ward-charm': { icon: 'delapouite/tribal-pendant', tint: 'fire' },
+  'cinder-stride-charm': { icon: 'lorc/feather', tint: 'fire' },
+  'cinder-mind-charm': { icon: 'lorc/charm', tint: 'fire' },
+  'cinderglass-focus': { icon: 'lorc/concentration-orb', tint: 'fire' },
+  // ---- Enchanting, tier 2 (tide) ----
+  'tide-edge-charm': { icon: 'lorc/sparkling-sabre', tint: 'water' },
+  'tide-ward-charm': { icon: 'delapouite/tribal-pendant', tint: 'water' },
+  'tide-stride-charm': { icon: 'lorc/feather', tint: 'water' },
+  'tide-mind-charm': { icon: 'lorc/charm', tint: 'water' },
+  'tideglass-focus': { icon: 'lorc/concentration-orb', tint: 'water' },
+  // ---- Enchanting, tier 3 (gale) ----
+  'gale-edge-charm': { icon: 'lorc/sparkling-sabre', tint: 'air' },
+  'gale-ward-charm': { icon: 'delapouite/tribal-pendant', tint: 'air' },
+  'gale-stride-charm': { icon: 'lorc/feather', tint: 'air' },
+  'gale-mind-charm': { icon: 'lorc/charm', tint: 'air' },
+  'galeglass-focus': { icon: 'lorc/concentration-orb', tint: 'air' },
+  // ---- Enchanting, tier 4 (stone) ----
+  'stone-edge-charm': { icon: 'lorc/sparkling-sabre', tint: 'earth' },
+  'stone-ward-charm': { icon: 'delapouite/tribal-pendant', tint: 'earth' },
+  'stone-stride-charm': { icon: 'lorc/feather', tint: 'earth' },
+  'stone-mind-charm': { icon: 'lorc/charm', tint: 'earth' },
+  'stoneglass-focus': { icon: 'lorc/concentration-orb', tint: 'earth' },
+  // ---- Enchanting, tier 5 (aether) ----
+  'aether-edge-charm': { icon: 'lorc/sparkling-sabre', tint: 'aether' },
+  'aether-ward-charm': { icon: 'delapouite/tribal-pendant', tint: 'aether' },
+  'aether-stride-charm': { icon: 'lorc/feather', tint: 'aether' },
+  'aether-mind-charm': { icon: 'lorc/charm', tint: 'aether' },
+  'aetherglass-focus': { icon: 'lorc/concentration-orb', tint: 'aether' },
+  // ---- Enchanting quartermaster and masterworks ----
+  'guild-seal-charm': { icon: 'lorc/gem-pendant', tint: 'bronze' },
+  'lucent-focus': { icon: 'delapouite/glowing-artifact', tint: 'gem' },
+  'starglass-focus': { icon: 'lorc/orbital-rays', tint: 'starmetal' },
+  'wyrmeye-orb': { icon: 'delapouite/dragon-orb', tint: 'wyrm' },
+  'voidglass-orb': { icon: 'lorc/unstable-orb', tint: 'void' },
 };
 
 // Icons on screens: tabs, professions, gathering professions and workstations.
@@ -358,6 +401,8 @@ export const uiIcons = {
   'alchemy-table': { icon: 'darkzaitzev/cauldron' },
   'tailoring': { icon: 'caro-asercion/sewing-machine' },
   'loom': { icon: 'caro-asercion/spinning-wheel' },
+  'enchanting': { icon: 'lorc/magic-swirl' },
+  'enchanting-circle': { icon: 'lorc/pentagram-rose' },
   'guild': { icon: 'delapouite/knight-banner' },
   'crier': { icon: 'delapouite/megaphone' },
   'credits': { icon: 'delapouite/scroll-quill' },
