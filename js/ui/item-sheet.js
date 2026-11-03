@@ -29,9 +29,9 @@ function saleText({ soldShare, hours }) {
   return 'Ledger: unlikely to sell at this price.';
 }
 
-export function openItemSheet(ctx, itemId) {
+export function openItemSheet(ctx, itemId, { onClose } = {}) {
   const item = itemById[itemId];
-  const sheet = openSheet(item.name);
+  const sheet = openSheet(item.name, { onClose });
   // Remember choices between redraws.
   const choice = { listQty: null, price: null, hours: 24, buyQty: 1, vendorQty: 1 };
   draw();
@@ -61,6 +61,10 @@ export function openItemSheet(ctx, itemId) {
 
   function act(fn) {
     if (ctx.act(fn) !== undefined) draw();
+  }
+  // Buying closes the sheet, back to where it was opened from.
+  function actAndClose(fn) {
+    if (ctx.act(fn) !== undefined) sheet.close();
   }
 
   function marketInfo() {
@@ -144,7 +148,7 @@ export function openItemSheet(ctx, itemId) {
       el('h3', {}, 'Buy'),
       el('div', { class: 'field' }, el('label', {}, `How many (${listed} listed)`), qty.node),
       quoteText,
-      el('button', { class: 'btn btn-primary wide', type: 'button', onclick: () => act((s, now) => {
+      el('button', { class: 'btn btn-primary wide', type: 'button', onclick: () => actAndClose((s, now) => {
         const got = buyItems(s, itemId, qty.value, now);
         toast(`Bought ${got.qty} × ${item.name} for ${coinText(got.cost)}. They're in your bags.`);
       }) }, 'Buy cheapest first'));
@@ -155,7 +159,7 @@ export function openItemSheet(ctx, itemId) {
     return el('section', { class: 'panel' },
       el('h3', {}, 'Trade goods vendor'),
       el('div', { class: 'field' }, el('label', {}, 'How many'), qty.node),
-      el('button', { class: 'btn btn-primary wide', type: 'button', onclick: () => act((s) => buyFromVendor(s, itemId, qty.value)) },
+      el('button', { class: 'btn btn-primary wide', type: 'button', onclick: () => actAndClose((s) => buyFromVendor(s, itemId, qty.value)) },
         'Buy from vendor'));
   }
 

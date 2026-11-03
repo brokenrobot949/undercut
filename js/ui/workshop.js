@@ -176,6 +176,12 @@ function openCraftSheet(ctx, recipe) {
   function act(fn) {
     if (ctx.act(fn) !== undefined) draw();
   }
+  // Queueing or smelting closes the sheet, back to the Workshop.
+  function actAndClose(fn) {
+    if (ctx.act(fn) !== undefined) sheet.close();
+  }
+  // Buying a material in its own sheet comes back here, so show the new count.
+  const matSheet = (id) => openItemSheet(ctx, id, { onClose: draw });
 
   function draw() {
     const { state } = ctx;
@@ -201,7 +207,7 @@ function openCraftSheet(ctx, recipe) {
       el('table', { class: 'listings' },
         el('thead', {}, el('tr', {}, el('th', {}, 'Material'), el('th', {}, 'Need'), el('th', {}, 'Have'), el('th', {}, 'Buy price'))),
         el('tbody', {}, recipe.mats.map((m) => el('tr', { class: (state.bags[m.item] || 0) < m.qty ? 'short' : null },
-          el('td', {}, el('button', { class: 'link', type: 'button', onclick: () => openItemSheet(ctx, m.item) }, itemById[m.item].name)),
+          el('td', {}, el('button', { class: 'link', type: 'button', onclick: () => matSheet(m.item) }, itemById[m.item].name)),
           el('td', {}, m.qty), el('td', {}, state.bags[m.item] || 0), el('td', {}, coins(unitCost(ctx, m.item))))))),
       el('p', { class: 'small' }, 'Materials cost ', coins(matCost(ctx, recipe)), '. Sells for ',
         coins(saleValue(ctx, recipe.makes.item) * recipe.makes.qty), ' after the cut. ',
@@ -210,10 +216,10 @@ function openCraftSheet(ctx, recipe) {
         : el('p', { class: 'small dim' }, color === 'red' ? 'Your skill is too low to make this yet.' : 'You need more materials. Tap one above to buy it.'),
       can && rankNeed ? el('p', { class: 'small dim' }, `Your forge needs ${rankNeed} Blacksmithing to smelt this. The City Smelter can do it now.`) : null,
       can && ownForge && !rankNeed ? el('button', { class: 'btn btn-primary wide', type: 'button',
-        onclick: () => act((s, now) => queueCraft(s, recipe.id, qty.value, now)) },
+        onclick: () => actAndClose((s, now) => queueCraft(s, recipe.id, qty.value, now)) },
         recipe.station === 'forge' ? 'Smelt at your forge (free)' : 'Add to queue') : null,
       can && recipe.station === 'forge' ? el('button', { class: 'btn wide', type: 'button',
-        onclick: () => act((s) => smeltAtCity(s, recipe.id, qty.value)) },
+        onclick: () => actAndClose((s) => smeltAtCity(s, recipe.id, qty.value)) },
         'Smelt now at the City Smelter (', feeText, ')') : null,
     );
   }
