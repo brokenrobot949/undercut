@@ -91,6 +91,9 @@ export const tuning = {
       { hours: 8, deposit: 0.10 },
       { hours: 24, deposit: 0.20 },
     ],
+    // The listing panel warns when you list more than this many hours of
+    // buyers at once, and suggests listing a few at a time instead.
+    tipHours: 6,
 
     // Buyers. Unserved buyers wait in a "reservoir" that refills at the
     // demand rate, up to this many hours of demand.

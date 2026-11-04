@@ -92,6 +92,7 @@ export function openItemSheet(ctx, itemId, { onClose } = {}) {
     const lowNote = el('p', { class: 'small' });
     const summary = el('p', { class: 'small dim' });
     const estimate = el('p', { class: 'small estimate' });
+    const tip = el('p', { class: 'small sell-tip' });
     const qty = stepper({ value: choice.listQty, max: have, onChange: (v) => { choice.listQty = v; update(); } });
 
     function update() {
@@ -105,6 +106,16 @@ export function openItemSheet(ctx, itemId, { onClose } = {}) {
       const net = choice.price - cutOn(choice.price, cutRate(ctx.state));
       fill(summary, 'Deposit ', coins(deposit), ' (back if it sells). You get ', coins(net * choice.listQty),
         ` for all ${choice.listQty} after the ${+(cutRate(ctx.state) * 100).toFixed(1)}% cut.`);
+      // Selling tip: how many buyers come, and a warning when the lot is
+      // bigger than a few hours of them.
+      const perHour = demandPerHour(ctx.state, item);
+      const few = Math.max(1, Math.ceil(perHour * tuning.market.tipHours));
+      const perDay = Math.round(perHour * 24);
+      const buyers = perDay >= 1 ? `Buyers take about ${perDay} a day, shared with every seller.` : 'Buyers for this come along less than once a day.';
+      fill(tip, choice.listQty > few
+        ? [el('strong', {}, 'Tip: '), `${buyers} A big lot can flood the market and come back unsold. List about ${few} at a time, just under the lowest price, and list more as they sell.`]
+        : buyers);
+      tip.classList.toggle('warn', choice.listQty > few);
       if (ledgerLevel(ctx.state) >= 2) fill(estimate, saleText(estimateSale(ctx.state, itemId, choice.price, choice.listQty, choice.hours, ctx.now())));
     }
     const setPrice = (p) => priceInput.set(p);
@@ -126,6 +137,7 @@ export function openItemSheet(ctx, itemId, { onClose } = {}) {
           class: `btn${choice.hours === d.hours ? ' btn-primary' : ''}`, type: 'button',
           onclick: () => { choice.hours = d.hours; draw(); },
         }, `${d.hours} h`)))),
+      tip,
       summary,
       estimate,
       el('button', { class: 'btn btn-primary wide', type: 'button', onclick: () => actAndClose((s, now) => {

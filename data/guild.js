@@ -46,6 +46,6 @@ export const shopSigns = {
 
 // Short tips under the guild panel's standing bar.
 export const guildTips = {
-  earn: 'Earn reputation by filling commissions at the counter. Guild contracts give the most.',
+  earn: 'Earn reputation by filling commissions at the counter. Guild contracts give the most. Commissions are also your steadiest gold early on, so check the counter often: rush orders expire fast.',
   top: 'You are Exalted, the highest standing. Commissions still pay gold.',
 };

@@ -371,6 +371,11 @@ That one model produces every behavior from the original notes, with no special 
 | Listing slots | 10 at the start, up to 50 |
 | Price helpers | Undercut (1% under the lowest), Match market, Custom |
 
+**Selling tips** (Nov 4, 2026). In the balance sim, the bot that lists everything at once and never relists earns a fraction of what the steady bot earns from the same materials. Three tips teach the steady habit:
+- The listing panel says how many buyers come a day. When you list more than 6 hours of buyers at once (tipHours in data/tuning.js), it warns that a big lot can flood the market and suggests how many to list at a time.
+- My listings shows a tip when one of your listings isn't first in line: cancel and list again just under the lowest price.
+- The Trade Guild panel says commissions are the steadiest early gold and rush orders expire fast.
+
 A listing is a quantity at one unit price, and units sell one at a time. Twenty potions at 45 s each can sell to twenty different buyers.
 
 **What the player sees per item:** lowest listing, market value (average sale price over the last day), your listings and their place in line, and a demand tag: Hot, Steady, Slow or Flooded. The Ledger upgrade adds a 7-day price chart and a sell-time estimate.

@@ -771,6 +771,8 @@ input[type="number"] {
 .chart-base { stroke: var(--text-dim); stroke-width: 1; stroke-dasharray: 4 4; }
 .chart-head, .chart-foot { display: flex; justify-content: space-between; gap: 8px; margin: 2px 0; }
 .estimate { color: var(--highlight); }
+.sell-tip { color: var(--text-dim); }
+.sell-tip.warn { color: var(--text); border-left: 3px solid var(--highlight); padding-left: 8px; }
 .raid-tag { color: var(--q-rare); border-color: var(--q-rare); }
 
 /* ---- Shop sign: a banner under the shop name that grows with standing ---- */

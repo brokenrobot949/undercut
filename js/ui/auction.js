@@ -75,8 +75,12 @@ export function renderAuction(ctx) {
 
 function myListings(ctx) {
   const mine = playerListings(ctx.state);
+  const undercut = mine.some((x) => x.place > 0);
   return el('section', { class: 'panel' },
     el('h2', {}, `My listings (${mine.length} / ${listingSlotsFor(ctx.state)})`),
+    // Selling tip: a listing that isn't first in line waits behind the ones ahead.
+    undercut ? el('p', { class: 'small sell-tip warn' }, el('strong', {}, 'Tip: '),
+      'A listing that is not first in line waits until the ones ahead of it sell. To move up, cancel it and list it again just under the lowest price (the old deposit is kept).') : null,
     mine.length ? el('div', { class: 'market-list' }, mine.map(({ itemId, place, listing }) => el('div', { class: 'my-listing with-icon' },
       itemIcon(itemId, 'sm'),
       el('button', { class: `link item-name q-${itemById[itemId].quality}`, type: 'button', onclick: () => openItemSheet(ctx, itemId) },
