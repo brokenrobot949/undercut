@@ -7,7 +7,7 @@ export const commissionTuning = {
   slots: 3,
   postEveryHours: 2,
   // A request can ask for a recipe you'll learn soon: up to this many skill
-  // points above yours. Below, it skips recipes this far under your skill.
+  // points above yours, but never past your rank's skill cap. Below, it skips recipes this far under your skill.
   reachAbove: 10,
   reachBelow: 60,
   // Reputation scales with what the order is worth, against a typical piece

@@ -524,6 +524,20 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   const r2 = deliverCommission(s, c.id, t0);
   check('contract parts add up to the full pay', r1.copper + r2.copper === c.pay && r1.rep + r2.rep === c.rep && r2.done);
 }
+// Requests never ask for a recipe past your rank's skill cap.
+{
+  const s = learnAll(game(29));
+  s.tutorial.done = true;
+  debugSetSkill(s, 'blacksmithing', 148); // Journeyman, cap 150
+  const pastCap = recipes.filter((r) => r.station === 'anvil' && r.skill[0] > 150 && r.skill[0] <= 158).length;
+  let over = 0;
+  for (let i = 0; i < 200; i++) {
+    const c = postCommission(s, t0);
+    if (c && recipeById[c.recipeId].skill[0] > 150) over++;
+    s.commissions.list = [];
+  }
+  check('requests stop at your rank\'s skill cap', pastCap > 0 && over === 0, `${pastCap} recipes just past the cap, ${over} asked for`);
+}
 {
   const s = game(27);
   const c = postCommission(s, t0, 'rush');

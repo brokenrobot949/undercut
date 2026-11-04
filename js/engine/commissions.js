@@ -14,7 +14,7 @@ import { schedule, cancelTimer } from './clock.js';
 import { rngInt, rngPick, rngNext } from './rng.js';
 import { madeCount, takeFromBags } from './bags.js';
 import { marketValue } from './market.js';
-import { hasProfession, knowsRecipe, recipeProfession, skillOf } from './skills.js';
+import { hasProfession, knowsRecipe, recipeProfession, skillOf, capOf } from './skills.js';
 import { tutorialDone, claimTutorial } from './tutorial.js';
 import { commissionSlotsFor, commissionPayMult } from './upgrades.js';
 import { hasStanding } from './guild.js';
@@ -57,7 +57,7 @@ export function requestText(c) {
 // ---- Posting -----------------------------------------------------------------
 
 // Recipes a request may ask for: your professions, a sellable result, and a
-// skill level near yours. Scroll-only recipes only once you know them.
+// skill level near yours, up to your rank's cap. Scroll-only recipes only once you know them.
 function candidates(state, category = null, station = null) {
   return recipes.filter((r) => {
     if (station && r.station !== station) return false;
@@ -69,7 +69,10 @@ function candidates(state, category = null, station = null) {
     // Quartermaster recipes once you have the standing to buy them.
     if (r.learn === 'quartermaster' && !knowsRecipe(state, r) && !hasStanding(state, r.standing)) return false;
     const skill = skillOf(state, prof);
-    return r.skill[0] <= skill + CT.reachAbove && r.skill[0] >= skill - CT.reachBelow;
+    // Never past your rank's skill cap: a recipe that needs the next rank's
+    // training can't be learned yet, however close it is.
+    const reach = Math.min(skill + CT.reachAbove, capOf(state, prof));
+    return r.skill[0] <= reach && r.skill[0] >= skill - CT.reachBelow;
   });
 }
 

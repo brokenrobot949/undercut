@@ -410,7 +410,7 @@ The shop counter takes requests from named heroes: a specific item, a quantity a
 **Rules**
 
 - The counter shows 3 commissions (upgradeable to 5). A new one posts every 2 hours, and unclaimed ones expire.
-- Requests come from recipes you know or are close to learning. One you can't make yet says where to get the recipe ("Quartermaster, Honored"), which gives the player a goal.
+- Requests come from recipes you know or are close to learning. One you can't make yet says where to get the recipe ("Quartermaster, Honored"), which gives the player a goal. "Close" means up to 10 skill above yours, but never past your rank's skill cap (Nov 4, 2026): at Journeyman you never get a request for a recipe that needs Expert training. In playtesting, requests for an iron flanged mace while stuck at 150 could only be declined. In the sim this makes more requests fillable, so the steady bots reach the endgame gate about 1 day sooner on average (46.4 days over 30 runs, was 47.6).
 - Only items you crafted count, by maker's mark, so buying from the auction house to hand in doesn't work.
 - Declining is free.
 - How often each kind posts: standard 55%, rush 20%, guild contract 10%, regular's request 15% (only once you have regulars).
