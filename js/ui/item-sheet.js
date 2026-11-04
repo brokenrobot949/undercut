@@ -33,7 +33,10 @@ export function openItemSheet(ctx, itemId, { onClose } = {}) {
   const item = itemById[itemId];
   const sheet = openSheet(item.name, { onClose });
   // Remember choices between redraws.
-  const choice = { listQty: null, price: null, hours: 24, buyQty: 1, vendorQty: 1 };
+  // The listing duration starts at the last one the player picked (saved).
+  const lastHours = ctx.state.settings.listHours;
+  const hours = tuning.market.durations.some((d) => d.hours === lastHours) ? lastHours : 24;
+  const choice = { listQty: null, price: null, hours, buyQty: 1, vendorQty: 1 };
   draw();
 
   function draw() {
@@ -125,10 +128,11 @@ export function openItemSheet(ctx, itemId, { onClose } = {}) {
         }, `${d.hours} h`)))),
       summary,
       estimate,
-      el('button', { class: 'btn btn-primary wide', type: 'button', onclick: () => act((s, now) => {
+      el('button', { class: 'btn btn-primary wide', type: 'button', onclick: () => actAndClose((s, now) => {
         const listing = listItem(s, { itemId, qty: choice.listQty, price: choice.price, hours: choice.hours }, now);
+        s.settings.listHours = choice.hours;
         toast(`Listed ${listing.qty} × ${item.name}. See it under My listings on the Auction tab.`);
-        choice.listQty = null;
+        return listing;
       }) }, 'List'),
     );
   }

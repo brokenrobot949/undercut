@@ -119,10 +119,10 @@ Cloaks are worn by every class and use bonus-loot cloth. Quivers and ammo pouche
 | --- | --- | --- | --- |
 | Apprentice | 1–75 | Free | Neutral |
 | Journeyman | 75–150 | 1 g | Neutral |
-| Expert | 150–225 | 4 g | Friendly |
+| Expert | 150–225 | 2.5 g | Friendly |
 | Artisan | 225–300 | 10 g | Honored |
 
-Training costs are starting values, tuned in the Phase 2 balance pass (Oct 30, 2026) so a cautious player reaches Expert in week 1 and Artisan in weeks 2–3.
+Training costs are starting values, tuned in the Phase 2 balance pass (Oct 30, 2026) so a cautious player reaches Expert in week 1 and Artisan in weeks 2–3. Expert dropped from 4 g to 2.5 g on Nov 4, 2026: in playtesting, saving 4 g at skill 150 took several days of slow selling. Steady bots now train Expert the moment they reach Friendly, so standing, not gold, sets the pace; the flooder bot gets there 1–3 days sooner (days 9–12, was 12–14). A trial that also cut listing deposits by a quarter or a half pushed the endgame bots before day 42, so deposits stayed as they were.
 
 **Skill-ups use recipe colors.** Each recipe's color comes from your current skill against four thresholds set in its data.
 
@@ -366,6 +366,7 @@ That one model produces every behavior from the original notes, with no special 
 | --- | --- |
 | Durations | 2 h, 8 h, 24 h |
 | Deposit, lost if unsold | 5%, 10% or 20% of vendor price × quantity, by duration |
+| Default duration | The last one you picked (saved); 24 h for a new game |
 | Auction house cut on each sale | 5% |
 | Listing slots | 10 at the start, up to 50 |
 | Price helpers | Undercut (1% under the lowest), Match market, Custom |

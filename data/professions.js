@@ -49,7 +49,7 @@ export const stationNames = { anvil: 'Anvil', forge: 'Forge', workbench: 'Workbe
 export const ranks = [
   { id: 'apprentice', name: 'Apprentice', cap: 75, cost: 0, standing: 'neutral' },
   { id: 'journeyman', name: 'Journeyman', cap: 150, cost: 10000, standing: 'neutral' },
-  { id: 'expert', name: 'Expert', cap: 225, cost: 40000, standing: 'friendly' },
+  { id: 'expert', name: 'Expert', cap: 225, cost: 25000, standing: 'friendly' },
   { id: 'artisan', name: 'Artisan', cap: 300, cost: 100000, standing: 'honored' },
 ];
 
