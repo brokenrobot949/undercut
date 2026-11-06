@@ -43,17 +43,21 @@ export function openItemSheet(ctx, itemId, { onClose } = {}) {
     const { state } = ctx;
     const have = bagCount(state, itemId);
     const tradeable = item.category !== 'trade' && item.category !== 'junk';
+    // A second List button near the top, so relisting needs no scrolling. Its
+    // label shows what it will list, from the choices further down the sheet.
+    const quickList = tradeable && have > 0 ? el('button', { class: 'btn btn-primary wide', type: 'button', onclick: listNow }) : null;
     fill(sheet.body, 
       el('div', { class: 'item-head' }, itemIcon(itemId, 'lg'), el('p', { class: 'small' },
         el('span', { class: `q-${item.quality}` }, item.quality[0].toUpperCase() + item.quality.slice(1)),
         ` · ${TIER_NAMES[item.tier]} tier · ${item.category}${item.armor ? ` (${item.armor})` : ''} · In bags: `,
         el('strong', {}, have))),
+      quickList,
       tradeable ? marketInfo() : item.category === 'junk'
         ? el('p', { class: 'small dim' }, 'Junk a hero brought home. Only a vendor will take it.')
         : el('p', { class: 'small dim' }, `Sold by the trade goods vendor for ${item.vendorBuy} copper each.`),
       item.teaches && have > 0 ? scrollSection() : null,
       have > 0 && canDisenchant(ctx.state, itemId) ? disenchantSection(have) : null,
-      tradeable && have > 0 ? sellSection(have) : null,
+      tradeable && have > 0 ? sellSection(have, quickList) : null,
       tradeable ? buySection() : item.category === 'junk' ? null : vendorBuySection(),
       have > 0 ? vendorSellSection(have) : null,
       recipeSection(),
@@ -83,7 +87,16 @@ export function openItemSheet(ctx, itemId, { onClose } = {}) {
         : el('dd', { class: 'kv-wide small dim' }, 'The Ledger shop upgrade adds a 7-day price chart here.'));
   }
 
-  function sellSection(have) {
+  function listNow() {
+    actAndClose((s, now) => {
+      const listing = listItem(s, { itemId, qty: choice.listQty, price: choice.price, hours: choice.hours }, now);
+      s.settings.listHours = choice.hours;
+      toast(`Listed ${listing.qty} × ${item.name}. See it under My listings on the Auction tab.`);
+      return listing;
+    });
+  }
+
+  function sellSection(have, quickList) {
     const { state } = ctx;
     if (choice.listQty === null || choice.listQty > have) choice.listQty = have;
     if (choice.price === null) choice.price = undercutPrice(state, itemId);
@@ -117,6 +130,7 @@ export function openItemSheet(ctx, itemId, { onClose } = {}) {
         : buyers);
       tip.classList.toggle('warn', choice.listQty > few);
       if (ledgerLevel(ctx.state) >= 2) fill(estimate, saleText(estimateSale(ctx.state, itemId, choice.price, choice.listQty, choice.hours, ctx.now())));
+      fill(quickList, `List ${choice.listQty} at `, coins(choice.price), ' each');
     }
     const setPrice = (p) => priceInput.set(p);
     update();
@@ -140,12 +154,7 @@ export function openItemSheet(ctx, itemId, { onClose } = {}) {
       tip,
       summary,
       estimate,
-      el('button', { class: 'btn btn-primary wide', type: 'button', onclick: () => actAndClose((s, now) => {
-        const listing = listItem(s, { itemId, qty: choice.listQty, price: choice.price, hours: choice.hours }, now);
-        s.settings.listHours = choice.hours;
-        toast(`Listed ${listing.qty} × ${item.name}. See it under My listings on the Auction tab.`);
-        return listing;
-      }) }, 'List'),
+      el('button', { class: 'btn btn-primary wide', type: 'button', onclick: listNow }, 'List'),
     );
   }
 

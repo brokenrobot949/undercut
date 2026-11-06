@@ -91,6 +91,12 @@ const migrations = {
     save.extras = createExtras();
     return save;
   },
+  // Version 13: the mailbox remembers which waiting units carry your maker's
+  // mark. What was already waiting comes without it, as it always did.
+  12: (save) => {
+    save.mailbox.made = {};
+    return save;
+  },
 };
 
 export function migrate(save) {

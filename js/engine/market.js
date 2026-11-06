@@ -169,7 +169,7 @@ export function depositFor(item, qty, hours, mult = 1) {
 
 // Posts a player listing. The caller has already taken the items and deposit.
 // The cut is fixed when listed, so a later upgrade doesn't change it.
-export function postPlayerListing(state, itemId, { price, qty, hours, at, deposit, cut = M.cut }) {
+export function postPlayerListing(state, itemId, { price, qty, hours, at, deposit, cut = M.cut, made = 0 }) {
   const item = itemById[itemId];
   const listing = {
     id: state.market.nextListingId++,
@@ -181,9 +181,16 @@ export function postPlayerListing(state, itemId, { price, qty, hours, at, deposi
     expiresAt: at + hours * HOUR,
     deposit: deposit ?? depositFor(item, qty, hours),
     cut,
+    made, // units you crafted, which keep your maker's mark if they come back
   };
   insertListing(state.market.items[itemId].listings, listing);
   return listing;
+}
+
+// How many unsold units of a listing carry your maker's mark. Bought units sell
+// first, the same order they leave your bags. Listings older than this have no count.
+export function madeInListing(listing) {
+  return Math.min(listing.made || 0, listing.qty);
 }
 
 // Takes a player listing down early. Returns it (the caller returns the

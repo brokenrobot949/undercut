@@ -1,5 +1,5 @@
 // Commissions: named heroes post requests at the shop counter. Each asks for
-// an item you can make (or will soon), a quantity and a deadline, and pays a
+// an item you can make right now, a quantity and a deadline, and pays a
 // premium over market value plus Trade Guild reputation. Only items you made
 // count (the maker's mark). Declining is free; unclaimed requests expire.
 
@@ -14,10 +14,9 @@ import { schedule, cancelTimer } from './clock.js';
 import { rngInt, rngPick, rngNext } from './rng.js';
 import { madeCount, takeFromBags } from './bags.js';
 import { marketValue } from './market.js';
-import { hasProfession, knowsRecipe, recipeProfession, skillOf, capOf } from './skills.js';
+import { hasProfession, knowsRecipe, recipeProfession, skillOf } from './skills.js';
 import { tutorialDone, claimTutorial } from './tutorial.js';
 import { commissionSlotsFor, commissionPayMult } from './upgrades.js';
-import { hasStanding } from './guild.js';
 import { quartermasterHint } from './quartermaster.js';
 
 const HOUR = 60 * 60 * 1000;
@@ -56,24 +55,20 @@ export function requestText(c) {
 
 // ---- Posting -----------------------------------------------------------------
 
-// Recipes a request may ask for: your professions, a sellable result, and a
-// skill level near yours, up to your rank's cap. Scroll-only recipes only once you know them.
+// Recipes a request may ask for: ones you know and can craft right now, in your
+// professions, with a sellable result. It stays near your skill while you know
+// something near it, so requests keep up as you learn; otherwise any recipe you know.
 function candidates(state, category = null, station = null) {
-  return recipes.filter((r) => {
+  const known = recipes.filter((r) => {
     if (station && r.station !== station) return false;
     const prof = recipeProfession(r);
-    if (!prof || !hasProfession(state, prof)) return false;
+    if (!prof || !hasProfession(state, prof) || !knowsRecipe(state, r)) return false;
     const item = itemById[r.makes.item];
     if (!['consumable', 'gear'].includes(item.category) || (category && item.category !== category)) return false;
-    if (r.learn === 'scroll' && !knowsRecipe(state, r)) return false;
-    // Quartermaster recipes once you have the standing to buy them.
-    if (r.learn === 'quartermaster' && !knowsRecipe(state, r) && !hasStanding(state, r.standing)) return false;
-    const skill = skillOf(state, prof);
-    // Never past your rank's skill cap: a recipe that needs the next rank's
-    // training can't be learned yet, however close it is.
-    const reach = Math.min(skill + CT.reachAbove, capOf(state, prof));
-    return r.skill[0] <= reach && r.skill[0] >= skill - CT.reachBelow;
+    return r.skill[0] <= skillOf(state, prof);
   });
+  const near = known.filter((r) => r.skill[0] >= skillOf(state, recipeProfession(r)) - CT.reachBelow);
+  return near.length ? near : known;
 }
 
 function pickType(state) {
@@ -82,10 +77,20 @@ function pickType(state) {
   return types.find((t) => (r -= t.weight) < 0) ?? types[0];
 }
 
-export function postCommission(state, now, forced = null) {
-  const type = forced ? commissionTypes.find((t) => t.id === forced) : pickType(state);
+function poolFor(state, type) {
   const category = type.id === 'contract' || type.id === 'drive' || type.id === 'enchant' ? 'consumable' : type.id === 'regular' ? 'gear' : null;
-  let pool = candidates(state, category, type.station);
+  return candidates(state, category, type.station);
+}
+
+export function postCommission(state, now, forced = null) {
+  let type = forced ? commissionTypes.find((t) => t.id === forced) : pickType(state);
+  let pool = poolFor(state, type);
+  // You know nothing that fits this kind (a contract and no known consumables,
+  // say): post a standard request instead of leaving the counter empty.
+  if (!pool.length && !forced) {
+    type = commissionTypes.find((t) => t.id === 'standard');
+    pool = poolFor(state, type);
+  }
   let regular = null;
   if (type.id === 'regular') {
     regular = rngPick(state.rng, state.tavern.regulars);
@@ -195,7 +200,8 @@ function rewardRegular(state, regularId) {
   for (const p of Object.keys(r.skills)) r.skills[p] = Math.min(300, r.skills[p] + gain * 5);
 }
 
-// Where to get a recipe you don't know yet, for the counter.
+// Where to get a recipe you don't know yet, for the counter. New requests only
+// ask for recipes you know; this is for ones an older save still has up.
 export function recipeHint(state, c) {
   const r = recipeById[c.recipeId];
   if (knowsRecipe(state, r)) return null;

@@ -273,7 +273,7 @@ Cloth is Tailoring's main material (Phase 5). It also sells on the auction house
 - Smelting gives no skill. It only converts ore to bars.
 - Ore and bars both trade on the auction house. NPC sellers price bars above ore plus the smelter fee, so smelting your own is a small profit source.
 
-**Stacks.** Materials and consumables stack to 20 per bag slot. Gear doesn't stack.
+**Stacks.** Materials and consumables stack to 20 per bag slot. Gear doesn't stack. The Bags tab shows one tile per slot, so the tiles always add up to the slot counter: 47 stone is three tiles (20, 20 and 7), and 5 cleavers are five tiles.
 
 ## Heroes and the Tavern
 
@@ -410,13 +410,13 @@ The shop counter takes requests from named heroes: a specific item, a quantity a
 **Rules**
 
 - The counter shows 3 commissions (upgradeable to 5). A new one posts every 2 hours, and unclaimed ones expire.
-- Requests come from recipes you know or are close to learning. One you can't make yet says where to get the recipe ("Quartermaster, Honored"), which gives the player a goal. "Close" means up to 10 skill above yours, but never past your rank's skill cap (Nov 4, 2026): at Journeyman you never get a request for a recipe that needs Expert training. In playtesting, requests for an iron flanged mace while stuck at 150 could only be declined. In the sim this makes more requests fillable, so the steady bots reach the endgame gate about 1 day sooner on average (46.4 days over 30 runs, was 47.6).
+- New requests only ask for recipes you already know and can craft right now (Nov 6, 2026). In playtesting, commissions are a main way to make money early, and requests for recipes you still had to buy could leave you stuck with gold you didn't have yet. Finding what to learn next is the Trade Guild trainer's and the quartermaster's job. Requests already on the counter when this changed stay until they're filled or expire, and those still say where to get the recipe.
 - Only items you crafted count, by maker's mark, so buying from the auction house to hand in doesn't work.
 - Declining is free.
 - How often each kind posts: standard 55%, rush 20%, guild contract 10%, regular's request 15% (only once you have regulars).
 - Quantities: gear is always one. Consumables: 3–8 for a standard request, 2–4 for a rush, 20–40 for a guild contract. Guild contracts take consumables only and pay 1.25× market. Gold and reputation are paid for each part handed in.
-- A request picks a recipe of one of your professions, from 60 skill points below yours to 10 above. A regular's request picks gear for the regular's armor type (or a weapon or cloak). A filled regular's request adds a loyalty level and 3 hero levels.
-- **Maker's mark:** the game counts which units in your bags you crafted. When you list, sell or use some of an item, bought units go first, so your crafted ones stay ready for commissions. Items returned from expired listings come back without the mark.
+- A request picks a recipe you know in one of your professions, from 60 skill points below yours up to your skill. If you know nothing in that range, it picks from everything you know, so learning newer recipes is how requests keep up with you. If you know nothing that fits the kind of request rolled (a guild contract with no known consumables, say), a standard request posts instead. A regular's request picks gear for the regular's armor type (or a weapon or cloak). A filled regular's request adds a loyalty level and 3 hero levels.
+- **Maker's mark:** the game counts which units in your bags you crafted. When you list, sell or use some of an item, bought units go first, so your crafted ones stay ready for commissions. The mark survives the auction house (Nov 6, 2026): crafted units that come back from an expired or cancelled listing still count, including while they wait to be collected. If a listing has both bought and crafted units, the bought ones sell first. Listings posted before this change come back without the mark.
 
 **Tutorial.** The first five commissions teach the game. They come from Marta Ashgrove, the guild quartermaster, one at a time. Each step is done anywhere in the game (in any order) and then claimed at the counter for its reward. Normal commissions start after the last claim.
 
@@ -456,7 +456,7 @@ The Trade Guild is the long-term goal. Standing unlocks training ranks, recipes 
 | Regular's request | 50–150 |
 | Guild drive (event) | Up to 2,000 |
 
-Commission reputation scales with what the order is worth. An order worth at least a typical piece of gear at its tier (150 c, 450 c, 8 s, 14 s, 26 s for tiers 1–5) earns the full amount; a smaller one earns less, never under a quarter. Guild contracts count as full size at four times that. All commission reputation is then multiplied by 0.70 (repScale in data/commissions.js; raised from 0.65 in the Phase 3 balance pass and to 0.70 in Phase 5), tuned so a cautious player reaches Friendly in week 1, Honored in weeks 2–3, Revered in weeks 4–5 and Exalted in weeks 6–8.
+Commission reputation scales with what the order is worth. An order worth at least a typical piece of gear at its tier (150 c, 450 c, 8 s, 14 s, 26 s for tiers 1–5) earns the full amount; a smaller one earns less, never under a quarter. Guild contracts count as full size at four times that. All commission reputation is then multiplied by 0.55 (repScale in data/commissions.js; raised from 0.65 in the Phase 3 balance pass and to 0.70 in Phase 5, then lowered to 0.55 on Nov 6, 2026, because every new request can now be filled, which brought the endgame about a week too early), tuned so a cautious player reaches Friendly in week 1, Honored in weeks 2–3, Revered in weeks 4–5 and Exalted in weeks 6–8.
 
 **Quartermaster recipes** (bought from the guild quartermaster once you reach the standing)
 
@@ -470,7 +470,7 @@ As built (Oct 31, 2026; in `data/recipes.js` with `learn: 'quartermaster'`):
 
 - Prices: 1 g at Friendly, 2.5 g at Honored and 5 g at Revered. Each also needs the recipe's skill: 180 for tier 3, 245 for tier 4 and 285 for tier 5.
 - Each one uses a bit more than the best normal recipe of its tier. The tier 3 ones add an essence, and the blue ones add a gem and an essence. Their base values are material cost × 1.7 (green) or × 2.1 (blue).
-- Once you have the standing, commissions can ask for quartermaster items, with a hint saying where to buy the recipe.
+- Once you've bought a quartermaster recipe, commissions can ask for its item.
 
 **Masterwork recipes** (epic, Exalted; each needs an endgame material)
 
@@ -616,7 +616,7 @@ The layout is mobile-first in portrait, with five bottom tabs and a fixed header
 
 **Screen rules**
 
-- Tapping any item opens one item sheet: icon, quality, market value, your stock, the recipes that use it, and List and Craft buttons.
+- Tapping any item opens one item sheet: icon, quality, market value, your stock, the recipes that use it, and List and Craft buttons. When you have some to sell, a second List button sits right under the item's name so relisting needs no scrolling. It shows what it will list ("List 5 at 1 s 47 c each") and follows the amount, price and duration set in the form further down.
 - Recipe rows show profit at current prices (sale value minus material cost), so the player can see what's worth making.
 - Recipe filters: Can craft now, Gives skill-ups, Profitable.
 - Tap targets are at least 44 px, with main actions near the bottom where thumbs reach.
@@ -652,7 +652,7 @@ As built (Phase 4, Oct 31, 2026):
 
 **Motion** stays small and quick: coins tick up on collect, a "Sold!" toast, progress bars fill. As built (Phase 4): the header gold counts up over about half a second whenever it rises. Each sale while you're watching pops a "Sold!" card with the item's icon and what it paid. Messages stack above the tab bar (three at most) and fade after about 3 seconds. Progress bars keep their place when the screen redraws. Phones set to reduce motion get no animation.
 
-**Sound** is a small set of effects added in Phase 4: coins on collect, "sold," hero return and craft complete. They come from a free CC0 sound pack, such as Kenney's. Sound starts only after the player's first tap, with a mute toggle in settings. There is no music. As built (Phase 4): four short .mp3 effects from Kenney's CC0 Interface Sounds and RPG Audio packs. A coin clink plays on Collect all, a chime when something sells while you watch, a door when a hero gets back, and a metal click when a crafting order finishes. Each check plays only one sound: a sale beats a hero return, which beats a finished craft. The Sound on/off switch in Settings is saved with the game. Credits are in `assets/sounds/CREDITS.md` and on the Credits screen.
+**Sound** is a small set of effects added in Phase 4: coins on collect, "sold," hero return and craft complete. They come from a free CC0 sound pack, such as Kenney's. Sound starts only after the player's first tap, with a mute toggle in settings. There is no music. As built (Phase 4): four short .mp3 effects from Kenney's CC0 Interface Sounds and RPG Audio packs. A coin clink plays whenever gold reaches your purse from any source: Collect all, commissions, vendor sales and tutorial rewards. A chime plays when something sells while you watch, and a door when a hero gets back (a sale beats a hero return if both land together). A metal clang plays each time an item is built in the workshop, whether it's one unit of a queued order or an instant City Smelter job, and it plays alongside those other sounds rather than being skipped (Nov 6, 2026; it used to be a much quieter click, only at the end of a whole order). The Sound on/off switch in Settings is saved with the game. Credits are in `assets/sounds/CREDITS.md` and on the Credits screen.
 
 ## Technical architecture
 

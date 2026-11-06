@@ -39,7 +39,9 @@ const ctx = {
   act(fn) {
     catchUpNow(false);
     try {
+      const copperBefore = ctx.state.copper;
       const result = fn(ctx.state, ctx.now());
+      if (ctx.state.copper > copperBefore) playSound('coins');
       save();
       app.render();
       return result ?? true;
@@ -147,10 +149,11 @@ function catchUpNow(asCheckIn) {
     for (const [id, s] of Object.entries(summary.sold)) soldToast(id, s.qty, s.copper);
     for (const o of summary.ordersDone) toast(`Made ${o.qty} × ${itemById[o.item].name}.`);
     for (const r of summary.returns) toast(`${r.name} is back from ${r.zone}. Collect on the Shop tab.`);
-    // One sound per check, the most exciting first.
+    // One market or tavern sound per check, the most exciting first. Anything
+    // built always gets its own, so a sale in the same moment can't hide it.
     if (Object.keys(summary.sold).length) playSound('sold');
     else if (summary.returns.length) playSound('hero-return');
-    else if (summary.ordersDone.length) playSound('craft-complete');
+    if (Object.keys(summary.crafted).length) playSound('craft-complete');
   }
   return summary;
 }

@@ -16,6 +16,7 @@ import { openItemSheet } from './item-sheet.js';
 import { recipeColor, knowsRecipe, trainerRecipes, forgeRankNeeded, hasProfession, startingProfession } from '../engine/skills.js';
 import { professions, professionById, professionForStation, stationNames } from '../../data/professions.js';
 import { skillBar, colorText, newTierHint } from './skill-bar.js';
+import { playSound } from './sound.js';
 
 const filters = { canCraft: false, skillUps: false, profitable: false };
 // The profession shown, kept between visits to the tab.
@@ -219,7 +220,7 @@ function openCraftSheet(ctx, recipe) {
         onclick: () => actAndClose((s, now) => queueCraft(s, recipe.id, qty.value, now)) },
         recipe.station === 'forge' ? 'Smelt at your forge (free)' : 'Add to queue') : null,
       can && recipe.station === 'forge' ? el('button', { class: 'btn wide', type: 'button',
-        onclick: () => actAndClose((s) => smeltAtCity(s, recipe.id, qty.value)) },
+        onclick: () => actAndClose((s) => { smeltAtCity(s, recipe.id, qty.value); playSound('craft-complete'); }) },
         'Smelt now at the City Smelter (', feeText, ')') : null,
     );
   }

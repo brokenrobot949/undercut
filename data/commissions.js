@@ -6,9 +6,8 @@ export const commissionTuning = {
   // Requests on the counter at once, and how often a new one posts (hours).
   slots: 3,
   postEveryHours: 2,
-  // A request can ask for a recipe you'll learn soon: up to this many skill
-  // points above yours, but never past your rank's skill cap. Below, it skips recipes this far under your skill.
-  reachAbove: 10,
+  // Requests only ask for recipes you know and can craft now. They skip recipes
+  // this many skill points under yours, unless that would leave nothing to ask for.
   reachBelow: 60,
   // Reputation scales with what the order is worth, against a typical piece
   // of gear at its tier (copper, tiers 1-5). A big order earns the full amount
@@ -16,7 +15,7 @@ export const commissionTuning = {
   repValueRef: [150, 450, 800, 1400, 2600],
   repFloor: 0.25,
   // Multiplies all commission reputation. Lower it to slow standing down.
-  repScale: 0.70,
+  repScale: 0.55,
 };
 
 // The kinds. `weight` is how often each kind posts (a regular's request only

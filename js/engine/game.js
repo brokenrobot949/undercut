@@ -4,10 +4,10 @@
 import { tuning } from '../../data/tuning.js';
 import { factions } from '../../data/factions.js';
 import { items, itemById } from '../../data/items.js';
-import { addOrMail } from './bags.js';
+import { addOrMail, addToMailbox } from './bags.js';
 import { createRng } from './rng.js';
 import { createClock, advance, gameNow, schedule, newSummary } from './clock.js';
-import { createMarket, syncMarketItems, marketTick, freshMarket, saleProceeds, sellToFirstCustomer } from './market.js';
+import { createMarket, syncMarketItems, marketTick, freshMarket, saleProceeds, sellToFirstCustomer, madeInListing } from './market.js';
 import { createTutorial } from './tutorial.js';
 import { firstCustomer } from '../../data/tutorial.js';
 import { createStations, syncStations, finishUnit } from './crafting.js';
@@ -20,7 +20,7 @@ import { createCommissions, commissionPostTimer, commissionExpireTimer } from '.
 export { collectMailbox } from './bags.js';
 export { getStanding } from './guild.js';
 
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 
 export function newGame({ name, factionId, professionId = 'blacksmithing', seed, now }) {
   const state = {
@@ -36,7 +36,8 @@ export function newGame({ name, factionId, professionId = 'blacksmithing', seed,
     knownRecipes: createKnownRecipes(),
     bags: { ...tuning.startingBags[professionId] }, // itemId -> quantity
     // Gold and items waiting to be collected (sales, expired listings).
-    mailbox: { copper: 0, items: {} },
+    // `made` counts the waiting units that carry your maker's mark.
+    mailbox: { copper: 0, items: {}, made: {} },
     rng: createRng(seed),
     clock: createClock(now),
     timers: [],
@@ -92,7 +93,7 @@ function marketHooks(state, summary) {
       s.copper += paid;
     },
     onExpire(itemId, listing, at) {
-      state.mailbox.items[itemId] = (state.mailbox.items[itemId] || 0) + listing.qty;
+      addToMailbox(state, itemId, listing.qty, madeInListing(listing));
       summary.expired[itemId] = (summary.expired[itemId] || 0) + listing.qty;
     },
   };

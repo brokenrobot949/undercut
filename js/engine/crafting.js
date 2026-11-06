@@ -11,7 +11,7 @@ import { recipeById } from '../../data/recipes.js';
 import { itemById } from '../../data/items.js';
 import { professions } from '../../data/professions.js';
 import { schedule, cancelTimer } from './clock.js';
-import { checkMats, takeFromBags, addOrMail, markMade } from './bags.js';
+import { checkMats, takeFromBags, addOrMail, addOrMailMade } from './bags.js';
 import { checkSkill, checkKnown, checkForgeRank, checkProfession, rollSkillUp } from './skills.js';
 import { noteTutorial } from './tutorial.js';
 import { rngChance } from './rng.js';
@@ -87,8 +87,7 @@ export function finishUnit(state, timer, summary) {
   const recipe = recipeById[order.recipeId];
   // Top-level bellows: each smelt has a chance of an extra bar.
   const extra = stationId === 'forge' && bonusBarChance(state) && rngChance(state.rng, bonusBarChance(state)) ? 1 : 0;
-  addOrMail(state, recipe.makes.item, recipe.makes.qty + extra);
-  markMade(state, recipe.makes.item, recipe.makes.qty + extra);
+  addOrMailMade(state, recipe.makes.item, recipe.makes.qty + extra, recipe.makes.qty + extra);
   noteTutorial(state, 'craft', recipe.id);
   if (stationId === 'forge') noteTutorial(state, 'smelt');
   rollSkillUp(state, recipe, summary);

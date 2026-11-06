@@ -9,9 +9,9 @@ import { firstCustomer } from '../../data/tutorial.js';
 import { tuning } from '../../data/tuning.js';
 import { itemById } from '../../data/items.js';
 import { listingSlotsFor, depositMult, cutRate } from './upgrades.js';
-import { bagCount, roomFor, takeFromBags, addToBags, addOrMail } from './bags.js';
+import { bagCount, roomFor, takeFromBags, addToBags, addOrMailMade, madeCount } from './bags.js';
 import {
-  postPlayerListing, cancelPlayerListing, playerListings, buyFromMarket, depositFor, vendorPrice,
+  postPlayerListing, cancelPlayerListing, playerListings, buyFromMarket, depositFor, vendorPrice, madeInListing,
 } from './market.js';
 
 const coinText = (c) => `${c} copper`;
@@ -53,9 +53,11 @@ export function listItem(state, { itemId, qty, price, hours }, now) {
   const deposit = depositFor(item, qty, hours, depositMult(state, now));
   if (deposit > state.copper) throw new Error(`The deposit is ${coinText(deposit)} and you can't cover it.`);
 
+  const madeBefore = madeCount(state, itemId);
   takeFromBags(state, itemId, qty);
   state.copper -= deposit;
-  const listing = postPlayerListing(state, itemId, { price, qty, hours, at: now, deposit, cut: cutRate(state) });
+  const made = madeBefore - madeCount(state, itemId);
+  const listing = postPlayerListing(state, itemId, { price, qty, hours, at: now, deposit, cut: cutRate(state), made });
   noteTutorial(state, 'list');
   // Once per game, a customer comes by soon after your first listing.
   if (state.firstCustomer === 'waiting') {
@@ -69,7 +71,7 @@ export function listItem(state, { itemId, qty, price, hours }, now) {
 export function cancelListing(state, itemId, listingId) {
   const listing = cancelPlayerListing(state, itemId, listingId);
   if (!listing) throw new Error('That listing is already gone.');
-  addOrMail(state, itemId, listing.qty);
+  addOrMailMade(state, itemId, listing.qty, madeInListing(listing));
   return listing;
 }
 

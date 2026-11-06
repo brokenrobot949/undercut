@@ -1,9 +1,10 @@
-// Bags tab: storage grid and the trade goods vendor. Tap an item to list it,
-// sell it to a vendor, or see what it's for.
+// Bags tab: storage grid and the trade goods vendor. One tile per bag slot, so
+// the grid adds up to the slot counter. Tap an item to list it, sell it to a
+// vendor, or see what it's for.
 
 import { el, coins, itemIcon } from './components.js';
 import { items, itemById } from '../../data/items.js';
-import { slotsUsed, bagSlots } from '../engine/bags.js';
+import { slotsUsed, bagSlots, slotStacks } from '../engine/bags.js';
 import { openItemSheet } from './item-sheet.js';
 
 const ORDER = { material: 0, trade: 1, consumable: 2, gear: 3 };
@@ -19,12 +20,12 @@ export function renderBags(ctx) {
       el('h2', {}, `Bags (${slotsUsed(state)} / ${bagSlots(state)} slots)`),
       waiting ? el('p', { class: 'small' }, `${waiting} items are waiting to be collected on the Shop tab.`) : null,
       held.length
-        ? el('div', { class: 'bag-grid' }, held.map(([id, qty]) => el('button', {
+        ? el('div', { class: 'bag-grid' }, held.flatMap(([id, qty]) => slotStacks(id, qty).map((n) => el('button', {
           class: `bag-tile border-${itemById[id].quality}`, type: 'button', onclick: () => openItemSheet(ctx, id),
         },
           itemIcon(id),
           el('span', { class: 'bag-name' }, itemById[id].name),
-          el('span', { class: 'bag-qty' }, qty))))
+          el('span', { class: 'bag-qty' }, n)))))
         : el('p', { class: 'small dim' }, 'Empty. Buy materials on the Auction tab or hire a miner in the Tavern.')),
     el('section', { class: 'panel' },
       el('h2', {}, 'Trade goods vendor'),

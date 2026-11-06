@@ -3,13 +3,14 @@
 // Prints PASS or FAIL for each check. Run it after changing anything in js/engine/.
 
 import { newGame, debugFastForward, catchUp, collectMailbox, SAVE_VERSION } from '../js/engine/game.js';
-import { listItem, undercutPrice, lowestOtherPrice, quoteBuy, buyItems, sellToVendor } from '../js/engine/trading.js';
+import { listItem, cancelListing, undercutPrice, lowestOtherPrice, quoteBuy, buyItems, sellToVendor } from '../js/engine/trading.js';
 import { queueCraft, cancelOrder, smeltAtCity, queueSlots } from '../js/engine/crafting.js';
 import { hireHero, zonesFor, expectedHaul, hireFee, regularsInTown } from '../js/engine/heroes.js';
 import { tuning } from '../data/tuning.js';
 import { postCommission, deliverCommission, declineCommission, canDeliver, claimTutorialStep } from '../js/engine/commissions.js';
 import { tutorialStep, stepMet } from '../js/engine/tutorial.js';
-import { madeCount } from '../js/engine/bags.js';
+import { madeCount, slotStacks, slotsUsed } from '../js/engine/bags.js';
+import { madeInListing } from '../js/engine/market.js';
 import { zoneById } from '../data/zones.js';
 import { itemById } from '../data/items.js';
 import { roomFor, addOrMail } from '../js/engine/bags.js';
@@ -524,19 +525,90 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   const r2 = deliverCommission(s, c.id, t0);
   check('contract parts add up to the full pay', r1.copper + r2.copper === c.pay && r1.rep + r2.rep === c.rep && r2.done);
 }
-// Requests never ask for a recipe past your rank's skill cap.
+// The maker's mark survives a trip to the auction house.
 {
+  const s = game(45);
+  catchUp(s, t0 + H);
+  s.copper = 100000;
+  const id = 'copper-cleaver';
+  const other = Object.values(itemById).find((i) => i.category === 'gear' && i.id !== id).id;
+  const list = (qty) => listItem(s, { itemId: id, qty, price: 999999, hours: 2 }, real(s));
+
+  // Cancelled: straight back to the bags, still marked.
+  s.bags = { [id]: 2 }; s.made = { [id]: 2 };
+  const a = list(2);
+  check('a listing remembers its crafted units', a.made === 2 && madeCount(s, id) === 0);
+  cancelListing(s, id, a.id);
+  check('a cancelled listing keeps its maker\'s mark', s.bags[id] === 2 && madeCount(s, id) === 2);
+
+  // Expired: waits in the mailbox, marked once collected. Bought units listed
+  // alongside stay unmarked.
+  s.bags = { [id]: 3 }; s.made = { [id]: 2 };
+  const b = list(3);
+  check('a mixed listing counts only the crafted units', b.made === 2);
+  catchUp(s, t0 + 5 * H);
+  check('an expired listing waits in the mailbox with its mark', s.mailbox.items[id] === 3 && s.mailbox.made[id] === 2);
+  s.bags = { [id]: 1 }; s.made = {};
+  check('marks in the mailbox don\'t mark what\'s in your bags', madeCount(s, id) === 0);
+  s.bags = {};
+  collectMailbox(s);
+  check('collecting brings the mark back', s.bags[id] === 3 && madeCount(s, id) === 2 && !Object.keys(s.mailbox.made).length);
+
+  // Partly sold: bought units sell first, so what returns stays marked.
+  check('sold units count against bought ones first', madeInListing({ made: 2, qty: 3 }) === 2 && madeInListing({ made: 2, qty: 1 }) === 1);
+  check('a listing from before this update returns unmarked', madeInListing({ qty: 4 }) === 0);
+
+  // Full bags: the mark waits in the mailbox until there's room.
+  s.bags = { [id]: 1 }; s.made = { [id]: 1 };
+  const c = list(1);
+  s.bags = { [other]: bagSlots(s) }; s.made = {};
+  cancelListing(s, id, c.id);
+  check('with full bags, the mark waits in the mailbox', s.mailbox.items[id] === 1 && s.mailbox.made[id] === 1 && !s.bags[id]);
+  s.bags = {};
+  collectMailbox(s);
+  check('and arrives when the unit does', madeCount(s, id) === 1);
+}
+
+// The bag grid shows one tile per slot, so it always adds up to the counter.
+{
+  check('stacks split at 20, gear one per slot', slotStacks('rough-stone', 47).join() === '20,20,7' && slotStacks('rough-stone', 40).join() === '20,20' && slotStacks('copper-cleaver', 3).join() === '1,1,1');
+  const s = game(46);
+  s.bags = { 'rough-stone': 47, 'copper-cleaver': 5 };
+  check('the tiles add up to the slot counter', Object.entries(s.bags).flatMap(([id, n]) => slotStacks(id, n)).length === slotsUsed(s));
+}
+
+// New requests only ask for recipes you know and can craft right now.
+{
+  const postMany = (s, type = null) => {
+    const seen = [];
+    for (let i = 0; i < 300; i++) {
+      const c = postCommission(s, t0, type);
+      if (c) seen.push(c);
+      s.commissions.list = [];
+    }
+    return seen;
+  };
+  const skill = (c) => recipeById[c.recipeId].skill[0];
   const s = learnAll(game(29));
   s.tutorial.done = true;
-  debugSetSkill(s, 'blacksmithing', 148); // Journeyman, cap 150
-  const pastCap = recipes.filter((r) => r.station === 'anvil' && r.skill[0] > 150 && r.skill[0] <= 158).length;
-  let over = 0;
-  for (let i = 0; i < 200; i++) {
-    const c = postCommission(s, t0);
-    if (c && recipeById[c.recipeId].skill[0] > 150) over++;
-    s.commissions.list = [];
+  debugSetSkill(s, 'blacksmithing', 148);
+  check('requests never ask above your skill', postMany(s).every((c) => skill(c) <= 148));
+
+  // Knows only the starting recipes, far below their skill: requests still post.
+  const low = game(47);
+  low.tutorial.done = true;
+  debugSetSkill(low, 'blacksmithing', 148);
+  const asked = postMany(low);
+  check('requests only ask for recipes you know', asked.length === 300 && asked.every((c) => low.knownRecipes[c.recipeId]), `${asked.length} posted`);
+  check('the counter still fills when nothing you know is near your skill', asked.every((c) => skill(c) < 148 - 60));
+  check('a request is always one you can craft now', asked.every((c) => recipeColor(low, recipeById[c.recipeId]) !== 'red'));
+
+  // Each profession's first recipes are enough for a request of any kind.
+  for (const p of ['blacksmithing', 'leatherworking', 'alchemy', 'tailoring']) {
+    const g = newGame({ name: 'T', factionId: 'red', professionId: p, seed: 48, now: t0 });
+    g.tutorial.done = true;
+    check(`a new ${p} shop always gets a request`, postMany(g).length === 300);
   }
-  check('requests stop at your rank\'s skill cap', pastCap > 0 && over === 0, `${pastCap} recipes just past the cap, ${over} asked for`);
 }
 {
   const s = game(27);
