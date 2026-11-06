@@ -273,7 +273,7 @@ Cloth is Tailoring's main material (Phase 5). It also sells on the auction house
 - Smelting gives no skill. It only converts ore to bars.
 - Ore and bars both trade on the auction house. NPC sellers price bars above ore plus the smelter fee, so smelting your own is a small profit source.
 
-**Stacks.** Materials and consumables stack to 20 per bag slot. Gear doesn't stack. The Bags tab shows one tile per slot, so the tiles always add up to the slot counter: 47 stone is three tiles (20, 20 and 7), and 5 cleavers are five tiles.
+**Stacks.** Materials and consumables stack to 20 per bag slot. Gear doesn't stack. The Bags tab lets the player choose how this looks, and the choice is saved with the game. Separate (the default) shows one tile per slot, so the tiles always add up to the slot counter: 47 stone is three tiles (20, 20 and 7), and 5 cleavers are five tiles. Combined shows one pile per item to save space, with a short note that there are fewer tiles than slots used.
 
 ## Heroes and the Tavern
 

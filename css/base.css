@@ -469,6 +469,7 @@ input[type="number"] {
 
 /* ---- Bags -------------------------------------------------------------- */
 
+.bag-view { margin-bottom: 12px; }
 .bag-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));

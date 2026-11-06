@@ -1,6 +1,7 @@
-// Bags tab: storage grid and the trade goods vendor. One tile per bag slot, so
-// the grid adds up to the slot counter. Tap an item to list it, sell it to a
-// vendor, or see what it's for.
+// Bags tab: storage grid and the trade goods vendor. The player picks the view
+// (saved): Separate shows one tile per bag slot, so the grid adds up to the slot
+// counter; Combined shows one pile per item. Tap an item to list it, sell it to
+// a vendor, or see what it's for.
 
 import { el, coins, itemIcon } from './components.js';
 import { items, itemById } from '../../data/items.js';
@@ -14,13 +15,19 @@ export function renderBags(ctx) {
   const held = Object.entries(state.bags)
     .sort(([a], [b]) => ORDER[itemById[a].category] - ORDER[itemById[b].category] || itemById[a].tier - itemById[b].tier);
   const waiting = Object.values(state.mailbox.items).reduce((a, b) => a + b, 0);
+  const combined = !!state.settings.bagsCombined;
 
   return el('div', { class: 'main-inner' },
     el('section', { class: 'panel' },
       el('h2', {}, `Bags (${slotsUsed(state)} / ${bagSlots(state)} slots)`),
       waiting ? el('p', { class: 'small' }, `${waiting} items are waiting to be collected on the Shop tab.`) : null,
+      el('div', { class: 'btn-row seg bag-view' }, [['Separate', false], ['Combined', true]].map(([label, value]) => el('button', {
+        class: `btn${combined === value ? ' btn-primary' : ''}`, type: 'button', 'aria-pressed': String(combined === value),
+        onclick: () => ctx.act((s) => { s.settings.bagsCombined = value; }),
+      }, label))),
+      combined ? el('p', { class: 'small dim' }, 'One pile per item, so there are fewer tiles than slots used.') : null,
       held.length
-        ? el('div', { class: 'bag-grid' }, held.flatMap(([id, qty]) => slotStacks(id, qty).map((n) => el('button', {
+        ? el('div', { class: 'bag-grid' }, held.flatMap(([id, qty]) => (combined ? [qty] : slotStacks(id, qty)).map((n) => el('button', {
           class: `bag-tile border-${itemById[id].quality}`, type: 'button', onclick: () => openItemSheet(ctx, id),
         },
           itemIcon(id),
