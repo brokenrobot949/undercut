@@ -448,7 +448,9 @@ The Trade Guild is the long-term goal. Standing unlocks training ranks, recipes 
 | Friendly | 3,000 | Expert training, the second profession wing, tier 3 quartermaster recipes |
 | Honored | 9,000 | Artisan training, the third profession wing, blue-quality recipes |
 | Revered | 21,000 | Raid expeditions, endgame materials, top blue recipes |
-| Exalted | 42,000 | Masterwork (epic) recipes, the Guildmaster title and a top-tier shop banner |
+| Exalted | 44,000 | Masterwork (epic) recipes, the Guildmaster title and a top-tier shop banner |
+
+Exalted moved from 42,000 to 44,000 on Nov 13, 2026. With crafted items surviving the auction house and the newer commission types, the alchemist bot reached the gate on day 41.7, just early. After the change the five steady bots reach Exalted with all three professions at 300 between days 43.2 and 52.5 (window: days 42–56). A shop that sat between 42,000 and 43,999 drops back to Revered until it earns the difference; anything it already bought stays.
 
 **Where reputation comes from** (starting values)
 

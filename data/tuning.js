@@ -165,6 +165,6 @@ export const tuning = {
     { id: 'friendly', name: 'Friendly', rep: 3000 },
     { id: 'honored', name: 'Honored', rep: 9000 },
     { id: 'revered', name: 'Revered', rep: 21000 },
-    { id: 'exalted', name: 'Exalted', rep: 42000 },
+    { id: 'exalted', name: 'Exalted', rep: 44000 },
   ],
 };

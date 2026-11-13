@@ -204,6 +204,8 @@ const BOTS = [
 const RUN_BOTS = process.env.SIM_BOTS ? BOTS.filter((b) => process.env.SIM_BOTS.split(',').includes(b.name)) : BOTS;
 // Days each bot plays. The Phase 3 gate is at 6 to 8 weeks.
 const RUN_DAYS = 70;
+// Reputation each standing needs, from data/tuning.js.
+const REP = Object.fromEntries(tuning.standings.map((s) => [s.id, s.rep]));
 // Bots that play like a steady, regular player; the Phase 3 gate is checked on these.
 const GATE_BOTS = new Set(['cautious', 'tanner', 'alchemist', 'tailor', 'enchanter']);
 const SELL_CATEGORIES = new Set(['consumable', 'gear']);
@@ -594,8 +596,8 @@ function botRun(bot, seed) {
     for (const item of tradeableItems) if (demandTag(state, item) === 'flooded') stats.flooded[item.id] = (stats.flooded[item.id] || 0) + 1;
     const s = state.skills[bot.prof];
     const reached = { skill75: s.skill >= 75, journeyman: s.rank >= 1, skill150: s.skill >= 150, skill300: s.skill >= 300,
-      friendly: state.reputation >= 3000, expert: s.rank >= 2, artisan: s.rank >= 3,
-      honored: state.reputation >= 9000, revered: state.reputation >= 21000, exalted: state.reputation >= 42000,
+      friendly: state.reputation >= REP.friendly, expert: s.rank >= 2, artisan: s.rank >= 3,
+      honored: state.reputation >= REP.honored, revered: state.reputation >= REP.revered, exalted: state.reputation >= REP.exalted,
       second: state.player.professions.length >= 2, third: state.player.professions.length >= 3 };
     reached.all300 = reached.third && state.player.professions.every((p) => state.skills[p].skill >= 300);
     reached.gate = reached.all300 && reached.exalted;
