@@ -8,8 +8,9 @@ import { rngInt } from './rng.js';
 import { firstCustomer } from '../../data/tutorial.js';
 import { tuning } from '../../data/tuning.js';
 import { itemById } from '../../data/items.js';
+import { recipeById } from '../../data/recipes.js';
 import { listingSlotsFor, depositMult, cutRate } from './upgrades.js';
-import { bagCount, roomFor, takeFromBags, addToBags, addOrMailMade, madeCount } from './bags.js';
+import { bagCount, roomFor, takeFromBags, addToBags, addOrMailMade, madeCount, bagSlots, slotsUsed, slotsFor } from './bags.js';
 import {
   postPlayerListing, cancelPlayerListing, playerListings, buyFromMarket, depositFor, vendorPrice, madeInListing,
 } from './market.js';
@@ -129,4 +130,30 @@ export function buyFromVendor(state, itemId, qty) {
   state.copper -= cost;
   addToBags(state, itemId, qty);
   return cost;
+}
+
+// ---- Recipe top-up: buy a recipe's trade goods in one go ---------------------
+
+// The trade goods a recipe is short of for `crafts` crafts, at vendor prices:
+// { lines: [{ item, qty, cost }], cost }. Materials from the auction house aren't counted.
+export function vendorShortfall(state, recipeId, crafts) {
+  const recipe = recipeById[recipeId];
+  crafts = Math.max(0, Math.floor(crafts));
+  const lines = recipe.mats.filter((m) => itemById[m.item].category === 'trade').map((m) => {
+    const qty = Math.max(0, m.qty * crafts - bagCount(state, m.item));
+    return { item: m.item, qty, cost: qty * itemById[m.item].vendorBuy };
+  }).filter((l) => l.qty > 0);
+  return { lines, cost: lines.reduce((sum, l) => sum + l.cost, 0) };
+}
+
+// Buys every trade good a recipe is short of for `crafts` crafts. All or nothing.
+export function buyVendorMats(state, recipeId, crafts) {
+  const { lines, cost } = vendorShortfall(state, recipeId, crafts);
+  if (!lines.length) throw new Error('You already have the vendor goods for that many.');
+  if (cost > state.copper) throw new Error("You can't afford all of that.");
+  const extraSlots = lines.reduce((sum, l) => sum + slotsFor(l.item, bagCount(state, l.item) + l.qty) - slotsFor(l.item, bagCount(state, l.item)), 0);
+  if (extraSlots > bagSlots(state) - slotsUsed(state)) throw new Error('Not enough room in your bags.');
+  state.copper -= cost;
+  for (const l of lines) state.bags[l.item] = bagCount(state, l.item) + l.qty;
+  return { lines, cost };
 }

@@ -135,6 +135,19 @@ export function smeltAtCity(state, recipeId, qty) {
   return fee;
 }
 
+// Favorite recipes sit at the top of their workstation's list.
+export function isFavorite(state, recipeId) {
+  return Boolean(state.favoriteRecipes?.[recipeId]);
+}
+
+export function toggleFavorite(state, recipeId) {
+  if (!recipeById[recipeId]) throw new Error('Unknown recipe.');
+  state.favoriteRecipes ||= {};
+  if (state.favoriteRecipes[recipeId]) delete state.favoriteRecipes[recipeId];
+  else state.favoriteRecipes[recipeId] = true;
+  return isFavorite(state, recipeId);
+}
+
 // How many crafts the bags can cover right now.
 export function maxCraftable(state, recipeId) {
   const recipe = recipeById[recipeId];

@@ -20,7 +20,7 @@ import { createCommissions, commissionPostTimer, commissionExpireTimer } from '.
 export { collectMailbox } from './bags.js';
 export { getStanding } from './guild.js';
 
-export const SAVE_VERSION = 13;
+export const SAVE_VERSION = 14;
 
 export function newGame({ name, factionId, professionId = 'blacksmithing', seed, now }) {
   const state = {
@@ -58,6 +58,8 @@ export function newGame({ name, factionId, professionId = 'blacksmithing', seed,
     events: null,
     // Decor, sign styles, trophies and guild donations (see shop-extras.js).
     extras: createExtras(),
+    // Recipes starred to sit at the top of the Workshop: { recipeId: true }.
+    favoriteRecipes: {},
   };
   createMarket(state, now);
   createTavern(state, now);

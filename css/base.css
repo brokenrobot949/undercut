@@ -875,3 +875,33 @@ input[type="number"] {
 /* Rows with no second line keep their button beside the name. */
 .my-listing.one-line > .small-btn, .my-listing.one-line > .small { grid-row: 1; grid-column: -2; justify-self: end; }
 .my-listing.one-line { min-height: 56px; }
+
+/* ---- Workshop: favorites, tier groups, vendor top-up --------------------- */
+
+.recipe-group { border-top: 1px solid var(--border); }
+.recipe-group.favorites { border-top: 0; margin-top: 8px; padding: 4px 10px 2px; border: 1px solid var(--highlight); border-radius: var(--radius); }
+.group-head { margin: 6px 0 2px; color: var(--highlight); }
+.recipe-group > summary {
+  min-height: var(--tap); display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding: 10px 0; cursor: pointer; list-style: none;
+}
+.recipe-group > summary::-webkit-details-marker { display: none; }
+.recipe-group > summary::before { content: '▸'; color: var(--text-dim); width: 12px; transition: transform 0.15s; }
+.recipe-group[open] > summary::before { transform: rotate(90deg); }
+.group-title { font-weight: 700; font-family: var(--font-heading); }
+.fav-star { color: var(--highlight); }
+.fav-tip { margin: 8px 0 0; }
+.fav-btn { justify-self: start; min-width: 120px; }
+.fav-btn.on { color: var(--highlight); border-color: var(--highlight); }
+.mat-short { color: #ff9d8f; }
+.top-up { margin: 12px 0; padding: 10px 12px; background: var(--panel-raised); border-radius: var(--radius); }
+.top-up h3 { margin: 0 0 4px; }
+.top-up .btn { margin-top: 8px; }
+.top-up p:empty { display: none; }
+
+/* ---- Shop: what's waiting to collect, as small item chips ---------------- */
+
+.collect-items { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.collect-chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px 2px 2px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-deep); font-size: 0.85rem; }
+.collect-chip .icon-tile { border-width: 1px; }
+.collect-coins { margin-top: 10px; }

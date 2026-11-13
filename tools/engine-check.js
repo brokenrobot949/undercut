@@ -4,7 +4,8 @@
 
 import { newGame, debugFastForward, catchUp, collectMailbox, SAVE_VERSION } from '../js/engine/game.js';
 import { listItem, cancelListing, undercutPrice, lowestOtherPrice, quoteBuy, buyItems, sellToVendor } from '../js/engine/trading.js';
-import { queueCraft, cancelOrder, smeltAtCity, queueSlots } from '../js/engine/crafting.js';
+import { queueCraft, cancelOrder, smeltAtCity, queueSlots, toggleFavorite, isFavorite } from '../js/engine/crafting.js';
+import { vendorShortfall, buyVendorMats } from '../js/engine/trading.js';
 import { hireHero, zonesFor, expectedHaul, hireFee, regularsInTown } from '../js/engine/heroes.js';
 import { tuning } from '../data/tuning.js';
 import { postCommission, deliverCommission, declineCommission, canDeliver, claimTutorialStep } from '../js/engine/commissions.js';
@@ -997,6 +998,41 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   e.player.professions.push('enchanting');
   const req = postCommission(e, t0, 'enchant');
   check('an Enchanting request asks for a charm you can make', req && req.type === 'enchant' && recipeById[req.recipeId].station === 'enchanting-circle' && req.qty <= 2 && req.requester.race);
+}
+
+// Workshop: favorite recipes and buying a recipe's vendor goods in one go.
+{
+  const s = game(15);
+  check('a new shop has no favorites', s.favoriteRecipes && !isFavorite(s, 'copper-cleaver'));
+  toggleFavorite(s, 'copper-cleaver');
+  check('starring a recipe makes it a favorite', isFavorite(s, 'copper-cleaver'));
+  toggleFavorite(s, 'copper-cleaver');
+  check('starring it again takes it off', !isFavorite(s, 'copper-cleaver'));
+  toggleFavorite(s, 'smelt-copper');
+  const old = structuredClone(s);
+  old.version = 13;
+  delete old.favoriteRecipes;
+  const m = migrate(old);
+  check('version 13 save gets an empty favorites list', m.version === SAVE_VERSION && Object.keys(m.favoriteRecipes).length === 0);
+  const back = decodeExport(encodeExport(s));
+  check('favorites survive export and import', back.favoriteRecipes['smelt-copper'] === true);
+
+  // Bronze scale hauberk: 8 bronze bars and 2 smithing flux each.
+  s.bags['smithing-flux'] = 1;
+  s.copper = 1000;
+  const short = vendorShortfall(s, 'bronze-scale-hauberk', 3);
+  check('the top-up counts only trade goods you lack', short.lines.length === 1 && short.lines[0].item === 'smithing-flux' && short.lines[0].qty === 5 && short.cost === 5 * itemById['smithing-flux'].vendorBuy);
+  check('a recipe with no trade goods needs no top-up', vendorShortfall(s, 'copper-cleaver', 5).lines.length === 0);
+  const paid = buyVendorMats(s, 'bronze-scale-hauberk', 3);
+  check('the top-up buys exactly what is short and charges the shown price', s.bags['smithing-flux'] === 6 && s.copper === 1000 - paid.cost && paid.cost === short.cost);
+  let threw = false;
+  try { buyVendorMats(s, 'bronze-scale-hauberk', 3); } catch { threw = true; }
+  check('nothing to buy once you have enough', threw);
+  s.copper = 3;
+  const before = s.bags['smithing-flux'];
+  threw = false;
+  try { buyVendorMats(s, 'bronze-scale-hauberk', 10); } catch { threw = true; }
+  check('a top-up you cannot afford buys nothing', threw && s.copper === 3 && s.bags['smithing-flux'] === before);
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');

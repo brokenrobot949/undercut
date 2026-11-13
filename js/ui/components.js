@@ -174,7 +174,7 @@ export function tickingCoins(from, to) {
 }
 
 // A number field with − and + buttons. `stepper.value` reads it.
-export function stepper({ value = 1, min = 1, max = Infinity, label = 'Quantity', onChange } = {}) {
+export function stepper({ value = 1, min = 1, max = Infinity, label = 'Quantity', onChange, maxButton = true } = {}) {
   const input = el('input', { type: 'number', inputmode: 'numeric', min: String(min), value: String(value), 'aria-label': label });
   const clamp = (v) => Math.max(min, Math.min(max, Math.floor(Number(v) || min)));
   const set = (v) => { input.value = String(clamp(v)); onChange?.(Number(input.value)); };
@@ -184,7 +184,7 @@ export function stepper({ value = 1, min = 1, max = Infinity, label = 'Quantity'
     el('button', { class: 'btn', type: 'button', 'aria-label': 'Fewer', onclick: () => set(Number(input.value) - 1) }, '−'),
     input,
     el('button', { class: 'btn', type: 'button', 'aria-label': 'More', onclick: () => set(Number(input.value) + 1) }, '+'),
-    Number.isFinite(max) ? el('button', { class: 'btn', type: 'button', onclick: () => set(max) }, 'Max') : null);
+    Number.isFinite(max) && maxButton ? el('button', { class: 'btn', type: 'button', onclick: () => set(max) }, 'Max') : null);
   return { node, get value() { return clamp(input.value); }, set };
 }
 

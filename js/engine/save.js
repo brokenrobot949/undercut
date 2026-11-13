@@ -97,6 +97,11 @@ const migrations = {
     save.mailbox.made = {};
     return save;
   },
+  // Version 14: favorite recipes in the Workshop, none starred yet.
+  13: (save) => {
+    save.favoriteRecipes = {};
+    return save;
+  },
 };
 
 export function migrate(save) {

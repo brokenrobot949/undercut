@@ -348,9 +348,11 @@ function awayPanel(ctx) {
     el('h2', {}, s ? 'While you were away' : 'Ready to collect'),
     s ? el('p', { class: 'dim' }, `You were away ${formatDuration(s.to - s.from)}.`) : null,
     items.length ? el('ul', { class: 'list' }, items.map((line) => el('li', {}, line))) : null,
-    mailbox.copper || waiting.length ? el('p', { style: 'margin-top:12px' }, 'To collect: ',
-      mailbox.copper ? coins(mailbox.copper) : null,
-      waiting.length ? ` ${waiting.map(([id, qty]) => `${qty} × ${itemById[id].name}`).join(', ')}` : null) : null,
+    mailbox.copper ? el('p', { class: 'collect-coins' }, 'To collect: ', coins(mailbox.copper)) : null,
+    // Waiting items as small chips; a long haul shows the first dozen and a count.
+    waiting.length ? el('div', { class: 'collect-items', 'aria-label': 'Items to collect' },
+      waiting.slice(0, 12).map(([id, qty]) => el('span', { class: 'collect-chip' }, itemIcon(id, 'sm'), `${qty} × ${itemById[id].name}`)),
+      waiting.length > 12 ? el('span', { class: 'collect-chip small dim', style: 'padding-left:8px' }, `+ ${waiting.length - 12} more`) : null) : null,
     el('div', { class: 'btn-row', style: 'margin-top:12px' },
       el('button', { class: 'btn btn-primary', type: 'button', onclick: () => ctx.collectAll() }, 'Collect all')),
   );

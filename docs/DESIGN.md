@@ -100,6 +100,10 @@ The starting profession is permanent. The other two never replace it.
 - **The tavern** always offers one hero who gathers for your starting profession: a miner, skinner or herbalist.
 - **Shops without a forge** still reach the City Smelter from the Workshop.
 - **The Workshop** shows a profession switcher once a shop has more than one profession.
+- **Workshop recipe list (Nov 12, 2026):** recipes are grouped by tier in folding sections. Each heading shows how many recipes it holds, how many still give skill-ups and how many you can make now. Tiers where every recipe is gray start folded (unless a filter is on); a section you open or close by hand stays that way until you reload. The forge and City Smelter lists stay flat. A "Best profit first" chip sorts by profit instead of recipe order. In each recipe row, materials you don't have enough of for one craft show in red.
+- **Favorite recipes:** tap ☆ Favorite in a recipe's sheet to star it. Starred recipes show in a gold-bordered Favorites box at the top of their workstation, and keep a ★ in their tier group. Favorites are saved with the game (save version 14 adds `favoriteRecipes`).
+- **Vendor goods top-up:** a recipe that uses trade goods (flux, coal, salt, thread, vials) has a Vendor goods box in its sheet. Choose how many crafts to buy for (it starts at what your other materials cover) and one button buys exactly the missing trade goods at vendor prices, showing the total, e.g. "Buy 5 smithing flux · 50 c". It's all or nothing: it buys nothing if you can't afford all of it or your bags lack room. Auction house materials are not bought this way.
+- **Ready to collect (Shop tab):** waiting items show as small icon chips, the first 12 and then "+ N more", instead of one long sentence.
 
 **Recipes by tier** (six per tier, plus one scroll-only recipe)
 
@@ -609,7 +613,7 @@ The layout is mobile-first in portrait, with five bottom tabs and a fixed header
 | Tab | What's on it |
 | --- | --- |
 | Shop (home) | "While you were away" summary, a "Next goal" line after the tutorial, commission counter, town crier, guild standing, upgrades, and the Trade Guild trainer and quartermaster |
-| Workshop | Profession switcher, skill bar and rank, recipe list colored by skill-up odds, craft queue, forge smelting queue |
+| Workshop | Profession switcher, skill bar and rank, recipe list colored by skill-up odds, craft queue, forge smelting queue. Starred favorites sit at the top; the rest fold into one group per tier (see below) |
 | Auction House | My Listings (status, place in line, cancel), then Browse: a search box, "In your bags" and "For your craft" filters (the latter on by default), and category chips. Tap an item to buy or sell it (price helpers and duration). Ledger charts come later |
 | Tavern | Hire board, regulars row, active expeditions with timers, returns to collect |
 | Bags | Storage grid, vendor sales, trade goods vendor |
