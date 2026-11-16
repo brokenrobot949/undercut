@@ -1,12 +1,13 @@
 // Auction House tab: My Listings, then Browse with a search box and filters
-// (category, items in your bags, items your craft uses or makes). Tap any item
-// to buy or sell it.
+// (category, items in your bags, items your craft uses or makes). Starred
+// items sit in a Favorites box at the top of Browse. Tap any item to buy or
+// sell it.
 
 import { el, coins, countdown, toast, itemIcon } from './components.js';
 import { tradeableItems, itemById } from '../../data/items.js';
 import { tuning } from '../../data/tuning.js';
 import { lowestListing, listedUnits, demandTag, playerListings } from '../engine/market.js';
-import { cancelListing } from '../engine/trading.js';
+import { cancelListing, isFavoriteItem } from '../engine/trading.js';
 import { listingSlotsFor } from '../engine/upgrades.js';
 import { openItemSheet, TAG_LABELS } from './item-sheet.js';
 import { recipes } from '../../data/recipes.js';
@@ -51,6 +52,17 @@ function browseList(ctx) {
     : el('p', { class: 'small dim' }, browse.bags ? 'Nothing in your bags matches. Turn off "In your bags" to see everything.' : 'No items match.');
 }
 
+// Starred items, always shown whatever the filters say, in Browse order.
+function favoritesBox(ctx) {
+  const { state } = ctx;
+  const favs = tradeableItems.filter((item) => isFavoriteItem(state, item.id))
+    .sort((a, b) => CATEGORIES.findIndex((c) => c.id === a.category) - CATEGORIES.findIndex((c) => c.id === b.category) || a.tier - b.tier);
+  if (!favs.length) return el('p', { class: 'small dim fav-tip' }, 'Tip: open an item and tap ☆ Favorite to pin it in a Favorites box here.');
+  return el('div', { class: 'recipe-group favorites' },
+    el('h3', { class: 'group-head' }, el('span', { class: 'fav-star', 'aria-hidden': 'true' }, '★'), ' Favorites'),
+    el('div', { class: 'market-list' }, favs.map((item) => marketRow(ctx, item, { inFavorites: true }))));
+}
+
 export function renderAuction(ctx) {
   const results = el('div', { class: 'market-list' });
   const refresh = () => { results.replaceChildren(...[browseList(ctx)].flat()); };
@@ -63,6 +75,7 @@ export function renderAuction(ctx) {
     myListings(ctx),
     el('section', { class: 'panel' },
       el('h2', {}, 'Browse'),
+      favoritesBox(ctx),
       search,
       el('div', { class: 'btn-row chips' },
         chip('In your bags', browse.bags, () => { browse.bags = !browse.bags; }),
@@ -103,14 +116,16 @@ function ordinal(n) {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
-function marketRow(ctx, item) {
+function marketRow(ctx, item, { inFavorites = false } = {}) {
   const { state } = ctx;
+  const fav = !inFavorites && isFavoriteItem(state, item.id);
   const lowest = lowestListing(state, item.id);
   const tag = demandTag(state, item);
   const have = state.bags[item.id] || 0;
   return el('button', { class: 'market-row with-icon', type: 'button', onclick: () => openItemSheet(ctx, item.id) },
     itemIcon(item.id, 'sm'),
-    el('span', { class: `item-name q-${item.quality}` }, item.name),
+    el('span', { class: `item-name q-${item.quality}` },
+      fav ? el('span', { class: 'fav-star', 'aria-label': 'Favorite' }, '★ ') : null, item.name),
     el('span', { class: `tag tag-${tag}` }, TAG_LABELS[tag]),
     el('span', { class: 'market-price' }, lowest ? coins(lowest.price) : el('span', { class: 'dim' }, 'none listed')),
     el('span', { class: 'small dim market-sub' }, `${listedUnits(state, item.id)} listed${have ? ` · you have ${have}` : ''}`),

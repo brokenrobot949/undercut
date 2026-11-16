@@ -5,7 +5,7 @@
 import { newGame, debugFastForward, catchUp, collectMailbox, SAVE_VERSION } from '../js/engine/game.js';
 import { listItem, cancelListing, undercutPrice, lowestOtherPrice, quoteBuy, buyItems, sellToVendor } from '../js/engine/trading.js';
 import { queueCraft, cancelOrder, smeltAtCity, queueSlots, toggleFavorite, isFavorite } from '../js/engine/crafting.js';
-import { vendorShortfall, buyVendorMats } from '../js/engine/trading.js';
+import { vendorShortfall, buyVendorMats, isFavoriteItem, toggleFavoriteItem } from '../js/engine/trading.js';
 import { hireHero, zonesFor, expectedHaul, hireFee, regularsInTown } from '../js/engine/heroes.js';
 import { tuning } from '../data/tuning.js';
 import { postCommission, deliverCommission, declineCommission, canDeliver, claimTutorialStep } from '../js/engine/commissions.js';
@@ -1016,6 +1016,20 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   check('version 13 save gets an empty favorites list', m.version === SAVE_VERSION && Object.keys(m.favoriteRecipes).length === 0);
   const back = decodeExport(encodeExport(s));
   check('favorites survive export and import', back.favoriteRecipes['smelt-copper'] === true);
+
+  // Auction house: favorite items.
+  check('a new shop has no favorite items', s.favoriteItems && !isFavoriteItem(s, 'copper-bar'));
+  toggleFavoriteItem(s, 'copper-bar');
+  check('starring an item makes it a favorite', isFavoriteItem(s, 'copper-bar'));
+  toggleFavoriteItem(s, 'copper-bar');
+  check('starring the item again takes it off', !isFavoriteItem(s, 'copper-bar'));
+  toggleFavoriteItem(s, 'copper-bar');
+  const old14 = structuredClone(s);
+  old14.version = 14;
+  delete old14.favoriteItems;
+  const m14 = migrate(old14);
+  check('version 14 save gets an empty favorite items list', m14.version === SAVE_VERSION && Object.keys(m14.favoriteItems).length === 0);
+  check('favorite items survive export and import', decodeExport(encodeExport(s)).favoriteItems['copper-bar'] === true);
 
   // Bronze scale hauberk: 8 bronze bars and 2 smithing flux each.
   s.bags['smithing-flux'] = 1;

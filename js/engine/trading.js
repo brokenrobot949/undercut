@@ -17,6 +17,21 @@ import {
 
 const coinText = (c) => `${c} copper`;
 
+// ---- Favorite items --------------------------------------------------------
+
+// Starred items sit at the top of the auction house Browse list.
+export function isFavoriteItem(state, itemId) {
+  return Boolean(state.favoriteItems?.[itemId]);
+}
+
+export function toggleFavoriteItem(state, itemId) {
+  if (!itemById[itemId]) throw new Error('Unknown item.');
+  state.favoriteItems ||= {};
+  if (state.favoriteItems[itemId]) delete state.favoriteItems[itemId];
+  else state.favoriteItems[itemId] = true;
+  return isFavoriteItem(state, itemId);
+}
+
 // ---- Price helpers -------------------------------------------------------
 
 // Cheapest listing by someone else, or null.

@@ -102,6 +102,11 @@ const migrations = {
     save.favoriteRecipes = {};
     return save;
   },
+  // Version 15: favorite items in the auction house Browse list, none starred yet.
+  14: (save) => {
+    save.favoriteItems = {};
+    return save;
+  },
 };
 
 export function migrate(save) {

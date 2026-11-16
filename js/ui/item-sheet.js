@@ -17,6 +17,7 @@ import {
 } from '../engine/market.js';
 import {
   undercutPrice, matchPrice, lowestOtherPrice, listItem, quoteBuy, buyItems, sellToVendor, buyFromVendor,
+  isFavoriteItem, toggleFavoriteItem,
 } from '../engine/trading.js';
 
 export const TAG_LABELS = { hot: 'Hot', steady: 'Steady', slow: 'Slow', flooded: 'Flooded' };
@@ -51,6 +52,7 @@ export function openItemSheet(ctx, itemId, { onClose } = {}) {
         el('span', { class: `q-${item.quality}` }, item.quality[0].toUpperCase() + item.quality.slice(1)),
         ` · ${TIER_NAMES[item.tier]} tier · ${item.category}${item.armor ? ` (${item.armor})` : ''} · In bags: `,
         el('strong', {}, have))),
+      tradeable ? favButton() : null,
       quickList,
       tradeable ? marketInfo() : item.category === 'junk'
         ? el('p', { class: 'small dim' }, 'Junk a hero brought home. Only a vendor will take it.')
@@ -68,6 +70,13 @@ export function openItemSheet(ctx, itemId, { onClose } = {}) {
 
   function act(fn) {
     if (ctx.act(fn) !== undefined) draw();
+  }
+
+  // Star the item to pin it in the auction house Favorites box.
+  function favButton() {
+    const fav = isFavoriteItem(ctx.state, itemId);
+    return el('button', { class: `btn small-btn fav-btn${fav ? ' on' : ''}`, type: 'button', 'aria-pressed': String(fav),
+      onclick: () => act((s) => toggleFavoriteItem(s, itemId)) }, fav ? '★ Favorite' : '☆ Favorite');
   }
   // Buying closes the sheet, back to where it was opened from.
   function actAndClose(fn) {
