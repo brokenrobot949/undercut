@@ -713,7 +713,22 @@ input[type="number"] {
 .trainer-recipes .my-listing.skill-gray { border-left-color: var(--skill-gray); }
 .trainer-recipes .my-listing.skill-red { border-left-color: var(--skill-red); }
 .trainer-recipes .skill-red .item-name { color: var(--text-dim); }
-.profession-switch { margin-bottom: 12px; }
+.profession-switch { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.profession-switch .btn { padding: 0 10px; }
+/* An icon followed by its label (professions, workstations, wings). */
+.icon-label { display: inline-flex; align-items: center; gap: 0.4em; }
+.icon-label > .icon { width: 1.25em; height: 1.25em; }
+.btn .icon-label { justify-content: center; }
+.skill-line .icon-label { display: flex; }
+
+/* Shop tab: Counter / Guild / Upgrades / Your shop. Short labels, one row on a phone. */
+.shop-switch { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+.shop-switch .btn { position: relative; padding: 4px 2px; font-size: 0.8rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; line-height: 1.15; }
+.shop-switch .btn .icon { width: 20px; height: 20px; }
+/* Something to do in that section: hand in, train, learn or upgrade. */
+.shop-switch .section-dot { position: absolute; top: 5px; right: 6px; width: 9px; height: 9px; border-radius: 50%; background: var(--highlight); box-shadow: 0 0 0 2px var(--panel-raised); }
+.shop-switch .btn-primary .section-dot { box-shadow: 0 0 0 2px var(--accent); }
+.guild-prof { margin-top: 4px; }
 .profession-card h2 { font-size: 1.1rem; }
 
 /* ---- Commissions --------------------------------------------------------- */
@@ -729,6 +744,7 @@ input[type="number"] {
 .search { width: 100%; min-height: var(--tap); padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel-raised); color: var(--text); font: inherit; }
 .panel.goal { border-color: var(--highlight); }
 .panel.goal p { margin: 0; }
+.panel.goal .goal-go { margin-top: 10px; }
 
 /* ---- Trade Guild panel --------------------------------------------------- */
 

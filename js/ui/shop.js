@@ -1,7 +1,11 @@
-// Shop tab (home): "While you were away", commissions, town crier, and the
-// Trade Guild with its skill trainer.
+// Shop tab (home), in four sections picked by a switcher at the top:
+//   Counter    next goal, commissions and the town crier
+//   Guild      standing, the skill trainer, the quartermaster and donations
+//   Upgrades   profession wings and shop upgrades
+//   Your shop  decor, sign styles and trophies
+// "While you were away" / "Ready to collect" shows above the switcher in every section.
 
-import { el, coins, comingSoon, formatDuration, countdown, toast, coinText, itemIcon, uiIcon } from './components.js';
+import { el, coins, comingSoon, formatDuration, countdown, toast, coinText, itemIcon, uiIcon, iconLabel } from './components.js';
 import { commissionTypes, commissionTuning } from '../../data/commissions.js';
 import { raceById, classById } from '../../data/races.js';
 import { commissionSlots, canDeliver, deliverCommission, declineCommission, recipeHint, claimTutorialStep } from '../engine/commissions.js';
@@ -29,29 +33,73 @@ import { nextTraining, trainRank, trainerRecipes, learnRecipe, recipeColor, hasP
 import { colorText, nextGoal } from './skill-bar.js';
 import { skillBar } from './skill-bar.js';
 
+// The section shown, kept between visits to the tab.
+let section = 'counter';
+
+const SECTIONS = [
+  { id: 'counter', label: 'Counter', icon: 'counter' },
+  { id: 'guild', label: 'Guild', icon: 'guild' },
+  { id: 'upgrades', label: 'Upgrades', icon: 'upgrades' },
+  { id: 'your-shop', label: 'Your shop', icon: 'your-shop' },
+];
+
 export function renderShop(ctx) {
   const { state } = ctx;
-  const faction = getFaction(state);
   const mailboxFull = state.mailbox.copper > 0 || Object.keys(state.mailbox.items).length > 0;
+  const todo = sectionTodo(ctx);
 
   return el('div', { class: 'main-inner' },
     ctx.away || mailboxFull ? awayPanel(ctx) : null,
-    goalPanel(ctx),
-    commissionPanel(ctx),
-    crierPanel(ctx),
-    el('section', { class: 'panel guild' },
-      el('h2', {}, faction.guild),
-      standingBlock(ctx),
-      el('h3', { id: 'trainer' }, 'Trainer'),
-      el('p', { class: 'small dim' }, 'Each rank lets your skill climb higher. Train the next one once you reach the cap. Recipes go on sale as your skill reaches them.'),
-      professions.filter((p) => hasProfession(ctx.state, p.id)).flatMap((p) => [trainerRow(ctx, p.id), recipeOffers(ctx, p.id)]),
-      el('h3', {}, 'Quartermaster'),
-      el('p', { class: 'small dim' }, `Better recipes for members in good standing, from ${tuning.standings[1].name}. Blue-quality ones from ${tuning.standings[2].name}, and masterworks (epic) at ${tuning.standings[4].name}.`),
-      quartermasterOffers(ctx),
-    ),
-    upgradesPanel(ctx),
-    donationsPanel(ctx),
-    yourShopPanel(ctx),
+    el('div', { class: 'shop-switch', role: 'tablist', 'aria-label': 'Shop sections' }, SECTIONS.map((s) => el('button', {
+      class: `btn${s.id === section ? ' btn-primary' : ''}`, type: 'button', role: 'tab', 'aria-selected': String(s.id === section),
+      onclick: () => showSection(ctx, s.id),
+    }, uiIcon(s.icon), s.label,
+    todo[s.id] && s.id !== section ? el('span', { class: 'section-dot', title: 'Something to do here' }) : null))),
+    section === 'counter' ? [goalPanel(ctx), commissionPanel(ctx), crierPanel(ctx)] : null,
+    section === 'guild' ? [guildPanel(ctx), donationsPanel(ctx)] : null,
+    section === 'upgrades' ? upgradesPanel(ctx) : null,
+    section === 'your-shop' ? yourShopPanel(ctx) : null,
+  );
+}
+
+function showSection(ctx, id) {
+  section = id;
+  ctx.render();
+  const main = document.querySelector('main');
+  if (main) main.scrollTop = 0;
+}
+
+// Which sections have something worth doing now, for the dot on the switcher:
+// a commission or tutorial step to hand in, a rank to train or recipe to learn,
+// an upgrade or wing you can afford.
+function sectionTodo(ctx) {
+  const { state } = ctx;
+  const mine = professions.filter((p) => hasProfession(state, p.id));
+  return {
+    counter: (tutorialStep(state) && stepMet(state)) || state.commissions.list.some((c) => {
+      const n = canDeliver(state, c);
+      return commissionTypes.find((t) => t.id === c.type)?.partial ? n > 0 : n >= c.qty - c.delivered;
+    }),
+    guild: mine.some((p) => nextTraining(state, p.id)?.ready
+        || trainerRecipes(state, p.id).some((o) => o.ready && recipeColor(state, o.recipe) !== 'gray'))
+      || quartermasterRecipes(state).some((o) => o.ready),
+    upgrades: !!nextWing(state)?.ready || upgrades.some((u) => nextUpgrade(state, u.id)?.ready),
+    'your-shop': false,
+  };
+}
+
+// The Trade Guild: standing, the trainer (one block per profession) and the quartermaster.
+function guildPanel(ctx) {
+  const faction = getFaction(ctx.state);
+  return el('section', { class: 'panel guild' },
+    el('h2', {}, faction.guild),
+    standingBlock(ctx),
+    el('h3', { id: 'trainer' }, 'Trainer'),
+    el('p', { class: 'small dim' }, 'Each rank lets your skill climb higher. Train the next one once you reach the cap. Recipes go on sale as your skill reaches them.'),
+    professions.filter((p) => hasProfession(ctx.state, p.id)).flatMap((p) => [trainerRow(ctx, p.id), recipeOffers(ctx, p.id)]),
+    el('h3', {}, 'Quartermaster'),
+    el('p', { class: 'small dim' }, `Better recipes for members in good standing, from ${tuning.standings[1].name}. Blue-quality ones from ${tuning.standings[2].name}, and masterworks (epic) at ${tuning.standings[4].name}.`),
+    quartermasterOffers(ctx),
   );
 }
 
@@ -97,7 +145,7 @@ function wingRow(ctx) {
       onclick: () => ctx.act((s) => {
         buyWing(s, p.id);
         toast(`Your ${p.name} wing is open. Find it in the Workshop.`);
-      }) }, `Open ${p.name}`)) : null,
+      }) }, iconLabel(p.id, `Open ${p.name}`))) : null,
     n && !n.ready ? el('p', { class: 'small dim' }, n.reason) : null);
 }
 
@@ -181,18 +229,30 @@ function unlockList(unlocks) {
 function quartermasterOffers(ctx) {
   const offers = quartermasterRecipes(ctx.state);
   if (!offers.length) return el('p', { class: 'small dim' }, 'You know every recipe the quartermaster sells for your professions.');
-  return el('div', { class: 'market-list trainer-recipes' }, offers.map((o) => {
-    const out = itemById[o.recipe.makes.item];
-    return el('div', { class: 'my-listing with-icon' },
-      itemIcon(out.id, 'sm'),
-      el('button', { class: `link item-name q-${out.quality}`, type: 'button', onclick: () => openItemSheet(ctx, out.id) }, out.name),
-      el('button', { class: `btn small-btn${o.ready ? ' btn-primary' : ''}`, type: 'button', disabled: !o.ready,
-        onclick: () => ctx.act((s) => {
-          buyQuartermasterRecipe(s, o.recipe.id);
-          toast(`Learned ${out.name}. Find it in the Workshop.`);
-        }) }, 'Learn ', coins(o.cost)),
-      el('span', { class: 'small dim market-sub' }, `${professionById[recipeProfession(o.recipe)].name} · `, o.reason ?? `skill ${o.recipe.skill[0]}`));
-  }));
+  // Ones you could buy now (or only lack the gold for), then the next few; the rest fold away.
+  const open = offers.filter((o) => o.ready || o.reason === 'Not enough gold.');
+  const later = offers.filter((o) => !open.includes(o));
+  const shown = [...open, ...later.slice(0, Math.max(2, 4 - open.length))];
+  const rest = offers.filter((o) => !shown.includes(o));
+  return [
+    el('div', { class: 'market-list trainer-recipes' }, shown.map((o) => quartermasterRow(ctx, o))),
+    rest.length ? el('details', { class: 'older-recipes' },
+      el('summary', { class: 'small' }, `${rest.length} more for later`),
+      el('div', { class: 'market-list trainer-recipes' }, rest.map((o) => quartermasterRow(ctx, o)))) : null,
+  ];
+}
+
+function quartermasterRow(ctx, o) {
+  const out = itemById[o.recipe.makes.item];
+  return el('div', { class: 'my-listing with-icon' },
+    itemIcon(out.id, 'sm'),
+    el('button', { class: `link item-name q-${out.quality}`, type: 'button', onclick: () => openItemSheet(ctx, out.id) }, out.name),
+    el('button', { class: `btn small-btn${o.ready ? ' btn-primary' : ''}`, type: 'button', disabled: !o.ready,
+      onclick: () => ctx.act((s) => {
+        buyQuartermasterRecipe(s, o.recipe.id);
+        toast(`Learned ${out.name}. Find it in the Workshop.`);
+      }) }, 'Learn ', coins(o.cost)),
+    el('span', { class: 'small dim market-sub' }, `${professionById[recipeProfession(o.recipe)].name} · `, o.reason ?? `skill ${o.recipe.skill[0]}`));
 }
 
 // Recipes the trainer sells: everything you can learn now, then the next few.
@@ -236,8 +296,11 @@ function trainerRow(ctx, professionId) {
 function goalPanel(ctx) {
   const g = nextGoal(ctx.state);
   if (!g) return null;
+  const target = g.section && SECTIONS.find((s) => s.id === g.section);
   return el('section', { class: 'panel goal' },
-    el('p', {}, el('strong', {}, 'Next goal: '), g.text, g.cost !== undefined ? coins(g.cost) : null, g.after ?? ''));
+    el('p', {}, el('strong', {}, 'Next goal: '), g.text, g.cost !== undefined ? coins(g.cost) : null, g.after ?? ''),
+    target ? el('button', { class: 'btn small-btn goal-go', type: 'button', onclick: () => showSection(ctx, target.id) },
+      iconLabel(target.icon, `Go to ${target.label}`)) : null);
 }
 
 function commissionPanel(ctx) {
@@ -274,7 +337,11 @@ function tutorialCard(ctx) {
       } }, 'Done! Claim reward')
       : el('button', { class: 'btn wide', type: 'button', onclick: () => {
         const tab = TUTORIAL_TABS[step.goal];
-        if (tab === 'shop') document.getElementById('trainer')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (tab === 'shop') {
+          section = 'guild';
+          ctx.render();
+          document.getElementById('trainer')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
         else ctx.goTab(tab);
       } }, `Show me: ${TAB_NAMES[TUTORIAL_TABS[step.goal]]}`));
 }

@@ -1,6 +1,6 @@
 // New game screen: maker's mark name, capital, and starting profession.
 
-import { el, setTheme } from './components.js';
+import { el, setTheme, iconLabel } from './components.js';
 import { factions } from '../../data/factions.js';
 import { professions } from '../../data/professions.js';
 
@@ -28,7 +28,7 @@ export function renderNewGame(root, { onStart }) {
   const profCards = startable.map((p) => el('button', {
     class: 'faction-card profession-card', type: 'button', 'aria-pressed': 'false', onclick: () => chooseProfession(p),
   },
-    el('h2', {}, p.name),
+    el('h2', {}, iconLabel(p.id, p.name)),
     el('div', { class: 'small' }, p.blurb)));
 
   function chooseProfession(p) {

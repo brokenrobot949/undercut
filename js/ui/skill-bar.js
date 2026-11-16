@@ -1,6 +1,6 @@
 // Shared skill pieces: the profession skill bar and recipe color labels.
 
-import { el } from './components.js';
+import { el, uiIcon } from './components.js';
 import { professionById } from '../../data/professions.js';
 import { tuning } from '../../data/tuning.js';
 import { skillOf, rankOf, capOf, MAX_SKILL, nextTraining, knowsRecipe, recipeColor, recipeProfession, startingProfession, hasProfession } from '../engine/skills.js';
@@ -16,12 +16,12 @@ export function skillBar(state, professionId, { capHint = false } = {}) {
   const cap = capOf(state, professionId);
   const atCap = capHint && skill >= cap && cap < 300;
   return el('div', { class: 'skill-line' },
-    el('span', {}, el('strong', {}, professionById[professionId].name), ` ${skill} / ${cap}`,
-      el('span', { class: 'dim' }, ` · ${rankOf(state, professionId).name}`)),
+    el('span', { class: 'icon-label' }, uiIcon(professionId), el('span', {}, el('strong', {}, professionById[professionId].name), ` ${skill} / ${cap}`,
+      el('span', { class: 'dim' }, ` · ${rankOf(state, professionId).name}`))),
     el('div', { class: 'bar skill-bar', role: 'progressbar', 'aria-label': `${professionById[professionId].name} skill`,
       'aria-valuemin': '0', 'aria-valuemax': String(cap), 'aria-valuenow': String(skill) },
       el('span', { style: `width:${(skill / cap) * 100}%` })),
-    atCap ? el('p', { class: 'small skill-capped' }, 'Skill is capped. Train the next rank at the Trade Guild (Shop tab).') : null);
+    atCap ? el('p', { class: 'small skill-capped' }, 'Skill is capped. Train the next rank at the Trade Guild (Shop tab, Guild).') : null);
 }
 
 const COLOR_TEXT = { orange: 'Orange', yellow: 'Yellow', green: 'Green', gray: 'Gray' };
@@ -34,7 +34,7 @@ export function colorText(recipe, color) {
 }
 
 // One line saying what to aim for next with your starting profession, once the
-// tutorial is over. Plain text plus a cost, for the Shop tab.
+// tutorial is over. Plain text plus a cost, for the Shop tab. `section`: the Shop section where it's done, for a Go button.
 export function nextGoal(state) {
   if (!tutorialDone(state)) return null;
   const prof = startingProfession(state);
@@ -43,12 +43,12 @@ export function nextGoal(state) {
   const t = nextTraining(state, prof);
   const skillUps = recipes.some((r) => recipeProfession(r) === prof && knowsRecipe(state, r) &&
     ['orange', 'yellow', 'green'].includes(recipeColor(state, r)));
-  if (t?.ready) return { text: `Train ${t.rank.name} at the trainer below, for `, cost: t.cost, after: '.' };
+  if (t?.ready) return { text: `Train ${t.rank.name} at the guild trainer, for `, cost: t.cost, after: '.', section: 'guild' };
   if (t && skill >= capOf(state, prof)) {
     if (/standing/.test(t.reason)) return { text: `Fill commissions to reach ${tuning.standings.find((s) => s.id === t.rank.standing).name} standing with the guild, then train ${t.rank.name}.` };
-    return { text: `Save up `, cost: t.cost, after: ` to train ${t.rank.name} at the trainer below.` };
+    return { text: `Save up `, cost: t.cost, after: ` to train ${t.rank.name} at the guild trainer.`, section: 'guild' };
   }
-  if (!skillUps && skill < MAX_SKILL) return { text: `None of your ${name} recipes give skill-ups now. Learn a new one at the trainer below.` };
+  if (!skillUps && skill < MAX_SKILL) return { text: `None of your ${name} recipes give skill-ups now. Learn a new one from the guild trainer.`, section: 'guild' };
   if (t) return { text: `Reach ${name} ${capOf(state, prof)} (you're at ${skill}), then train ${t.rank.name}.` };
   if (skill < MAX_SKILL) return { text: `Reach ${name} ${MAX_SKILL} (you're at ${skill}).` };
   return endgameGoal(state, name);
@@ -60,14 +60,14 @@ function endgameGoal(state, name) {
   const wing = nextWing(state);
   if (wing) {
     if (/standing/.test(wing.reason ?? '')) return { text: `You've mastered ${name}. Reach ${tuning.standings.find((s) => s.id === wing.standing).name} standing to open another profession wing.` };
-    return { text: 'Open your next profession wing in Shop upgrades below, for ', cost: wing.cost, after: '.' };
+    return { text: 'Open your next profession wing under Upgrades, for ', cost: wing.cost, after: '.', section: 'upgrades' };
   }
   const behind = state.player.professions.find((p) => skillOf(state, p) < MAX_SKILL);
   if (behind) return { text: `Reach ${professionById[behind].name} ${MAX_SKILL} (you're at ${skillOf(state, behind)}).` };
   const { next } = getStanding(state);
   if (next) return { text: `Every profession mastered. Fill commissions to reach ${next.name} standing with the guild.` };
   if (recipes.some((r) => r.masterwork && !knowsRecipe(state, r) && hasProfession(state, recipeProfession(r)))) {
-    return { text: "You're the Guildmaster. Buy masterwork recipes from the quartermaster and send raiders for their endgame materials." };
+    return { text: "You're the Guildmaster. Buy masterwork recipes from the quartermaster and send raiders for their endgame materials.", section: 'guild' };
   }
   return { text: "You're the Guildmaster, with every profession mastered. Masterworks and raids are the top of the market now." };
 }

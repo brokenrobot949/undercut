@@ -4,7 +4,7 @@
 // yellow, green, gray, and red when too hard. Starred recipes sit at the top;
 // the rest fold into one group per tier, with all-gray tiers closed.
 
-import { el, coins, coinText, openSheet, stepper, progress, countdown, fill, itemIcon, toast, confirmDisenchant } from './components.js';
+import { el, coins, coinText, openSheet, stepper, progress, countdown, fill, itemIcon, toast, confirmDisenchant, iconLabel } from './components.js';
 import { disenchant } from '../engine/enchanting.js';
 import { recipes, recipeById } from '../../data/recipes.js';
 import { itemById } from '../../data/items.js';
@@ -40,10 +40,10 @@ export function renderWorkshop(ctx) {
   const mine = professions.filter((p) => hasProfession(ctx.state, p.id));
   if (!shown || !hasProfession(ctx.state, shown)) shown = startingProfession(ctx.state);
   return el('div', { class: 'main-inner' },
-    mine.length > 1 ? el('div', { class: 'btn-row seg profession-switch', role: 'tablist' }, mine.map((p) => el('button', {
+    mine.length > 1 ? el('div', { class: 'profession-switch', role: 'tablist' }, mine.map((p) => el('button', {
       class: `btn${p.id === shown ? ' btn-primary' : ''}`, type: 'button', role: 'tab', 'aria-selected': String(p.id === shown),
       onclick: () => { shown = p.id; ctx.render(); },
-    }, p.name))) : null,
+    }, iconLabel(p.id, p.name)))) : null,
     professionById[shown].stations.map((s) => stationPanel(ctx, s, stationNames[s], BLURBS[s])),
     shown === 'enchanting' ? disenchantPanel(ctx) : null,
     hasProfession(ctx.state, 'blacksmithing') ? null : smelterPanel(ctx),
@@ -92,7 +92,7 @@ function stationPanel(ctx, stationId, title, blurb) {
   const anyFavs = Object.keys(state.favoriteRecipes || {}).length > 0;
 
   return el('section', { class: 'panel' },
-    el('h2', {}, title),
+    el('h2', {}, iconLabel(stationId, title)),
     first ? skillBar(state, prof, { capHint: true }) : null,
     el('p', { class: 'small dim' }, blurb),
     el('h3', {}, `Queue (${queue.length} / ${queueSlots(state, stationId)})`),
@@ -149,7 +149,7 @@ function trainerHint(ctx, prof) {
   if (!offers.length) return null;
   const tierHint = newTierHint(ctx.state, prof, offers[0].recipe);
   return el('p', { class: `small trainer-hint${ready ? ' ready' : ''}` },
-    ready ? `${ready} new recipe${ready === 1 ? '' : 's'} for your skill at the Trade Guild trainer (Shop tab).`
+    ready ? `${ready} new recipe${ready === 1 ? '' : 's'} for your skill at the Trade Guild trainer (Shop tab, Guild).`
       : `Next recipe at the trainer: skill ${offers[0].recipe.skill[0]}.`,
     tierHint ? ` ${tierHint}` : '');
 }

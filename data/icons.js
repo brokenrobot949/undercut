@@ -404,6 +404,10 @@ export const uiIcons = {
   'enchanting': { icon: 'lorc/magic-swirl' },
   'enchanting-circle': { icon: 'lorc/pentagram-rose' },
   'guild': { icon: 'delapouite/knight-banner' },
+  // Shop tab sections (the Guild section uses 'guild' above).
+  'counter': { icon: 'lorc/ringing-bell' },
+  'upgrades': { icon: 'delapouite/stone-wheel' },
+  'your-shop': { icon: 'delapouite/window' },
   'crier': { icon: 'delapouite/megaphone' },
   'credits': { icon: 'delapouite/scroll-quill' },
   'sound-on': { icon: 'delapouite/speaker' },

@@ -42,6 +42,11 @@ export function uiIcon(key) {
   return iconSpan(uiIcons[key]);
 }
 
+// A screen icon followed by its label, e.g. the anvil icon and "Blacksmithing".
+export function iconLabel(key, ...label) {
+  return el('span', { class: 'icon-label' }, uiIcon(key), el('span', {}, ...label));
+}
+
 // Blue and purple gear is valuable: ask before breaking it down.
 export function confirmDisenchant(itemId, qty) {
   const item = itemById[itemId];
