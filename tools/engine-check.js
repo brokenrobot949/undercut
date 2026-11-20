@@ -4,8 +4,8 @@
 
 import { newGame, debugFastForward, catchUp, collectMailbox, SAVE_VERSION } from '../js/engine/game.js';
 import { listItem, cancelListing, undercutPrice, lowestOtherPrice, quoteBuy, buyItems, sellToVendor } from '../js/engine/trading.js';
-import { queueCraft, cancelOrder, smeltAtCity, queueSlots, toggleFavorite, isFavorite } from '../js/engine/crafting.js';
-import { vendorShortfall, buyVendorMats, isFavoriteItem, toggleFavoriteItem } from '../js/engine/trading.js';
+import { queueCraft, cancelOrder, smeltAtCity, queueSlots, toggleFavorite, isFavorite, maxCraftable } from '../js/engine/crafting.js';
+import { vendorShortfall, buyVendorMats, isFavoriteItem, toggleFavoriteItem, restOfMatsQuote, buyRestOfMats } from '../js/engine/trading.js';
 import { hireHero, zonesFor, expectedHaul, hireFee, regularsInTown } from '../js/engine/heroes.js';
 import { tuning } from '../data/tuning.js';
 import { postCommission, deliverCommission, declineCommission, canDeliver, claimTutorialStep } from '../js/engine/commissions.js';
@@ -1047,6 +1047,33 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   threw = false;
   try { buyVendorMats(s, 'bronze-scale-hauberk', 10); } catch { threw = true; }
   check('a top-up you cannot afford buys nothing', threw && s.copper === 3 && s.bags['smithing-flux'] === before);
+
+  // Buy the rest: one craft's missing materials, vendor and auction house.
+  s.bags['bronze-bar'] = 3;
+  s.bags['smithing-flux'] = 0;
+  const bronze = s.market.items['bronze-bar'];
+  bronze.listings = [
+    { id: 9001, seller: 'npc', price: 30, qty: 2, expiresAt: Infinity },
+    { id: 9002, seller: 'player', price: 1, qty: 9, expiresAt: Infinity },
+    { id: 9003, seller: 'npc', price: 40, qty: 10, expiresAt: Infinity },
+  ];
+  const rest = restOfMatsQuote(s, 'bronze-scale-hauberk');
+  const fluxPrice = itemById['smithing-flux'].vendorBuy;
+  check('buy the rest prices the cheapest listings and the vendor', rest.unavailable.length === 0 && rest.cost === 2 * 30 + 3 * 40 + 2 * fluxPrice
+    && rest.lines.find((l) => l.item === 'bronze-bar').qty === 5 && rest.lines.find((l) => l.item === 'smithing-flux').source === 'vendor');
+  s.copper = 5000;
+  const restPaid = buyRestOfMats(s, 'bronze-scale-hauberk', t0);
+  check('buy the rest fills exactly one craft and charges the shown price', s.bags['bronze-bar'] === 8 && s.bags['smithing-flux'] === 2
+    && s.copper === 5000 - rest.cost && restPaid.cost === rest.cost && maxCraftable(s, 'bronze-scale-hauberk') === 1);
+  check('buy the rest skips your own listings', bronze.listings.some((l) => l.id === 9002 && l.qty === 9));
+  check('nothing left to buy once one craft is covered', restOfMatsQuote(s, 'bronze-scale-hauberk').lines.length === 0);
+  s.bags['bronze-bar'] = 0;
+  bronze.listings = [{ id: 9004, seller: 'npc', price: 30, qty: 3, expiresAt: Infinity }];
+  check('buy the rest flags a material the auction house cannot cover', restOfMatsQuote(s, 'bronze-scale-hauberk').unavailable[0] === 'bronze-bar');
+  const copperBefore = s.copper;
+  threw = false;
+  try { buyRestOfMats(s, 'bronze-scale-hauberk', t0); } catch { threw = true; }
+  check('buy the rest buys nothing when a material is short', threw && s.copper === copperBefore && s.bags['bronze-bar'] === 0 && bronze.listings[0].qty === 3);
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');

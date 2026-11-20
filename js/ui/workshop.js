@@ -10,7 +10,7 @@ import { recipes, recipeById } from '../../data/recipes.js';
 import { itemById } from '../../data/items.js';
 import { tuning } from '../../data/tuning.js';
 import { marketValue, cutOn } from '../engine/market.js';
-import { lowestOtherPrice, vendorShortfall, buyVendorMats } from '../engine/trading.js';
+import { lowestOtherPrice, vendorShortfall, buyVendorMats, restOfMatsQuote, buyRestOfMats } from '../engine/trading.js';
 import { queueCraft, cancelOrder, queueSlots, smeltAtCity, smelterFee, maxCraftable, unitMs, isFavorite, toggleFavorite } from '../engine/crafting.js';
 import { cutRate } from '../engine/upgrades.js';
 import { openItemSheet } from './item-sheet.js';
@@ -266,6 +266,7 @@ function openCraftSheet(ctx, recipe) {
         el('tbody', {}, recipe.mats.map((m) => el('tr', { class: (state.bags[m.item] || 0) < m.qty ? 'short' : null },
           el('td', {}, el('button', { class: 'link', type: 'button', onclick: () => matSheet(m.item) }, itemById[m.item].name)),
           el('td', {}, m.qty), el('td', {}, state.bags[m.item] || 0), el('td', {}, coins(unitCost(ctx, m.item))))))),
+      color === 'red' ? null : buyRestSection(),
       color === 'red' ? null : topUpSection(),
       el('p', { class: 'small' }, 'Materials cost ', coins(matCost(ctx, recipe)), '. Sells for ',
         coins(saleValue(ctx, recipe.makes.item) * recipe.makes.qty), ' after the cut. ',
@@ -280,6 +281,36 @@ function openCraftSheet(ctx, recipe) {
         onclick: () => actAndClose((s) => { smeltAtCity(s, recipe.id, qty.value); playSound('craft-complete'); }) },
         'Smelt now at the City Smelter (', feeText, ')') : null,
     );
+  }
+
+  // One button buys whatever one craft is still short of: trade goods from the
+  // vendor, the rest from the cheapest auction listings. Red and locked when
+  // the auction house doesn't have enough of something.
+  function buyRestSection() {
+    const { state } = ctx;
+    const { lines, cost, unavailable } = restOfMatsQuote(state, recipe.id);
+    if (!lines.length) return null;
+    const affordable = cost <= state.copper;
+    const ok = !unavailable.length && affordable;
+    const list = lines.map((l) => `${l.qty} ${itemById[l.item].name.toLowerCase()}`).join(', ');
+    const button = el('button', {
+      class: `btn wide${unavailable.length ? ' btn-unavailable' : ok ? ' btn-primary' : ''}`, type: 'button', disabled: !ok,
+      onclick: () => act((s, now) => {
+        const bought = buyRestOfMats(s, recipe.id, now);
+        toast(`Bought ${bought.lines.map((l) => `${l.qty} ${itemById[l.item].name.toLowerCase()}`).join(', ')} for ${coinText(bought.cost)}.`);
+        return bought.cost;
+      }),
+    }, unavailable.length ? `Not enough ${unavailable.map((id) => itemById[id].name.toLowerCase()).join(', ')} listed`
+      : ['Buy the rest · ', coins(cost)]);
+    const shortNote = unavailable.map((id) => {
+      const l = lines.find((x) => x.item === id);
+      return `${l.listed ? `Only ${l.listed}` : 'No'} ${itemById[id].name.toLowerCase()} on the auction house (need ${l.qty}).`;
+    }).join(' ');
+    return el('div', { class: 'top-up' },
+      el('h3', {}, 'Buy the rest for one craft'),
+      el('p', { class: 'small dim' }, `${list}. Cheapest listings first; trade goods from the vendor.`),
+      button,
+      el('p', { class: 'small dim' }, unavailable.length ? shortNote : !affordable ? `Not enough gold: it costs ${coinText(cost)}.` : ''));
   }
 
   // Trade goods (flux, coal, salt, thread, vials) come from the vendor at a

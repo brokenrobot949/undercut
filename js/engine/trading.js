@@ -172,3 +172,49 @@ export function buyVendorMats(state, recipeId, crafts) {
   for (const l of lines) state.bags[l.item] = bagCount(state, l.item) + l.qty;
   return { lines, cost };
 }
+
+// ---- Buy the rest: everything one craft is short of ---------------------------
+
+// What one craft of a recipe is short of, and the cheapest way to get it:
+// trade goods from the vendor, everything else from the cheapest auction
+// listings (never your own). Returns { lines: [{ item, qty, cost, source,
+// listed }], cost, unavailable: [itemIds the auction house can't cover] }.
+export function restOfMatsQuote(state, recipeId) {
+  const recipe = recipeById[recipeId];
+  const lines = [];
+  const unavailable = [];
+  for (const m of recipe.mats) {
+    const qty = Math.max(0, m.qty - bagCount(state, m.item));
+    if (!qty) continue;
+    const item = itemById[m.item];
+    if (item.category === 'trade') {
+      lines.push({ item: m.item, qty, cost: qty * item.vendorBuy, source: 'vendor', listed: qty });
+      continue;
+    }
+    const q = state.market.items[m.item] ? quoteBuy(state, m.item, qty) : { qty: 0, cost: 0 };
+    lines.push({ item: m.item, qty, cost: q.cost, source: 'auction', listed: q.qty });
+    if (q.qty < qty) unavailable.push(m.item);
+  }
+  return { lines, cost: lines.reduce((sum, l) => sum + l.cost, 0), unavailable };
+}
+
+// Buys everything one craft is short of. All or nothing: buys nothing if the
+// auction house can't cover a material, you can't afford it, or bags lack room.
+export function buyRestOfMats(state, recipeId, now) {
+  const quote = restOfMatsQuote(state, recipeId);
+  if (!quote.lines.length) throw new Error('You already have every material for one craft.');
+  if (quote.unavailable.length) {
+    throw new Error(`Not enough ${quote.unavailable.map((id) => itemById[id].name.toLowerCase()).join(' or ')} on the auction house.`);
+  }
+  if (quote.cost > state.copper) throw new Error("You can't afford all of that.");
+  const extraSlots = quote.lines.reduce((sum, l) => sum + slotsFor(l.item, bagCount(state, l.item) + l.qty) - slotsFor(l.item, bagCount(state, l.item)), 0);
+  if (extraSlots > bagSlots(state) - slotsUsed(state)) throw new Error('Not enough room in your bags.');
+  for (const l of quote.lines) {
+    if (l.source === 'auction') l.cost = buyFromMarket(state, l.item, l.qty, Infinity, now).cost;
+    state.copper -= l.cost;
+    addToBags(state, l.item, l.qty);
+  }
+  if (quote.lines.some((l) => l.source === 'auction')) noteTutorial(state, 'buy');
+  quote.cost = quote.lines.reduce((sum, l) => sum + l.cost, 0);
+  return quote;
+}

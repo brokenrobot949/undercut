@@ -914,6 +914,9 @@ input[type="number"] {
 .top-up h3 { margin: 0 0 4px; }
 .top-up .btn { margin-top: 8px; }
 .top-up p:empty { display: none; }
+.top-up p { margin: 6px 0 0; }
+/* Buy the rest: red and locked when the auction house can't cover a material. */
+.btn.btn-unavailable, .btn.btn-unavailable:disabled { opacity: 1; background: #4a1f1b; border-color: #8e3a32; color: #ffb4a8; }
 
 /* ---- Shop: what's waiting to collect, as small item chips ---------------- */
 
