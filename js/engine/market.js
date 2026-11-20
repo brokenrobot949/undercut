@@ -202,6 +202,11 @@ export function cancelPlayerListing(state, itemId, listingId) {
   return listings.splice(i, 1)[0];
 }
 
+// Units of an item you have up for sale on the auction house right now.
+export function playerListedUnits(state, itemId) {
+  return (state.market.items[itemId]?.listings || []).reduce((n, l) => n + (l.seller === 'player' ? l.qty : 0), 0);
+}
+
 export function playerListings(state) {
   const out = [];
   for (const [itemId, m] of Object.entries(state.market.items)) {

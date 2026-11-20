@@ -437,6 +437,7 @@ input[type="number"] {
 
 /* ---- Lists: my listings, queues, recipes --------------------------- */
 
+.market-row .have-count { font-size: 0.8rem; font-weight: 400; color: var(--text-dim); }
 .market-row .market-tag { grid-area: tag; justify-self: end; color: var(--highlight); }
 .my-listing {
   display: grid;

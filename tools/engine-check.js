@@ -44,7 +44,7 @@ import { professions as allProfessions } from '../data/professions.js';
 import { buyDecor, buyTrophy, buySignStyle, setSignStyle, signStyleOf, donate, donationMult, donationEndsAt } from '../js/engine/shop-extras.js';
 import { depositMult, commissionPayMult } from '../js/engine/upgrades.js';
 import { clerkPrice, clerkCheck, clerkFloorPrice, setClerkOn, setClerkFloor, clerkRelistLimit } from '../js/engine/clerk.js';
-import { playerListings } from '../js/engine/market.js';
+import { playerListings, playerListedUnits } from '../js/engine/market.js';
 
 const H = 60 * 60 * 1000;
 const DAY = 24 * H;
@@ -1169,6 +1169,21 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   delete old15.clerk;
   const m15 = migrate(old15);
   check('version 15 save gets the clerk switched on at a 90% floor', m15.version === SAVE_VERSION && m15.clerk.on === true && m15.clerk.floor === 0.9);
+}
+
+// The Workshop's "have" count: units you have listed, not NPC listings.
+{
+  const s = game(43);
+  catchUp(s, t0 + H);
+  s.bags['rough-stone'] = 7;
+  s.copper = 100000;
+  const all = () => s.market.items['rough-stone'].listings.reduce((n, l) => n + l.qty, 0);
+  const npc = all();
+  listItem(s, { itemId: 'rough-stone', qty: 3, price: 500, hours: 2 }, real(s));
+  listItem(s, { itemId: 'rough-stone', qty: 2, price: 600, hours: 2 }, real(s));
+  check('listed count adds up only your own listings', playerListedUnits(s, 'rough-stone') === 5 && all() === npc + 5,
+    `${playerListedUnits(s, 'rough-stone')}`);
+  check('listing moves units out of bags', s.bags['rough-stone'] === 2);
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');

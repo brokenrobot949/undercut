@@ -9,7 +9,7 @@ import { disenchant } from '../engine/enchanting.js';
 import { recipes, recipeById } from '../../data/recipes.js';
 import { itemById } from '../../data/items.js';
 import { tuning } from '../../data/tuning.js';
-import { marketValue, cutOn } from '../engine/market.js';
+import { marketValue, cutOn, playerListedUnits } from '../engine/market.js';
 import { lowestOtherPrice, vendorShortfall, buyVendorMats, restOfMatsQuote, buyRestOfMats } from '../engine/trading.js';
 import { queueCraft, cancelOrder, queueSlots, smeltAtCity, smelterFee, maxCraftable, unitMs, isFavorite, toggleFavorite } from '../engine/crafting.js';
 import { cutRate } from '../engine/upgrades.js';
@@ -201,12 +201,16 @@ function recipeRow(ctx, recipe, { inFavorites = false } = {}) {
   const profit = profitEach(ctx, recipe);
   const color = recipeColor(state, recipe);
   const fav = !inFavorites && isFavorite(state, recipe.id);
+  // How many you already have: in your bags plus listed on the auction house.
+  const listed = playerListedUnits(state, out.id);
+  const have = (state.bags[out.id] || 0) + listed;
   return el('button', { class: `market-row with-icon${color ? ` skill-${color}` : ''}`, type: 'button', onclick: () => openCraftSheet(ctx, recipe),
     'aria-label': color ? `${out.name}, ${colorText(recipe, color)}` : null },
     itemIcon(out.id, 'sm'),
     el('span', { class: `item-name ${color ? `skill-text-${color}` : `q-${out.quality}`}` },
       fav ? el('span', { class: 'fav-star', 'aria-label': 'Favorite' }, '★ ') : null,
-      `${out.name}${recipe.makes.qty > 1 ? ` × ${recipe.makes.qty}` : ''}`),
+      `${out.name}${recipe.makes.qty > 1 ? ` × ${recipe.makes.qty}` : ''}`,
+      el('span', { class: 'have-count' }, ` · have ${have}${listed ? ` (${listed} listed)` : ''}`)),
     el('span', { class: `market-price ${profit >= 0 ? 'profit' : 'loss'}` }, profit >= 0 ? '+' : '−', coins(Math.abs(profit))),
     // Materials you don't have enough of for one craft show in red.
     el('span', { class: 'small dim market-sub' }, recipe.mats.map((m, i) => {
