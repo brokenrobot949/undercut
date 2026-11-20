@@ -8,6 +8,7 @@ import { createSkills, createKnownRecipes, recipeProfession } from './skills.js'
 import { recipes } from '../../data/recipes.js';
 import { createUpgrades } from './upgrades.js';
 import { createExtras } from './shop-extras.js';
+import { createClerk } from './clerk.js';
 
 // Every key starts with "undercut:" because other games share this web address.
 export const SAVE_KEY = 'undercut:save';
@@ -105,6 +106,12 @@ const migrations = {
   // Version 15: favorite items in the auction house Browse list, none starred yet.
   14: (save) => {
     save.favoriteItems = {};
+    return save;
+  },
+  // Version 16: the auctioneer's clerk's settings (on, 90% floor). The
+  // upgrade itself starts at level 0 like any new upgrade.
+  15: (save) => {
+    save.clerk = createClerk();
     return save;
   },
 };

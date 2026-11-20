@@ -9,6 +9,7 @@ import { tuning } from '../../data/tuning.js';
 import { lowestListing, listedUnits, demandTag, playerListings } from '../engine/market.js';
 import { cancelListing, isFavoriteItem } from '../engine/trading.js';
 import { listingSlotsFor } from '../engine/upgrades.js';
+import { clerkLevel, clerkActive, clerkCheckHours, clerkFloors, clerkFloorShare, clerkRelistLimit, setClerkOn, setClerkFloor } from '../engine/clerk.js';
 import { openItemSheet, TAG_LABELS } from './item-sheet.js';
 import { recipes } from '../../data/recipes.js';
 import { hasProfession, recipeProfession } from '../engine/skills.js';
@@ -86,11 +87,36 @@ export function renderAuction(ctx) {
   );
 }
 
+// The auctioneer's clerk: on/off and the floor, once the upgrade is bought.
+function clerkBox(ctx) {
+  const { state } = ctx;
+  if (!clerkLevel(state)) return null;
+  const on = clerkActive(state);
+  const every = clerkCheckHours(state);
+  const pct = (x) => `${Math.round(x * 100)}%`;
+  return el('div', { class: 'clerk-box' },
+    el('div', { class: 'clerk-head' },
+      el('strong', {}, "Auctioneer's clerk"),
+      el('button', { class: `btn chip${on ? ' btn-primary' : ''}`, type: 'button', 'aria-pressed': String(on),
+        onclick: () => ctx.act((s) => setClerkOn(s, !on)) }, on ? 'On' : 'Off')),
+    el('p', { class: 'small dim' }, on
+      ? `Relists a listing that expires unsold, up to ${clerkRelistLimit} times${every ? `, and checks your listings every ${every >= 1 ? `${every} h` : `${Math.round(every * 60)} min`} to keep them first in line` : ''}. Never above the price you set, never below your floor.`
+      : 'Switched off: your listings come home when they expire.'),
+    on ? el('div', { class: 'field' },
+      el('label', {}, 'Lowest price, as a share of the price you set'),
+      el('div', { class: 'btn-row chips' }, clerkFloors.map((f) => el('button', {
+        class: `btn chip${clerkFloorShare(state) === f ? ' btn-primary' : ''}`, type: 'button', 'aria-pressed': String(clerkFloorShare(state) === f),
+        onclick: () => ctx.act((s) => setClerkFloor(s, f)) }, pct(f))))) : null);
+}
+
 function myListings(ctx) {
   const mine = playerListings(ctx.state);
-  const undercut = mine.some((x) => x.place > 0);
+  // With a clerk that checks live listings, the undercut tip isn't needed.
+  const undercut = mine.some((x) => x.place > 0) && !(clerkActive(ctx.state) && clerkCheckHours(ctx.state));
+  const clerkOn = clerkActive(ctx.state);
   return el('section', { class: 'panel' },
     el('h2', {}, `My listings (${mine.length} / ${listingSlotsFor(ctx.state)})`),
+    clerkBox(ctx),
     // Selling tip: a listing that isn't first in line waits behind the ones ahead.
     undercut ? el('p', { class: 'small sell-tip warn' }, el('strong', {}, 'Tip: '),
       'A listing that is not first in line waits until the ones ahead of it sell. To move up, cancel it and list it again just under the lowest price (the old deposit is kept).') : null,
@@ -101,7 +127,8 @@ function myListings(ctx) {
       el('span', { class: 'market-price' }, coins(listing.price), ' each'),
       el('span', { class: 'small dim market-sub' },
         place === 0 ? 'Cheapest listed' : `${ordinal(place + 1)} in line`, ' · ', countdown(listing.expiresAt), ' left',
-        listing.startQty > listing.qty ? ` · ${listing.startQty - listing.qty} sold` : ''),
+        listing.startQty > listing.qty ? ` · ${listing.startQty - listing.qty} sold` : '',
+        clerkOn ? ` · relisted ${listing.relists || 0} / ${clerkRelistLimit}` : ''),
       el('button', { class: 'btn small-btn', type: 'button',
         onclick: () => ctx.act((s) => {
           const gone = cancelListing(s, itemId, listing.id);

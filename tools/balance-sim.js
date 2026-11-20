@@ -188,6 +188,10 @@ function priceVsSpeed() {
 //   flipper   like cautious, and also buys stock listed under 80% of base value
 //             (a dip) and relists it once the price is back near base
 //   eager     like cautious, but checks in every hour (an engaged first day)
+//   clerk     like cautious, but never relists by hand: it buys
+//             the auctioneer's clerk to do it. Only this bot buys the clerk, so
+//             the gate bots measure players who don't use it (Rob, Nov 20, 2026:
+//             a clerk player reaching the endgame sooner is fine).
 // The tanner (Leatherworking) and alchemist play like the cautious smith.
 
 const BOTS = [
@@ -199,6 +203,7 @@ const BOTS = [
   { name: 'alchemist', prof: 'alchemy', every: 4, listHours: 6, relist: true, flip: false, wings: ['blacksmithing', 'leatherworking'] },
   { name: 'tailor', prof: 'tailoring', every: 4, listHours: 6, relist: true, flip: false, wings: ['leatherworking', 'alchemy'] },
   { name: 'enchanter', prof: 'leatherworking', every: 4, listHours: 6, relist: true, flip: false, wings: ['enchanting', 'tailoring'] },
+  { name: 'clerk', prof: 'blacksmithing', every: 4, listHours: 6, relist: false, flip: false, clerk: true, wings: ['alchemy', 'leatherworking'] },
 ];
 // SIM_BOTS=tailor,cautious runs just those bots.
 const RUN_BOTS = process.env.SIM_BOTS ? BOTS.filter((b) => process.env.SIM_BOTS.split(',').includes(b.name)) : BOTS;
@@ -282,6 +287,9 @@ function buyMissing(state, recipe, qty, budget, now) {
   }
   return true;
 }
+
+// The upgrades a bot buys: everything, except the clerk unless it's the clerk bot.
+const botUpgrades = (bot) => upgrades.filter((u) => u.id !== 'clerk' || bot.clerk);
 
 function botCheckIn(bot, state, now, stats) {
   const profs = state.player.professions;
@@ -374,7 +382,7 @@ function botCheckIn(bot, state, now, stats) {
   // what's left after saving for training.
   for (;;) {
     const spare = state.copper - reserve();
-    const best = upgrades.map((u) => ({ u, n: nextUpgrade(state, u.id) })).filter((x) => x.n?.ready && x.n.cost <= spare * 0.3)
+    const best = botUpgrades(bot).map((u) => ({ u, n: nextUpgrade(state, u.id) })).filter((x) => x.n?.ready && x.n.cost <= spare * 0.3)
       .sort((a, b) => a.n.cost - b.n.cost)[0];
     if (!best) break;
     buyUpgrade(state, best.u.id);
@@ -384,7 +392,7 @@ function botCheckIn(bot, state, now, stats) {
   // Gold sinks, once every upgrade is bought: keep each donation running while
   // it costs under 10% of the spare gold, then buy decor, signs and trophies,
   // cheapest first, while each costs under 30%.
-  if (upgrades.every((u) => !nextUpgrade(state, u.id))) {
+  if (botUpgrades(bot).every((u) => !nextUpgrade(state, u.id))) {
     for (const d of donations) {
       if (!donationEndsAt(state, d.id, now) && donationOffer(state, d.id, now).ready && d.cost <= (state.copper - reserve()) * 0.1) {
         donate(state, d.id, now);

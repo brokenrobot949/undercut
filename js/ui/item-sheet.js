@@ -10,6 +10,7 @@ import { recipeById } from '../../data/recipes.js';
 import { tuning } from '../../data/tuning.js';
 import { bagCount } from '../engine/bags.js';
 import { depositMult, cutRate, ledgerLevel } from '../engine/upgrades.js';
+import { clerkActive, clerkCheckHours, clerkFloorPrice, clerkRelistLimit } from '../engine/clerk.js';
 import { priceChart } from './price-chart.js';
 import {
   marketValue, demandTag, demandPerHour, supplyDays, scarcity, vendorPrice, depositFor, listedUnits, cutOn,
@@ -115,6 +116,7 @@ export function openItemSheet(ctx, itemId, { onClose } = {}) {
     const summary = el('p', { class: 'small dim' });
     const estimate = el('p', { class: 'small estimate' });
     const tip = el('p', { class: 'small sell-tip' });
+    const clerkNote = el('p', { class: 'small dim' });
     const qty = stepper({ value: choice.listQty, max: have, onChange: (v) => { choice.listQty = v; update(); } });
 
     function update() {
@@ -138,6 +140,11 @@ export function openItemSheet(ctx, itemId, { onClose } = {}) {
         ? [el('strong', {}, 'Tip: '), `${buyers} A big lot can flood the market and come back unsold. List about ${few} at a time, just under the lowest price, and list more as they sell.`]
         : buyers);
       tip.classList.toggle('warn', choice.listQty > few);
+      // What the auctioneer's clerk will do with this listing.
+      if (clerkActive(ctx.state)) {
+        fill(clerkNote, `Your clerk will ${clerkCheckHours(ctx.state) ? 'keep it first in line and ' : ''}relist it up to ${clerkRelistLimit} times, never below `,
+          coins(clerkFloorPrice(ctx.state, itemId, choice.price)), ' each.');
+      }
       if (ledgerLevel(ctx.state) >= 2) fill(estimate, saleText(estimateSale(ctx.state, itemId, choice.price, choice.listQty, choice.hours, ctx.now())));
       fill(quickList, `List ${choice.listQty} at `, coins(choice.price), ' each');
     }
@@ -162,6 +169,7 @@ export function openItemSheet(ctx, itemId, { onClose } = {}) {
         }, `${d.hours} h`)))),
       tip,
       summary,
+      clerkNote,
       estimate,
       el('button', { class: 'btn btn-primary wide', type: 'button', onclick: listNow }, 'List'),
     );

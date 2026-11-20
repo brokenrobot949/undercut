@@ -24,6 +24,7 @@ import { quartermasterRecipes, buyQuartermasterRecipe } from '../engine/quarterm
 import { activeEvents, crierLine, glutLeft, upcomingEvents } from '../engine/events.js';
 import { upgradeById } from '../../data/upgrades.js';
 const eventWarnHoursAt3 = upgradeById.ledger.warnHours;
+import { clerkLevel, clerkCheckHours, clerkRelistLimit } from '../engine/clerk.js';
 import { eventById } from '../../data/events.js';
 import { upgradeLevel, nextUpgrade, buyUpgrade, queueSlotsFor, craftTimeMult, bonusBarChance, bagSlotsFor, cutRate, depositMult,
   listingSlotsFor, boardSizeFor, expeditionSlotsFor, commissionPayMult, eventWarnHours } from '../engine/upgrades.js';
@@ -162,6 +163,11 @@ function upgradeEffect(state, id) {
     case 'table': return `${boardSizeFor(state)} heroes on the board`;
     case 'charter': return `${expeditionSlotsFor(state)} heroes out at once`;
     case 'counter': return `${commissionSlots(state)} commission slots${commissionPayMult(state) > 1 ? `, pay +${pct(commissionPayMult(state) - 1)}` : ''}`;
+    case 'clerk': {
+      if (!clerkLevel(state)) return 'you relist by hand';
+      const every = clerkCheckHours(state);
+      return `relists expired listings up to ${clerkRelistLimit} times${every ? `, reprices live ones every ${every >= 1 ? `${every} h` : `${Math.round(every * 60)} min`}` : ''}`;
+    }
     case 'ledger': return ['no price history', '7-day price charts', 'price charts and sell-time estimates', `charts, estimates and event warnings ${eventWarnHoursAt3} h early`][upgradeLevel(state, 'ledger')];
     default: return '';
   }
@@ -391,6 +397,10 @@ function awayPanel(ctx) {
     for (const [id, sale] of Object.entries(s.sold || {})) {
       items.push(el('span', {}, `Sold ${sale.qty} × ${itemById[id].name} for `, coins(sale.copper), '.'));
     }
+    for (const [id, qty] of Object.entries(s.relisted || {})) {
+      items.push(`Your clerk relisted ${qty} × ${itemById[id].name}.`);
+    }
+    if (s.repriced) items.push(`Your clerk changed the price of a listing ${s.repriced} time${s.repriced === 1 ? '' : 's'} to stay first in line.`);
     for (const [id, qty] of Object.entries(s.expired || {})) {
       items.push(`Listing expired: ${qty} × ${itemById[id].name} came back.`);
     }

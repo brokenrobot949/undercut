@@ -15,12 +15,13 @@ import { createTavern, refreshBoardTimer, expeditionReturns } from './heroes.js'
 import { createSkills, createKnownRecipes, syncSkills } from './skills.js';
 import { createUpgrades, syncUpgrades } from './upgrades.js';
 import { createExtras } from './shop-extras.js';
+import { createClerk, clerkRelist, clerkCheck } from './clerk.js';
 import { createEvents, planTimer, eventStartTimer, eventEndTimer } from './events.js';
 import { createCommissions, commissionPostTimer, commissionExpireTimer } from './commissions.js';
 export { collectMailbox } from './bags.js';
 export { getStanding } from './guild.js';
 
-export const SAVE_VERSION = 15;
+export const SAVE_VERSION = 16;
 
 export function newGame({ name, factionId, professionId = 'blacksmithing', seed, now }) {
   const state = {
@@ -62,6 +63,8 @@ export function newGame({ name, factionId, professionId = 'blacksmithing', seed,
     favoriteRecipes: {},
     // Items starred to sit at the top of the auction house Browse list: { itemId: true }.
     favoriteItems: {},
+    // The auctioneer's clerk's settings (the upgrade itself is in `upgrades`).
+    clerk: createClerk(),
   };
   createMarket(state, now);
   createTavern(state, now);
@@ -85,8 +88,9 @@ export function getFaction(state) {
 
 // ---- Clock handlers ----------------------------------------------------
 
-// What happens to the player when their listings sell or expire.
-function marketHooks(state, summary) {
+// What happens to the player when their listings sell or expire. With
+// `relist` false (a fresh market after a long absence) the clerk relists nothing.
+function marketHooks(state, summary, relist = true) {
   return {
     onSale(itemId, listing, price, at) {
       const paid = saleProceeds(listing, price);
@@ -97,6 +101,7 @@ function marketHooks(state, summary) {
       s.copper += paid;
     },
     onExpire(itemId, listing, at) {
+      if (relist && clerkRelist(state, itemId, listing, at, summary)) return;
       addToMailbox(state, itemId, listing.qty, madeInListing(listing));
       summary.expired[itemId] = (summary.expired[itemId] || 0) + listing.qty;
     },
@@ -105,10 +110,11 @@ function marketHooks(state, summary) {
 
 const handlers = {
   tick(state, at, summary) {
+    clerkCheck(state, at, summary);
     marketTick(state, at, marketHooks(state, summary));
   },
   freshMarket(state, at, summary) {
-    freshMarket(state, at, marketHooks(state, summary));
+    freshMarket(state, at, marketHooks(state, summary, false));
   },
   timers: {
     craft: (state, timer, summary) => finishUnit(state, timer, summary),
@@ -143,6 +149,8 @@ function gameSummary(state) {
   const summary = newSummary(state, null);
   summary.sold = {}; // itemId -> { qty, copper }
   summary.expired = {}; // itemId -> qty returned
+  summary.relisted = {}; // itemId -> qty the clerk relisted
+  summary.repriced = 0; // live listings whose price the clerk changed
   summary.crafted = {}; // itemId -> qty made
   summary.ordersDone = []; // whole orders finished: { item, qty }
   summary.returns = []; // heroes home: { name, zone, haul, line }
@@ -159,6 +167,7 @@ export function catchUp(state, realNow, summary = gameSummary(state)) {
   syncSkills(state);
   syncUpgrades(state);
   state.extras ||= createExtras();
+  state.clerk ||= createClerk();
   if (!state.tavern) createTavern(state, state.clock.lastSeenAt);
   if (!state.commissions) createCommissions(state, state.clock.lastSeenAt);
   if (!state.events) createEvents(state, state.clock.lastSeenAt);

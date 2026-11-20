@@ -320,11 +320,15 @@ function driftDemand(state, m) {
 
 function expireListings(item, m, at, hooks) {
   if (!m.listings.some((l) => l.expiresAt <= at)) return;
+  // Take every expired listing off first, then tell the player's side, so a
+  // listing the clerk relists from the hook lands in the new list.
+  const expired = [];
   m.listings = m.listings.filter((l) => {
     if (l.expiresAt > at) return true;
-    if (l.seller === 'player') hooks.onExpire(item.id, l, at);
+    if (l.seller === 'player') expired.push(l);
     return false;
   });
+  for (const l of expired) hooks.onExpire(item.id, l, at);
 }
 
 function restockNpc(state, item, m, demand, at) {
@@ -444,7 +448,7 @@ export function postGlut(state, itemId, qty, price, at, expiresAt) {
   return listing;
 }
 
-function insertListing(listings, listing) {
+export function insertListing(listings, listing) {
   let lo = 0;
   let hi = listings.length;
   while (lo < hi) {

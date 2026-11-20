@@ -924,3 +924,9 @@ input[type="number"] {
 .collect-chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px 2px 2px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-deep); font-size: 0.85rem; }
 .collect-chip .icon-tile { border-width: 1px; }
 .collect-coins { margin-top: 10px; }
+
+/* Auctioneer's clerk box, at the top of My listings. */
+.clerk-box { border: 1px solid var(--border, var(--highlight)); border-radius: var(--radius); padding: 8px 10px; margin: 8px 0 10px; }
+.clerk-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.clerk-box .small { margin: 6px 0; }
+.clerk-box .field { margin: 6px 0 0; }

@@ -384,6 +384,23 @@ That one model produces every behavior from the original notes, with no special 
 - My listings shows a tip when one of your listings isn't first in line: cancel and list again just under the lowest price.
 - The Trade Guild panel says commissions are the steadiest early gold and rush orders expire fast.
 
+**Auctioneer's clerk** (shop upgrade, Nov 20, 2026). A clerk who looks after your listings while you're away, so a check-in is less relisting by hand. Numbers are in the `clerk` entry of `data/upgrades.js`.
+
+| Level | Cost | Needs | What the clerk does |
+| --- | --- | --- | --- |
+| 1 | 1.5 g | — | Relists a listing that expires unsold, up to 3 times: same amount and duration, priced just under the lowest other listing |
+| 2 | 2.7 g | Friendly | Also checks your live listings every 2 hours and changes the price so you stay first in line |
+| 3 | 4.9 g | Honored | Checks every 30 minutes |
+
+- **Your price is the ceiling, your floor is the limit.** The clerk never prices above the price you set, and never below your floor: a share of that price you choose on the Auction tab (80%, 85%, 90%, 95% or 100%; 90% to start). If the cheaper listings sell out, a check moves your price back up toward what you set. It never goes under the vendor price.
+- **Relisting costs a new deposit**, paid from your gold. If you can't cover it, the listing comes home as usual. After the third relist, it comes home too, so a flooded item doesn't keep cycling.
+- **Changing the price on a live listing is free.** No new deposit, and the listing keeps its time left and its place among same-priced listings.
+- **On by default** once bought; the Auction tab has an on/off switch. Turning it off stops all relisting and price changes.
+- The listing panel says what the clerk will do with a new listing. My listings shows how many relists each listing has used. "While you were away" lists what the clerk relisted and how many prices it changed.
+- After a long absence (over 7 days) nothing is relisted: the market starts fresh and everything comes home.
+- Save version 16 adds the `clerk` record (on/off, floor, last check).
+- **Balance.** When every sim bot bought the clerk, the steady bots reached the endgame 1 to 3 days sooner (one enchanter run on day 41.5). Rob decided (Nov 20, 2026) that's fine for players who choose the clerk and that the endgame shouldn't get longer for those who don't, so Exalted stays at 44,000. In the sim only a separate "clerk" bot buys it: a cautious smith that never relists by hand. It reaches Exalted with all three at 300 on days 47–52, about the same as the cautious smith who relists by hand every check-in (days 48–49). The gate bots don't buy the clerk.
+
 A listing is a quantity at one unit price, and units sell one at a time. Twenty potions at 45 s each can sell to twenty different buyers.
 
 **What the player sees per item:** lowest listing, market value (average sale price over the last day), your listings and their place in line, and a demand tag: Hot, Steady, Slow or Flooded. The Ledger upgrade adds a 7-day price chart and a sell-time estimate.
@@ -514,6 +531,7 @@ Upgrades are bought with gold, and a few also need guild standing. Most have 5 l
 | Expedition charter | +1 expedition slot (4 levels) | 2 → 6 |
 | Counter | +1 commission slot, commission pay +5% (2 levels) | 3 → 5 |
 | Ledger | Level 1 price history, level 2 sell-time estimates, level 3 event warnings 6 h early | 3 levels |
+| Auctioneer's clerk | Level 1 relists expired listings, level 2 reprices live ones every 2 h, level 3 every 30 min (see Auction House) | 3 levels |
 | Profession wing | Adds another profession | Needs Friendly, Honored, Revered, then Exalted |
 | Shop sign | Cosmetic banner that grows with your standing | Follows standing |
 

@@ -68,6 +68,17 @@ export const upgrades = [
   { id: 'ledger', name: 'Ledger', blurb: 'Price history, sell-time estimates, then early event warnings',
     levels: 3, cost: 20000, growth: 1.8, warnHours: 6,
     standing: [null, null, 'friendly'] },
+
+  // The auctioneer's clerk looks after your listings while you're away.
+  // Level 1: relists a listing that expires unsold, up to `relists` times.
+  // Level 2 and up: also checks live listings every `checkHours[level - 1]`
+  // hours and changes the price to stay first in line (free, no new deposit).
+  // It never prices above the price you set, or below your floor (a share of
+  // that price, picked from `floors` on the Auction tab; `floor` to start).
+  { id: 'clerk', name: "Auctioneer's clerk", blurb: 'Relists and reprices your listings while you are away',
+    levels: 3, cost: 15000, growth: 1.8,
+    relists: 3, checkHours: [null, 2, 0.5], floors: [0.8, 0.85, 0.9, 0.95, 1], floor: 0.9,
+    standing: [null, 'friendly', 'honored'] },
 ];
 
 export const upgradeById = Object.fromEntries(upgrades.map((u) => [u.id, u]));

@@ -43,6 +43,8 @@ import { disenchant, disenchantYield, canDisenchant } from '../js/engine/enchant
 import { professions as allProfessions } from '../data/professions.js';
 import { buyDecor, buyTrophy, buySignStyle, setSignStyle, signStyleOf, donate, donationMult, donationEndsAt } from '../js/engine/shop-extras.js';
 import { depositMult, commissionPayMult } from '../js/engine/upgrades.js';
+import { clerkPrice, clerkCheck, clerkFloorPrice, setClerkOn, setClerkFloor, clerkRelistLimit } from '../js/engine/clerk.js';
+import { playerListings } from '../js/engine/market.js';
 
 const H = 60 * 60 * 1000;
 const DAY = 24 * H;
@@ -1074,6 +1076,99 @@ const real = (state) => state.clock.lastSeenAt; // game time = real time here (n
   threw = false;
   try { buyRestOfMats(s, 'bronze-scale-hauberk', t0); } catch { threw = true; }
   check('buy the rest buys nothing when a material is short', threw && s.copper === copperBefore && s.bags['bronze-bar'] === 0 && bronze.listings[0].qty === 3);
+}
+
+// The auctioneer's clerk: relists expired listings, keeps live ones first in
+// line, never above the price you set or below your floor.
+{
+  const mine = (s) => playerListings(s).filter((x) => x.itemId === 'rough-stone').map((x) => x.listing);
+  const fresh = (seed) => {
+    const s = game(seed);
+    catchUp(s, t0 + H);
+    s.bags['rough-stone'] = 5;
+    s.copper = 100000;
+    return s;
+  };
+
+  // Without the clerk an expired listing comes home (checked above too).
+  let s = fresh(41);
+  check('new games start with the clerk on at a 90% floor', s.clerk.on === true && s.clerk.floor === 0.9);
+  listItem(s, { itemId: 'rough-stone', qty: 5, price: 500, hours: 2 }, real(s));
+  catchUp(s, t0 + 4 * H);
+  check('without the clerk an expired listing comes home', s.mailbox.items['rough-stone'] === 5 && mine(s).length === 0);
+
+  // Level 1: relisted with a new deposit, up to the limit, then home.
+  s = fresh(42);
+  buyUpgrade(s, 'clerk');
+  const copperBefore = s.copper;
+  const first = listItem(s, { itemId: 'rough-stone', qty: 5, price: 500, hours: 2 }, real(s));
+  const firstDeposit = copperBefore - s.copper;
+  const sum = catchUp(s, t0 + 3.5 * H);
+  const again = mine(s);
+  check('the clerk relists an expired listing', again.length === 1 && again[0].id !== first.id && again[0].qty === 5 && again[0].relists === 1 && !s.mailbox.items['rough-stone']);
+  check('a relist pays a new deposit and keeps the duration', s.copper === copperBefore - 2 * firstDeposit && again[0].expiresAt - again[0].postedAt === 2 * H, `${copperBefore - s.copper} vs ${2 * firstDeposit}`);
+  check('the relist shows in the summary', sum.relisted['rough-stone'] === 5 && !sum.expired['rough-stone']);
+  check('a relist stays between your floor and your price', again[0].top === 500 && again[0].price <= 500 && again[0].price >= clerkFloorPrice(s, 'rough-stone', 500));
+  catchUp(s, t0 + 12 * H);
+  check(`after ${clerkRelistLimit} relists the listing comes home`, mine(s).length === 0 && s.mailbox.items['rough-stone'] === 5);
+
+  // Can't cover the deposit: it comes home.
+  s = fresh(43);
+  buyUpgrade(s, 'clerk');
+  listItem(s, { itemId: 'rough-stone', qty: 5, price: 500, hours: 2 }, real(s));
+  s.copper = 0;
+  catchUp(s, t0 + 4 * H);
+  check('no relist without gold for the deposit', mine(s).length === 0 && s.mailbox.items['rough-stone'] === 5 && s.copper === 0);
+
+  // Switched off: no relists.
+  s = fresh(44);
+  buyUpgrade(s, 'clerk');
+  setClerkOn(s, false);
+  listItem(s, { itemId: 'rough-stone', qty: 5, price: 500, hours: 2 }, real(s));
+  catchUp(s, t0 + 4 * H);
+  check('a clerk switched off relists nothing', mine(s).length === 0 && s.mailbox.items['rough-stone'] === 5);
+
+  // The clerk's price: under the lowest other listing, clamped to floor and top.
+  s = fresh(45);
+  const m = s.market.items['rough-stone'];
+  m.listings = [{ id: 9101, seller: 'npc', price: 100, qty: 3, postedAt: t0, expiresAt: Infinity }];
+  check('clerk price undercuts the lowest when it can', clerkPrice(s, 'rough-stone', { price: 105 }) === 99);
+  check('clerk price never goes below your floor', clerkPrice(s, 'rough-stone', { price: 200 }) === 180);
+  check('clerk price never goes above your price', clerkPrice(s, 'rough-stone', { price: 50 }) === 50);
+  setClerkFloor(s, 1);
+  check('a 100% floor keeps your price', clerkPrice(s, 'rough-stone', { price: 200 }) === 200);
+  let threw = false;
+  try { setClerkFloor(s, 0.5); } catch { threw = true; }
+  check('only the listed floor choices are allowed', threw && s.clerk.floor === 1);
+
+  // Level 2: live listings move to stay first in line, for free.
+  s = fresh(46);
+  s.reputation = 100000; // standing for the later levels
+  buyUpgrade(s, 'clerk');
+  buyUpgrade(s, 'clerk');
+  const live = listItem(s, { itemId: 'rough-stone', qty: 5, price: 100000, hours: 24 }, real(s));
+  const afterList = s.copper;
+  const lm = s.market.items['rough-stone'];
+  const lowOther = lm.listings.find((l) => l.seller !== 'player').price;
+  const rsum = catchUp(s, t0 + 3.5 * H);
+  check('level 2 lowers a live listing that is not first in line', live.price < 100000 && live.price >= 90000 && rsum.repriced >= 1, `${live.price}`);
+  check('a price change is free and keeps the time left', s.copper === afterList && live.expiresAt === t0 + H + 24 * H);
+  // The others sell out: the next check moves back up to your price.
+  live.top = 200;
+  live.price = 190;
+  lm.listings = [live];
+  const checkAt = s.clerk.lastCheckAt + 2 * H;
+  clerkCheck(s, checkAt - 1, {});
+  check('no check before the interval is up', live.price === 190);
+  clerkCheck(s, checkAt, {});
+  check('with nobody cheaper the clerk moves back up to your price', live.price === 200, `${live.price}`);
+
+  // Saves: version 15 gets clerk settings.
+  const old15 = structuredClone(s);
+  old15.version = 15;
+  delete old15.clerk;
+  const m15 = migrate(old15);
+  check('version 15 save gets the clerk switched on at a 90% floor', m15.version === SAVE_VERSION && m15.clerk.on === true && m15.clerk.floor === 0.9);
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed.');
